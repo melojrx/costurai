@@ -1,0 +1,402 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ linha.nome }} - Detalhes da Linha{% endblock %}
+
+{% block extra_css %}
+<style>
+    .linha-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .status-ATIVA { background: #d4edda; color: #155724; }
+    .status-PARADA { background: #f8d7da; color: #721c24; }
+    .status-MANUTENCAO { background: #fff3cd; color: #856404; }
+    .status-INATIVA { background: #e2e3e5; color: #383d41; }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    
+    .etapa-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #007bff;
+    }
+    
+    .historico-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #28a745;
+        transition: all 0.2s;
+    }
+    
+    .historico-item:hover {
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .ops-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .ops-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+        border: none;
+        padding: 1rem;
+    }
+    
+    .ops-table td {
+        padding: 1rem;
+        border-color: #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .progress-custom {
+        height: 8px;
+        border-radius: 10px;
+        background: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-custom .progress-bar {
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    
+    .btn-action {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 20px;
+        border: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho da Linha -->
+    <div class="linha-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-industry me-3"></i>
+                    {{ linha.nome }}
+                </h1>
+                <p class="mb-3 opacity-75">{{ linha.descricao }}</p>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="status-badge status-{{ linha.status }}">
+                        {{ linha.get_status_display }}
+                    </span>
+                    <span class="text-white-50">
+                        <i class="fas fa-users me-1"></i>
+                        {{ linha.operadores.count }} operadores
+                    </span>
+                    <span class="text-white-50">
+                        <i class="fas fa-clock me-1"></i>
+                        Capacidade: {{ linha.capacidade_diaria }} peças/dia
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-light btn-lg me-2" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas da Linha -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-value text-primary">{{ stats_30_dias.total_produzido|default:0 }}</div>
+                <div class="stats-label">Produzido (30 dias)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-value text-success">{{ stats_30_dias.total_defeituoso|default:0 }}</div>
+                <div class="stats-label">Defeituosos</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-value text-warning">{{ stats_30_dias.total_retrabalho|default:0 }}</div>
+                <div class="stats-label">Retrabalho</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-value text-info">{{ stats_30_dias.tempo_total|default:0 }}</div>
+                <div class="stats-label">Tempo Total (min)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- OPs Ativas na Linha -->
+        <div class="col-md-8">
+            <div class="card ops-table">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        OPs Ativas na Linha ({{ ops_ativas.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if ops_ativas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>OP</th>
+                                    <th>Cliente</th>
+                                    <th>Produto</th>
+                                    <th>Status</th>
+                                    <th>Progresso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for op in ops_ativas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ op.numero_op }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ op.op_externa|default:"" }}</small>
+                                    </td>
+                                    <td>{{ op.cliente.nome|default:"N/A" }}</td>
+                                    <td>
+                                        {% if op.produto %}
+                                        <strong>{{ op.produto.codigo }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ op.produto.referencia }}</small>
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ op.get_status_display }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress-custom">
+                                            <div class="progress-bar bg-success" style="width: {{ op.porcentagem_concluida|default:0 }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ op.porcentagem_concluida|default:0 }}%</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'producao:op_detalhes' op.id %}" class="btn btn-sm btn-outline-primary btn-action">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma OP ativa nesta linha</h5>
+                        <p class="text-muted">As OPs aparecerão aqui quando forem atribuídas a esta linha.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Gráfico de Produção Diária -->
+            <div class="chart-container mt-4">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Produção Diária (Últimos 15 dias)
+                </h5>
+                <canvas id="producaoDiariaChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Eficiência por Etapa e Histórico -->
+        <div class="col-md-4">
+            <!-- Eficiência por Etapa -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Eficiência por Etapa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for etapa in etapas %}
+                    <div class="etapa-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>{{ etapa.nome }}</strong>
+                            <span class="badge bg-primary">0%</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">
+                            Tempo médio: {{ etapa.tempo_medio_minutos }} min
+                        </small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-info-circle text-muted"></i>
+                        <p class="text-muted mb-0">Nenhuma etapa configurada</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Histórico Recente -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico Recente
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% for historico in historico_recente %}
+                    <div class="historico-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>OP {{ historico.ordem_producao.numero_op }}</strong>
+                                <br>
+                                <small class="text-muted">{{ historico.etapa.nome }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ historico.data_registro|date:"d/m H:i" }}
+                            </small>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-success">{{ historico.quantidade_produzida }} produzidas</span>
+                            {% if historico.quantidade_defeituosa > 0 %}
+                            <span class="badge bg-danger">{{ historico.quantidade_defeituosa }} defeituosas</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-clock text-muted"></i>
+                        <p class="text-muted mb-0">Nenhum histórico recente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Produção Diária
+    const ctx = document.getElementById('producaoDiariaChart').getContext('2d');
+    const producaoDiariaChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for item in producao_diaria %}
+                '{{ item.data }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Produção Diária',
+                data: [
+                    {% for item in producao_diaria %}
+                    {{ item.producao }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e9ecef'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

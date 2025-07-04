@@ -1,0 +1,735 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}Acompanhar Produção - {{ empresa.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --status-nao-iniciada: #6b7280;
+        --status-em-andamento: #f59e0b;
+        --status-concluida: #10b981;
+        --status-pausada: #3b82f6;
+        --status-cancelada: #ef4444;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+    }
+    
+    .stat-card .stat-icon.primary {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
+    
+    .stat-card .stat-icon.success {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .stat-card .stat-icon.warning {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .stat-card .stat-icon.danger {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .stat-card .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.9rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    
+    .op-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .op-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .op-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        gap: 20px;
+    }
+    
+    .op-info h4 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+    }
+    
+    .op-info p {
+        color: var(--gray-600);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .op-badge {
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    
+    .op-badge.alta { 
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .op-badge.media { 
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .op-badge.baixa { 
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .progress-section {
+        margin-bottom: 24px;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .progress-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    
+    .progress-value {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    
+    .progress-bar-container {
+        height: 8px;
+        border-radius: 6px;
+        background: var(--gray-200);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--primary-blue-light), var(--primary-blue-dark));
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .etapas-timeline {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 0;
+        overflow-x: auto;
+    }
+    
+    .etapa-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 120px;
+        position: relative;
+    }
+    
+    .etapa-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .etapa-icon.nao-iniciada {
+        background: rgba(107, 114, 128, 0.1);
+        color: var(--status-nao-iniciada);
+        border: 2px solid rgba(107, 114, 128, 0.2);
+    }
+    
+    .etapa-icon.em-andamento {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--status-em-andamento);
+        border: 2px solid rgba(245, 158, 11, 0.3);
+        animation: pulse 2s infinite;
+    }
+    
+    .etapa-icon.concluida {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--status-concluida);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .etapa-icon.pausada {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--status-pausada);
+        border: 2px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    .etapa-nome {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        text-align: center;
+        line-height: 1.2;
+    }
+    
+    .etapa-linha {
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        width: calc(100% + 16px);
+        height: 2px;
+        background: var(--gray-300);
+        z-index: 1;
+    }
+    
+    .etapa-item:last-child .etapa-linha {
+        display: none;
+    }
+    
+    .etapa-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+    }
+    
+    .btn-etapa {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid;
+        min-width: 100px;
+        justify-content: center;
+    }
+    
+    .btn-etapa.primary {
+        background: var(--primary-blue-light);
+        color: white;
+        border-color: var(--primary-blue-light);
+    }
+    
+    .btn-etapa.primary:hover {
+        background: var(--primary-blue-dark);
+        color: white;
+    }
+    
+    .btn-etapa.success {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+    }
+    
+    .btn-etapa.success:hover {
+        background: #059669;
+        color: white;
+    }
+    
+    .btn-etapa.warning {
+        background: var(--warning);
+        color: white;
+        border-color: var(--warning);
+    }
+    
+    .btn-etapa.warning:hover {
+        background: #d97706;
+        color: white;
+    }
+    
+    .alert-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        border-left: 4px solid;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .alert-card.danger {
+        border-left-color: var(--danger);
+        background: rgba(239, 68, 68, 0.02);
+    }
+    
+    .alert-card.warning {
+        border-left-color: var(--warning);
+        background: rgba(245, 158, 11, 0.02);
+    }
+    
+    .alert-card.info {
+        border-left-color: var(--primary-blue-light);
+        background: rgba(59, 130, 246, 0.02);
+    }
+    
+    .alert-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .alert-icon {
+        font-size: 1.2rem;
+    }
+    
+    .alert-title {
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+    }
+    
+    .alert-message {
+        color: var(--gray-600);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    /* Animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 24px 20px;
+        }
+        
+        .op-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .etapas-timeline {
+            padding: 16px 0;
+        }
+        
+        .etapa-item {
+            min-width: 80px;
+        }
+        
+        .etapa-actions {
+            flex-direction: column;
+        }
+        
+        .btn-etapa {
+            width: 100%;
+        }
+        
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-3">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Acompanhar Produção
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Monitoramento em tempo real das ordens de produção
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'producao:linhas' %}" class="btn btn-light me-2">
+                    <i class="fas fa-industry me-2"></i>Linhas
+                </a>
+                <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-light">
+                    <i class="fas fa-list me-2"></i>Todas OPs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas do Dia -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-play"></i>
+            </div>
+            <div class="stat-value">{{ stats_hoje.ops_iniciadas }}</div>
+            <div class="stat-label">OPs Iniciadas Hoje</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ stats_hoje.ops_concluidas }}</div>
+            <div class="stat-label">OPs Concluídas Hoje</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="stat-value">{{ stats_hoje.producao_total }}</div>
+            <div class="stat-label">Peças Produzidas</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div class="stat-value">{{ stats_hoje.linhas_ativas }}</div>
+            <div class="stat-label">Linhas Ativas</div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    {% if alertas %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Alertas e Problemas
+            </h5>
+            {% for alerta in alertas %}
+            <div class="alert-card {{ alerta.tipo }}">
+                <div class="alert-header">
+                    <i class="{{ alerta.icone }} alert-icon"></i>
+                    <h6 class="alert-title">{{ alerta.titulo }}</h6>
+                </div>
+                <p class="alert-message">{{ alerta.mensagem }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- OPs em Produção -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-4">
+                <i class="fas fa-cogs me-2"></i>
+                Ordens de Produção em Andamento ({{ ops_dados|length }})
+            </h5>
+        </div>
+    </div>
+
+    {% for op_data in ops_dados %}
+    <div class="op-card" data-op-id="{{ op_data.op.id }}">
+        <div class="op-header">
+            <div class="op-info">
+                <h4>{{ op_data.op.numero_op }} - {{ op_data.op.cliente.nome }}</h4>
+                <p>
+                    {% if op_data.op.produto %}
+                        {{ op_data.op.produto.referencia }} | 
+                    {% endif %}
+                    Linha: {{ op_data.op.linha_producao.nome|default:"Não definida" }} |
+                    Qtd: {{ op_data.op.quantidade_total }} peças
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="op-badge {% if op_data.op.prioridade >= 4 %}alta{% elif op_data.op.prioridade >= 3 %}media{% else %}baixa{% endif %}">
+                    Prioridade {{ op_data.op.prioridade }}
+                </span>
+                {% if op_data.etapa_atual %}
+                <span class="badge bg-info">
+                    {{ op_data.etapa_atual.nome }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Progresso Geral -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-label">Progresso Geral</span>
+                <span class="progress-value">{{ op_data.progresso_total }}%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: {{ op_data.progresso_total }}%"></div>
+            </div>
+        </div>
+
+        <!-- Timeline de Etapas -->
+        <div class="etapas-timeline">
+            {% for controle in op_data.controles %}
+            <div class="etapa-item">
+                <div class="etapa-icon {{ controle.status|lower|replace:'_','-' }}">
+                    <i class="{{ controle.etapa.icone }}"></i>
+                </div>
+                <div class="etapa-nome">{{ controle.etapa.nome }}</div>
+                <div class="etapa-linha"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Ações da OP -->
+        <div class="etapa-actions">
+            <a href="{% url 'producao:op_detalhes' op_data.op.id %}" class="btn-etapa primary">
+                <i class="fas fa-eye"></i>Detalhes
+            </a>
+            
+            {% for controle in op_data.controles %}
+                {% if controle.status == 'NAO_INICIADA' %}
+                    <button class="btn-etapa success" onclick="iniciarEtapa({{ controle.id }})">
+                        <i class="fas fa-play"></i>Iniciar {{ controle.etapa.nome }}
+                    </button>
+                    {% break %}
+                {% elif controle.status == 'EM_ANDAMENTO' %}
+                    <button class="btn-etapa warning" onclick="pausarEtapa({{ controle.id }})">
+                        <i class="fas fa-pause"></i>Pausar
+                    </button>
+                    <button class="btn-etapa success" onclick="concluirEtapa({{ controle.id }})">
+                        <i class="fas fa-check"></i>Concluir
+                    </button>
+                    {% break %}
+                {% elif controle.status == 'PAUSADA' %}
+                    <button class="btn-etapa success" onclick="retomarEtapa({{ controle.id }})">
+                        <i class="fas fa-play"></i>Retomar
+                    </button>
+                    {% break %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="op-card text-center py-5">
+        <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhuma OP em produção</h5>
+        <p class="text-muted mb-4">Todas as ordens de produção foram concluídas ou não há OPs ativas.</p>
+        <a href="{% url 'producao:op_novo' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nova Ordem de Produção
+        </a>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funções para controle de etapas
+function iniciarEtapa(controleId) {
+    if (confirm('Deseja iniciar esta etapa de produção?')) {
+        fazerRequisicaoEtapa(`/producao/api/etapa/${controleId}/iniciar/`, 'POST');
+    }
+}
+
+function concluirEtapa(controleId) {
+    const quantidade = prompt('Quantidade produzida nesta etapa:');
+    if (quantidade && !isNaN(quantidade) && quantidade > 0) {
+        fazerRequisicaoEtapa(`/producao/api/etapa/${controleId}/concluir/`, 'POST', {
+            quantidade_produzida: parseInt(quantidade),
+            observacoes: ''
+        });
+    }
+}
+
+function pausarEtapa(controleId) {
+    if (confirm('Deseja pausar esta etapa de produção?')) {
+        fazerRequisicaoEtapa(`/producao/api/etapa/${controleId}/pausar/`, 'POST');
+    }
+}
+
+function retomarEtapa(controleId) {
+    if (confirm('Deseja retomar esta etapa de produção?')) {
+        fazerRequisicaoEtapa(`/producao/api/etapa/${controleId}/retomar/`, 'POST');
+    }
+}
+
+function fazerRequisicaoEtapa(url, method, data = {}) {
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarNotificacao(data.message, 'success');
+            // Recarregar a página após 1 segundo
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            mostrarNotificacao(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao processar solicitação', 'error');
+    });
+}
+
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    const tipos = {
+        'success': { icon: 'check-circle', class: 'alert-success' },
+        'error': { icon: 'exclamation-triangle', class: 'alert-danger' },
+        'warning': { icon: 'exclamation-triangle', class: 'alert-warning' },
+        'info': { icon: 'info-circle', class: 'alert-info' }
+    };
+    
+    const config = tipos[tipo] || tipos.info;
+    
+    const alert = document.createElement('div');
+    alert.className = `alert ${config.class} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
+    
+    alert.innerHTML = `
+        <i class="fas fa-${config.icon} me-2"></i>
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto-remover após 5 segundos
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Função para obter cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Atualizar dados automaticamente a cada 30 segundos
+setInterval(() => {
+    console.log('Atualizando dados de produção...');
+    // Aqui poderia implementar atualização via AJAX sem recarregar a página
+}, 30000);
+
+// Marcar como atualizado quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard de produção carregado');
+});
+</script>
+{% endblock %} 

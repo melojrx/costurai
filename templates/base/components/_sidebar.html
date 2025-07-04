@@ -1,0 +1,561 @@
+<!-- Sidebar Moderna - Padrão Costuraai.com.br -->
+<style>
+    .sidebar-elias {
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--primary-blue);
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1025;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-elias.collapsed {
+        width: 0;
+        overflow: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    .sidebar-elias::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .sidebar-elias::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .sidebar-elias::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+    
+    .sidebar-elias::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Header da Sidebar */
+    .sidebar-header {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: white;
+        text-decoration: none;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+    
+    .sidebar-logo:hover {
+        color: white;
+    }
+    
+    .sidebar-logo i {
+        font-size: 1.5rem;
+        color: #74C0FC;
+    }
+    
+    .sidebar-logo-text {
+        color: white;
+    }
+    
+    /* Informações da Empresa */
+    .sidebar-company {
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .company-name {
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+    
+    .company-info {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        font-weight: 400;
+    }
+    
+    /* Navegação Principal */
+    .sidebar-nav {
+        padding: 24px 0;
+    }
+    
+    .nav-section {
+        margin-bottom: 32px;
+    }
+    
+    .nav-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .nav-section-title {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0 24px 12px;
+        margin-bottom: 8px;
+    }
+    
+    .nav-item {
+        position: relative;
+        margin-bottom: 2px;
+    }
+    
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        position: relative;
+        border-radius: 0;
+    }
+    
+    .nav-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-link.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.15);
+        font-weight: 600;
+    }
+    
+    .nav-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #74C0FC;
+    }
+    
+    .nav-link i {
+        width: 20px;
+        font-size: 1rem;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    
+    .nav-link-text {
+        flex: 1;
+    }
+    
+    .nav-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 3px 7px;
+        border-radius: 12px;
+        line-height: 1;
+        min-width: 20px;
+        text-align: center;
+    }
+    
+    .nav-badge.primary {
+        background: #74C0FC;
+        color: var(--primary-blue);
+    }
+    
+    .nav-badge.success {
+        background: var(--success);
+    }
+    
+    .nav-badge.warning {
+        background: var(--warning);
+    }
+    
+    /* Toggle Button */
+    .sidebar-toggle {
+        position: fixed;
+        top: 20px;
+        left: calc(var(--sidebar-width) + 16px);
+        z-index: 1030;
+        background: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .sidebar-toggle:hover {
+        background: #f8fafc;
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sidebar-toggle.collapsed {
+        left: 16px;
+    }
+    
+    .sidebar-toggle i {
+        color: var(--gray-600);
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-toggle.collapsed i {
+        transform: rotate(180deg);
+    }
+    
+    /* Footer da Sidebar */
+    .sidebar-footer {
+        position: sticky;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px 24px;
+        margin-top: auto;
+    }
+    
+    .sidebar-footer-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.625rem;
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    /* Mobile Backdrop */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1024;
+        display: none;
+        backdrop-filter: blur(2px);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar-elias {
+            transform: translateX(-100%);
+            width: 260px;
+        }
+        
+        .sidebar-elias.show {
+            transform: translateX(0);
+        }
+        
+        .sidebar-backdrop.show {
+            display: block;
+        }
+        
+        .sidebar-toggle {
+            left: 16px !important;
+            top: 15px;
+            width: 36px;
+            height: 36px;
+        }
+    }
+    
+    /* Estados especiais para mobile */
+    @media (max-width: 576px) {
+        .sidebar-elias {
+            width: 280px;
+        }
+        
+        .sidebar-header {
+            height: 70px;
+        }
+        
+        .nav-link {
+            padding: 14px 24px;
+            font-size: 0.9rem;
+        }
+        
+        .nav-section-title {
+            font-size: 0.65rem;
+        }
+    }
+    
+    /* Adicionar ao <style> existente, após .sidebar-logo */
+    .sidebar-logo-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin-right: 8px;
+    }
+    .sidebar-logo-icon i {
+        font-size: 2rem;
+        color: #fff !important;
+        filter: none;
+    }
+    .sidebar-logo-text {
+        color: white;
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+</style>
+
+<!-- Toggle Button -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu lateral">
+    <i class="fas fa-chevron-left"></i>
+</button>
+
+<!-- Mobile Backdrop -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar-elias" id="sidebarModern">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <a href="{% url 'dashboard' %}" class="sidebar-logo">
+            <span class="sidebar-logo-icon">
+                <i class="fas fa-cut"></i>
+            </span>
+            <span class="sidebar-logo-text">Costuraai</span>
+        </a>
+    </div>
+    
+    <!-- Company Info -->
+    <div class="sidebar-company">
+        <div class="company-name">{{ empresa_atual.nome|truncatechars:30|default:"Empresa Demo" }}</div>
+        <div class="company-info">{{ empresa_atual.cnpj|default:"Sistema de Gestão" }}</div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <!-- Principal -->
+        <div class="nav-section">
+            <div class="nav-section-title">PRINCIPAL</div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-link-text">Dashboard</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Produção -->
+        <div class="nav-section">
+            <div class="nav-section-title">PRODUÇÃO</div>
+            <div class="nav-item">
+                <a href="{% url 'producao:ops_listar' %}" class="nav-link {% if 'ops' in request.path and 'novo' not in request.path %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="nav-link-text">Ordens de Produção</span>
+                    <span class="nav-badge">{{ ops_count|default:"0" }}</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'producao:op_novo' %}" class="nav-link {% if 'ops/novo' in request.path %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span class="nav-link-text">Nova OP</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'producao:linhas' %}" class="nav-link {% if 'linhas' in request.path %}active{% endif %}">
+                    <i class="fas fa-cogs"></i>
+                    <span class="nav-link-text">Linhas de Produção</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Cadastros -->
+        <div class="nav-section">
+            <div class="nav-section-title">CADASTROS</div>
+            <div class="nav-item">
+                <a href="{% url 'cadastros:clientes_listar' %}" class="nav-link {% if 'clientes' in request.path %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-link-text">Clientes</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'cadastros:produtos_listar' %}" class="nav-link {% if 'produtos' in request.path %}active{% endif %}">
+                    <i class="fas fa-tshirt"></i>
+                    <span class="nav-link-text">Produtos</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="{% url 'cadastros:fornecedores_listar' %}" class="nav-link {% if 'fornecedores' in request.path %}active{% endif %}">
+                    <i class="fas fa-truck"></i>
+                    <span class="nav-link-text">Fornecedores</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Financeiro -->
+        <div class="nav-section">
+            <div class="nav-section-title">FINANCEIRO</div>
+            <div class="nav-item">
+                <a href="{% url 'financeiro:relatorio_financeiro' %}" class="nav-link {% if 'financeiro' in request.path and request.resolver_match.url_name == 'relatorio_financeiro' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-link-text">Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'financeiro:contas_receber' %}" class="nav-link {% if 'contas-receber' in request.path %}active{% endif %}">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span class="nav-link-text">Contas a Receber</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'financeiro:contas_pagar' %}" class="nav-link {% if 'contas-pagar' in request.path %}active{% endif %}">
+                    <i class="fas fa-credit-card"></i>
+                    <span class="nav-link-text">Contas a Pagar</span>
+                </a>
+            </div>
+            
+            </div>
+        </div>
+        
+        <!-- Relatórios -->
+        <div class="nav-section">
+            <div class="nav-section-title">RELATÓRIOS</div>
+            <div class="nav-item">
+                <a href="{% url 'producao:relatorios' %}" class="nav-link {% if 'relatorios' in request.path and 'producao' not in request.path and 'eficiencia' not in request.path %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="nav-link-text">Visão Geral</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'producao:relatorio_producao' %}" class="nav-link {% if 'relatorios/producao' in request.path %}active{% endif %}">
+                    <i class="fas fa-chart-area"></i>
+                    <span class="nav-link-text">Análise de Produção</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'producao:relatorio_eficiencia' %}" class="nav-link {% if 'relatorios/eficiencia' in request.path %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="nav-link-text">Eficiência</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Sistema -->
+        <div class="nav-section">
+            <div class="nav-section-title">ADMINISTRAÇÃO</div>
+            <div class="nav-item">
+                <a href="{% url 'empresas:configuracoes' %}" class="nav-link {% if 'configuracoes' in request.path %}active{% endif %}">
+                    <i class="fas fa-cog"></i>
+                    <span class="nav-link-text">Configurações</span>
+                </a>
+            </div>
+            
+        </div>
+    </nav>
+    
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <div class="sidebar-footer-text">
+            © 2025 Costuraai v1.0
+        </div>
+    </div>
+</aside>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebarModern');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    
+    // Toggle sidebar
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Mobile: show/hide sidebar with backdrop
+                sidebar.classList.toggle('show');
+                backdrop.classList.toggle('show');
+            } else {
+                // Desktop: collapse sidebar
+                sidebar.classList.toggle('collapsed');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Save state
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            }
+        });
+    }
+    
+    // Close mobile sidebar when clicking backdrop
+    if (backdrop) {
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            backdrop.classList.remove('show');
+        });
+    }
+    
+    // Restore sidebar state on desktop
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed');
+        sidebarToggle.classList.add('collapsed');
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Remove desktop collapsed state on mobile
+            sidebar.classList.remove('collapsed');
+            sidebarToggle.classList.remove('collapsed');
+            backdrop.classList.remove('show');
+            sidebar.classList.remove('show');
+        } else {
+            // Remove mobile states on desktop
+            backdrop.classList.remove('show');
+            sidebar.classList.remove('show');
+            
+            // Restore saved collapsed state
+            const savedCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (savedCollapsed) {
+                sidebar.classList.add('collapsed');
+                sidebarToggle.classList.add('collapsed');
+            }
+        }
+    });
+    
+    // Auto-close mobile sidebar when clicking nav links
+    const navLinks = sidebar.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('show');
+                backdrop.classList.remove('show');
+            }
+        });
+    });
+});
+</script> 

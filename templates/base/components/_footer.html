@@ -1,0 +1,102 @@
+<!-- Footer Moderno - Padrão Costuraai.com.br -->
+<style>
+    .footer-elias {
+        background: white;
+        border-top: 1px solid var(--gray-200);
+        padding: 24px 32px;
+        margin-top: auto;
+    }
+    
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 100%;
+    }
+    
+    .footer-text {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .footer-links {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+    }
+    
+    .footer-link {
+        color: var(--gray-500);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .footer-link:hover {
+        color: var(--primary-blue-light);
+    }
+    
+    .footer-version {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--gray-100);
+        color: var(--gray-600);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .footer-version i {
+        font-size: 0.625rem;
+        color: var(--success);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .footer-elias {
+            padding: 20px;
+        }
+        
+        .footer-content {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+        
+        .footer-links {
+            gap: 16px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .footer-links {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+</style>
+
+<footer class="footer-elias">
+    <div class="footer-content">
+        <div class="footer-text">
+            © 2025 Costuraai.com.br - Sistema para Gestão de Confecções
+        </div>
+        
+        <div class="footer-links">
+            <span class="footer-version">
+                <i class="fas fa-circle"></i>
+                v1.0.0
+            </span>
+            
+            <a href="#" class="footer-link">Suporte</a>
+            
+            <a href="#" class="footer-link">Documentação</a>
+            
+            <a href="/admin/" class="footer-link" target="_blank">Admin</a>
+        </div>
+    </div>
+</footer> 

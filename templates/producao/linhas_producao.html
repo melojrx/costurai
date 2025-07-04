@@ -1,0 +1,795 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}Linhas de Produção - {{ empresa.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --linha-ativa: #10b981;
+        --linha-parada: #ef4444;
+        --linha-manutencao: #f59e0b;
+        --linha-inativa: #6b7280;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    .page-header .row {
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+    
+    .page-header p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-items: center;
+        min-height: 44px;
+    }
+    
+    .header-actions .btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .header-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .linha-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 28px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .linha-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-blue-light);
+        transition: all 0.3s ease;
+    }
+    
+    .linha-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .linha-card.status-ativa::before { 
+        background: var(--linha-ativa); 
+    }
+    
+    .linha-card.status-parada::before { 
+        background: var(--linha-parada); 
+    }
+    
+    .linha-card.status-manutencao::before { 
+        background: var(--linha-manutencao); 
+    }
+    
+    .linha-card.status-inativa::before { 
+        background: var(--linha-inativa); 
+    }
+    
+    .linha-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        gap: 20px;
+    }
+    
+    .linha-info h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+    
+    .linha-info p {
+        color: var(--gray-600);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    
+    .status-badge.ativa {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--linha-ativa);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .status-badge.parada {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--linha-parada);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .status-badge.manutencao {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--linha-manutencao);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .status-badge.inativa {
+        background: rgba(107, 114, 128, 0.1);
+        color: var(--linha-inativa);
+        border: 1px solid rgba(107, 114, 128, 0.2);
+    }
+    
+    .linha-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 20px;
+        margin: 24px 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        background: white;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .linha-progress {
+        margin: 24px 0;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .progress-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    
+    .progress-value {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    
+    .progress-bar-container {
+        height: 8px;
+        border-radius: 6px;
+        background: var(--gray-200);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--primary-blue-light), var(--primary-blue-dark));
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    .linha-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid;
+        min-width: 120px;
+        justify-content: center;
+    }
+    
+    .btn-action.primary {
+        background: var(--primary-blue-light);
+        color: white;
+        border-color: var(--primary-blue-light);
+    }
+    
+    .btn-action.primary:hover {
+        background: var(--primary-blue-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+    
+    .btn-action.secondary {
+        background: white;
+        color: var(--gray-700);
+        border-color: var(--gray-300);
+    }
+    
+    .btn-action.secondary:hover {
+        background: var(--gray-100);
+        color: var(--gray-800);
+    }
+    
+    .btn-action.warning {
+        background: var(--warning);
+        color: white;
+        border-color: var(--warning);
+    }
+    
+    .btn-action.warning:hover {
+        background: #d97706;
+        color: white;
+    }
+    
+    .btn-action.success {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+    }
+    
+    .btn-action.success:hover {
+        background: #059669;
+        color: white;
+    }
+    
+    /* Stats Gerais */
+    .stats-gerais {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card-geral {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card-geral:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-card-geral .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+    }
+    
+    .stat-card-geral .stat-icon.primary {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
+    
+    .stat-card-geral .stat-icon.success {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .stat-card-geral .stat-icon.warning {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .stat-card-geral .stat-icon.danger {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .stat-card-geral .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    
+    .stat-card-geral .stat-label {
+        font-size: 0.9rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    
+    /* Animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 24px 20px;
+        }
+        
+        .page-header .row {
+            gap: 16px;
+        }
+        
+        .header-actions {
+            justify-content: flex-end;
+            margin-top: 16px;
+            gap: 8px;
+        }
+        
+        .header-actions .btn {
+            min-width: 110px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+        }
+        
+        .linha-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .linha-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .linha-actions {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            width: 100%;
+        }
+        
+        .stats-gerais {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .content-wrapper {
+            padding: 20px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .page-header {
+            padding: 20px 16px;
+        }
+        
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header-actions {
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .header-actions .btn {
+            min-width: 100px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .linha-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-gerais {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8 col-md-7">
+                <h1 class="mb-3">
+                    <i class="fas fa-industry me-3"></i>
+                    Linhas de Produção
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Controle e monitoramento em tempo real das linhas de produção
+                </p>
+            </div>
+            <div class="col-lg-4 col-md-5">
+                <div class="header-actions">
+                    <a href="{% url 'producao:acompanhar_producao' %}" class="btn btn-light">
+                        <i class="fas fa-chart-line me-2"></i>Acompanhar
+                    </a>
+                    <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-light">
+                        <i class="fas fa-list me-2"></i>Ver OPs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas Gerais -->
+    <div class="stats-gerais">
+        <div class="stat-card-geral">
+            <div class="stat-icon primary">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_linhas }}</div>
+            <div class="stat-label">Total de Linhas</div>
+        </div>
+        
+        <div class="stat-card-geral">
+            <div class="stat-icon success">
+                <i class="fas fa-play"></i>
+            </div>
+            <div class="stat-value">{{ stats.linhas_ativas }}</div>
+            <div class="stat-label">Linhas Ativas</div>
+        </div>
+        
+        <div class="stat-card-geral">
+            <div class="stat-icon warning">
+                <i class="fas fa-tools"></i>
+            </div>
+            <div class="stat-value">{{ stats.linhas_manutencao }}</div>
+            <div class="stat-label">Em Manutenção</div>
+        </div>
+        
+        <div class="stat-card-geral">
+            <div class="stat-icon primary">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="stat-value">{{ stats.eficiencia_geral }}%</div>
+            <div class="stat-label">Eficiência Geral</div>
+        </div>
+    </div>
+
+    <!-- Linhas de Produção -->
+    <div class="row">
+        {% for linha in linhas %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="linha-card status-{{ linha.status|lower }}">
+                    <div class="linha-header">
+                        <div class="linha-info">
+                            <h3>{{ linha.nome }}</h3>
+                            <p>{{ linha.descricao|default:"Linha de produção" }}</p>
+                        </div>
+                        <span class="status-badge {{ linha.status|lower }}">
+                            {% if linha.status == 'ATIVA' %}
+                                <i class="fas fa-play"></i>Ativa
+                            {% elif linha.status == 'PARADA' %}
+                                <i class="fas fa-stop"></i>Parada
+                            {% elif linha.status == 'MANUTENCAO' %}
+                                <i class="fas fa-tools"></i>Manutenção
+                            {% else %}
+                                <i class="fas fa-pause"></i>Inativa
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="linha-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ linha.ops_ativas|default:0 }}</div>
+                            <div class="stat-label">OPs Ativas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ linha.operadores.count }}</div>
+                            <div class="stat-label">Operadores</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ linha.eficiencia_hoje|default:0|floatformat:0 }}%</div>
+                            <div class="stat-label">Eficiência</div>
+                        </div>
+                    </div>
+                    
+                    <div class="linha-progress">
+                        <div class="progress-header">
+                            <span class="progress-label">Produção Diária</span>
+                            <span class="progress-value">{{ linha.producao_hoje|default:0 }}/{{ linha.capacidade_diaria }} peças</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            {% widthratio linha.producao_hoje|default:0 linha.capacidade_diaria 100 as progress_width %}
+                            <div class="progress-bar" style="width: {{ progress_width|default:0 }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="linha-actions">
+                        <a href="{% url 'producao:linha_detalhes' linha.id %}" class="btn-action primary">
+                            <i class="fas fa-eye"></i>Detalhes
+                        </a>
+                        
+                        {% if linha.status == 'ATIVA' %}
+                            <button class="btn-action warning" onclick="alterarStatusLinha({{ linha.id }}, 'PARADA')">
+                                <i class="fas fa-pause"></i>Pausar
+                            </button>
+                        {% elif linha.status == 'PARADA' %}
+                            <button class="btn-action success" onclick="alterarStatusLinha({{ linha.id }}, 'ATIVA')">
+                                <i class="fas fa-play"></i>Ativar
+                            </button>
+                        {% elif linha.status == 'MANUTENCAO' %}
+                            <button class="btn-action success" onclick="alterarStatusLinha({{ linha.id }}, 'ATIVA')">
+                                <i class="fas fa-play"></i>Reativar
+                            </button>
+                        {% endif %}
+                        
+                        <button class="btn-action secondary" onclick="configurarLinha({{ linha.id }})">
+                            <i class="fas fa-cog"></i>Config
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card-modern">
+                    <div class="card-body-modern text-center py-5">
+                        <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma linha de produção cadastrada</h5>
+                        <p class="text-muted mb-4">Configure suas linhas de produção para começar o acompanhamento.</p>
+                        <button class="btn-modern btn-modern-primary" onclick="novaLinha()">
+                            <i class="fas fa-plus me-2"></i>Criar Primeira Linha
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if linhas %}
+    <!-- Resumo Geral -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h5 class="card-title-modern">
+                        <i class="fas fa-chart-bar me-2" style="color: #6366f1;"></i>
+                        Resumo Geral das Linhas
+                    </h5>
+                    <p class="card-subtitle-modern">Indicadores consolidados de todas as linhas</p>
+                </div>
+                
+                <div class="card-body-modern">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: var(--success);">{{ stats.linhas_ativas }}</div>
+                                <div class="stat-label">Linhas Ativas</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: var(--warning);">{{ stats.linhas_manutencao }}</div>
+                                <div class="stat-label">Em Manutenção</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: var(--primary-blue-light);">{{ stats.producao_hoje }}</div>
+                                <div class="stat-label">Peças Produzidas Hoje</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-item">
+                                <div class="stat-number" style="color: var(--primary-blue-dark);">{{ stats.eficiencia_geral }}%</div>
+                                <div class="stat-label">Eficiência Média</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Função para alterar status da linha
+function alterarStatusLinha(linhaId, novoStatus) {
+    const statusTexts = {
+        'ATIVA': 'ativar',
+        'PARADA': 'pausar',
+        'MANUTENCAO': 'colocar em manutenção'
+    };
+    
+    if (confirm(`Deseja ${statusTexts[novoStatus]} esta linha de produção?`)) {
+        fetch(`/producao/api/linha/${linhaId}/alterar-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                status: novoStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarNotificacao(data.message, 'success');
+                // Recarregar a página após 1 segundo
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                mostrarNotificacao(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao alterar status da linha', 'error');
+        });
+    }
+}
+
+function configurarLinha(linhaId) {
+    mostrarNotificacao('Funcionalidade de configuração em desenvolvimento!', 'info');
+}
+
+function novaLinha() {
+    mostrarNotificacao('Funcionalidade de criação de linha em desenvolvimento!', 'info');
+}
+
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    const tipos = {
+        'success': { icon: 'check-circle', class: 'alert-success' },
+        'error': { icon: 'exclamation-triangle', class: 'alert-danger' },
+        'warning': { icon: 'exclamation-triangle', class: 'alert-warning' },
+        'info': { icon: 'info-circle', class: 'alert-info' }
+    };
+    
+    const config = tipos[tipo] || tipos.info;
+    
+    const alert = document.createElement('div');
+    alert.className = `alert ${config.class} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
+    
+    alert.innerHTML = `
+        <i class="fas fa-${config.icon} me-2"></i>
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto-remover após 5 segundos
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Função para obter cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Atualizar dados em tempo real (a cada 30 segundos)
+setInterval(() => {
+    // Aqui poderia implementar atualização automática dos dados
+    console.log('Atualizando dados das linhas...');
+}, 30000);
+</script>
+{% endblock %} 

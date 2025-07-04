@@ -1,0 +1,728 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Fornecedores - {{ empresa.nome }} - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para a listagem de fornecedores */
+    .search-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+    
+    .search-form {
+        display: grid;
+        grid-template-columns: 1fr 200px 1fr;
+        gap: 20px;
+        align-items: end;
+    }
+    
+    .search-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .suppliers-table-container {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    .suppliers-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    
+    .suppliers-table th {
+        background: var(--gray-50);
+        padding: 16px 20px;
+        text-align: left;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .suppliers-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 0.875rem;
+        color: var(--gray-800);
+        vertical-align: middle;
+    }
+    
+    .suppliers-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .suppliers-table tr:hover {
+        background: var(--gray-50);
+    }
+    
+    .supplier-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .supplier-name {
+        font-weight: 600;
+        color: var(--gray-900);
+        font-size: 0.875rem;
+    }
+    
+    .supplier-subtitle {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    .supplier-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .tipo-faccao { background: #dbeafe; color: #1d4ed8; }
+    .tipo-materia_prima { background: #dcfce7; color: #16a34a; }
+    .tipo-aviamentos { background: #fef3c7; color: #d97706; }
+    .tipo-servicos { background: #e0e7ff; color: #6366f1; }
+    .tipo-outros { background: #f3f4f6; color: #6b7280; }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .status-ativo {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .status-inativo {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    .btn-action.btn-view {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
+    
+    .btn-action.btn-edit {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .btn-action.btn-delete {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--gray-500);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--gray-300);
+        margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+    }
+    
+    .empty-state p {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        margin-bottom: 24px;
+    }
+    
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .contact-name {
+        font-weight: 600;
+        color: var(--gray-900);
+    }
+    
+    .contact-phone {
+        font-size: 0.75rem;
+        color: var(--primary);
+    }
+    
+    .contact-email {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    .location-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .location-city {
+        font-weight: 500;
+        color: var(--gray-900);
+    }
+    
+    .location-state {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .search-form {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        .search-actions {
+            justify-content: stretch;
+        }
+        
+        .search-actions .btn-modern {
+            flex: 1;
+        }
+        
+        .suppliers-table-container {
+            overflow-x: auto;
+        }
+        
+        .suppliers-table {
+            min-width: 1000px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .btn-action {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- CSRF Token for JavaScript -->
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" id="csrf-token">
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Fornecedores</h1>
+        <p class="page-subtitle">Gerencie os fornecedores da sua confecção</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'cadastros:fornecedor_criar' %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-plus"></i>
+            Novo Fornecedor
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid-modern grid-cols-4 mb-4">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-truck"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total de Fornecedores</div>
+        <div class="stat-value">{{ total_fornecedores|default:"0" }}</div>
+        <div class="stat-change neutral">
+            <i class="fas fa-database"></i>
+            Cadastrados
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Fornecedores Ativos</div>
+        <div class="stat-value">{{ fornecedores_ativos|default:"0" }}</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            Disponíveis
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-tags"></i>
+            </div>
+        </div>
+        <div class="stat-label">Tipos Diferentes</div>
+        <div class="stat-value">{{ tipos_fornecedores|default:"0" }}</div>
+        <div class="stat-change neutral">
+            <i class="fas fa-layer-group"></i>
+            Categorias
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="stat-label">Resultados</div>
+        <div class="stat-value">{{ fornecedores|length }}</div>
+        <div class="stat-change neutral">
+            <i class="fas fa-filter"></i>
+            Filtrados
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-card">
+    <form method="GET" class="search-form">
+        <div class="form-modern">
+            <label class="form-label">Buscar Fornecedor</label>
+            <input type="text" class="form-control" name="search" value="{{ search }}" 
+                   placeholder="Razão social, nome fantasia, CNPJ/CPF...">
+        </div>
+        <div class="form-modern">
+            <label class="form-label">Tipo</label>
+            <select class="form-control" name="tipo">
+                <option value="">Todos os tipos</option>
+                {% for value, label in tipos %}
+                    <option value="{{ value }}" {% if tipo == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-modern">
+            <label class="form-label">Status</label>
+            <select class="form-control" name="status">
+                <option value="">Todos</option>
+                <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativos</option>
+                <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativos</option>
+            </select>
+        </div>
+        <div class="search-actions">
+            <button type="submit" class="btn-modern btn-modern-primary">
+                <i class="fas fa-search"></i>
+                Buscar
+            </button>
+            <a href="{% url 'cadastros:fornecedores_listar' %}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-times"></i>
+                Limpar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Suppliers Table -->
+<div class="suppliers-table-container">
+    {% if fornecedores %}
+    <table class="suppliers-table">
+        <thead>
+            <tr>
+                <th>Avatar</th>
+                <th>Fornecedor</th>
+                <th>Tipo</th>
+                <th>CNPJ/CPF</th>
+                <th>Contato</th>
+                <th>Localização</th>
+                <th>Status</th>
+                <th width="180">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fornecedor in fornecedores %}
+            <tr>
+                <td>
+                    <div class="supplier-avatar">
+                        {{ fornecedor.razao_social.0|upper }}{{ fornecedor.razao_social.1|upper|default:'' }}
+                    </div>
+                </td>
+                <td>
+                    <div class="supplier-info">
+                        <div class="supplier-name">{{ fornecedor.razao_social }}</div>
+                        {% if fornecedor.nome_fantasia and fornecedor.nome_fantasia != fornecedor.razao_social %}
+                        <div class="supplier-subtitle">{{ fornecedor.nome_fantasia }}</div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <span class="tipo-badge tipo-{{ fornecedor.tipo_fornecedor|lower }}">
+                        {{ fornecedor.get_tipo_fornecedor_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if fornecedor.cnpj_cpf %}
+                        <code style="background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
+                            {{ fornecedor.cnpj_cpf }}
+                        </code>
+                    {% else %}
+                        <span style="color: var(--gray-400);">Não informado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="contact-info">
+                        {% if fornecedor.contato_principal %}
+                        <div class="contact-name">{{ fornecedor.contato_principal }}</div>
+                        {% endif %}
+                        {% if fornecedor.telefone %}
+                        <div class="contact-phone">{{ fornecedor.telefone }}</div>
+                        {% endif %}
+                        {% if fornecedor.email %}
+                        <div class="contact-email">{{ fornecedor.email|truncatechars:25 }}</div>
+                        {% endif %}
+                        {% if not fornecedor.contato_principal and not fornecedor.telefone and not fornecedor.email %}
+                        <span style="color: var(--gray-400);">Não informado</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="location-info">
+                        {% if fornecedor.cidade %}
+                        <div class="location-city">{{ fornecedor.cidade }}</div>
+                        {% endif %}
+                        {% if fornecedor.uf %}
+                        <div class="location-state">{{ fornecedor.uf }}</div>
+                        {% endif %}
+                        {% if not fornecedor.cidade and not fornecedor.uf %}
+                        <span style="color: var(--gray-400);">Não informado</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge status-{{ fornecedor.ativo|yesno:'ativo,inativo' }}">
+                        {{ fornecedor.ativo|yesno:'Ativo,Inativo' }}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'cadastros:fornecedor_detalhes' fornecedor.id %}" class="btn-action btn-view" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'cadastros:fornecedor_editar' fornecedor.id %}" class="btn-action btn-edit" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn-action btn-delete" title="Excluir" 
+                                onclick="confirmDelete('{{ fornecedor.razao_social }}', '{% url 'cadastros:fornecedor_deletar' fornecedor.id %}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-truck"></i>
+        <h3>Nenhum fornecedor encontrado</h3>
+        <p>{% if search %}Não encontramos fornecedores com os termos "{{ search }}".{% else %}Você ainda não possui fornecedores cadastrados.{% endif %}</p>
+        <a href="{% url 'cadastros:fornecedor_criar' %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-plus"></i>
+            Cadastrar Primeiro Fornecedor
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<!-- Modal de Confirmação de Deleção -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Header com gradiente vermelho -->
+            <div class="modal-header border-0" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                <div class="d-flex align-items-center">
+                    <div class="modal-icon-container me-3">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="animation: pulse 2s infinite;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="deleteConfirmModalLabel">Confirmar Exclusão</h5>
+                        <small style="opacity: 0.9;">Esta ação não pode ser desfeita</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="alert alert-danger border-0" style="background: #fef2f2;">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="danger-icon-bg">
+                                <i class="fas fa-trash-alt fa-2x text-danger"></i>
+                            </div>
+                        </div>
+                        <h6 class="text-danger mb-2">Você está prestes a excluir um fornecedor</h6>
+                        <p class="text-muted mb-0 small">Esta ação removerá permanentemente o fornecedor do sistema</p>
+                    </div>
+                </div>
+                
+                <div class="supplier-delete-info">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="supplier-icon">
+                                <i class="fas fa-truck text-primary fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h6 class="mb-1 text-dark">Fornecedor selecionado:</h6>
+                            <p class="mb-0 fw-bold text-primary" id="supplierNameToDelete"></p>
+                            <small class="text-muted">ID: <span id="supplierIdToDelete"></span></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="alert alert-warning border-0" style="background: #fffbeb;">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle text-warning me-2 mt-1"></i>
+                            <div>
+                                <small class="text-warning fw-bold">Importante:</small>
+                                <ul class="small text-muted mb-0 mt-1">
+                                    <li>Todas as informações do fornecedor serão perdidas</li>
+                                    <li>Histórico de compras será mantido para auditoria</li>
+                                    <li>Esta ação não afeta pedidos já realizados</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash-alt me-1"></i>
+                    <span class="btn-text">Sim, Excluir Fornecedor</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+/* Estilos adicionais para o modal */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.danger-icon-bg {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fee2e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.supplier-delete-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.supplier-icon {
+    width: 50px;
+    height: 50px;
+    background: #dbeafe;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.modal-content {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.modal-header {
+    border-radius: 12px 12px 0 0;
+}
+</style>
+
+<script>
+let currentDeleteUrl = '';
+
+function confirmDelete(supplierName, deleteUrl) {
+    // Extrair o ID do fornecedor da URL
+    const urlParts = deleteUrl.split('/');
+    const supplierId = urlParts[urlParts.length - 3]; // Pega o ID antes de /deletar/
+    
+    currentDeleteUrl = deleteUrl;
+    
+    // Preencher informações do fornecedor
+    document.getElementById('supplierNameToDelete').textContent = supplierName;
+    document.getElementById('supplierIdToDelete').textContent = supplierId;
+    
+    // Configurar botão para excluir
+    const deleteBtn = document.getElementById('confirmDeleteBtn');
+    deleteBtn.onclick = function() {
+        performDelete();
+    };
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+function performDelete() {
+    const deleteBtn = document.getElementById('confirmDeleteBtn');
+    const btnText = deleteBtn.querySelector('.btn-text');
+    
+    // Mostrar loading
+    btnText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Excluindo...';
+    deleteBtn.disabled = true;
+    
+    // Criar form e submeter
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = currentDeleteUrl;
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken.value;
+        form.appendChild(csrfInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %} 

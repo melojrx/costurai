@@ -1,0 +1,522 @@
+<!-- Navbar Moderna - Padrão Costuraai.com.br -->
+<style>
+    .navbar-elias {
+        background: #ffffff;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        height: 76px;
+        position: fixed;
+        top: 0;
+        left: var(--sidebar-width);
+        right: 0;
+        z-index: 1020;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .navbar-elias.sidebar-collapsed {
+        left: 0;
+    }
+    
+    .navbar-container {
+        height: 100%;
+        padding: 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    /* Logo/Brand - Apenas visível em mobile quando sidebar é colapsada */
+    .navbar-brand-mobile {
+        display: none;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        text-decoration: none;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .navbar-brand-mobile:hover {
+        color: var(--primary-blue-dark);
+    }
+    
+    /* Search Bar Central */
+    .navbar-search {
+        flex: 1;
+        max-width: 500px;
+        margin: 0 32px;
+        position: relative;
+    }
+    
+    .navbar-search-container {
+        position: relative;
+        width: 100%;
+    }
+    
+    .navbar-search-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 16px 0 48px;
+        border: 1px solid var(--gray-300);
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 400;
+        background: var(--gray-50);
+        color: var(--gray-700);
+        transition: all 0.2s ease;
+        outline: none;
+    }
+    
+    .navbar-search-input:focus {
+        border-color: var(--primary-blue-light);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .navbar-search-input::placeholder {
+        color: var(--gray-400);
+        font-weight: 400;
+    }
+    
+    .navbar-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-400);
+        font-size: 1rem;
+        pointer-events: none;
+    }
+    
+    /* Right Side Menu */
+    .navbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    /* Notifications */
+    .notification-btn {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        color: var(--gray-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 1.125rem;
+    }
+    
+    .notification-btn:hover {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+    
+    .notification-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 18px;
+        height: 18px;
+        background: #ef4444;
+        color: white;
+        font-size: 0.625rem;
+        font-weight: 700;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+    
+    /* Indicador do Plano */
+    .plano-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: 1px solid transparent;
+    }
+    
+    .plano-indicator:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .plano-indicator-primary {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    .plano-indicator-warning {
+        background: var(--warning-light);
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.2);
+        animation: pulse-subtle 3s infinite;
+    }
+    
+    .plano-indicator-danger {
+        background: var(--danger-light);
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.2);
+        animation: pulse-urgent 2s infinite;
+    }
+    
+    .plano-indicator i {
+        font-size: 0.875rem;
+    }
+    
+    .plano-indicator-text {
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+    
+    @keyframes pulse-subtle {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+        }
+        50% { 
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+        }
+    }
+    
+    @keyframes pulse-urgent {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+        50% { 
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+    }
+    
+    /* User Menu */
+    .user-menu {
+        position: relative;
+    }
+    
+    .user-avatar-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 12px 6px 6px;
+        background: transparent;
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .user-avatar-btn:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: inherit;
+    }
+    
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--primary-blue-light);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+    
+    .user-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        line-height: 1.2;
+    }
+    
+    .user-role {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        line-height: 1.2;
+    }
+    
+    .user-dropdown-icon {
+        color: var(--gray-400);
+        font-size: 0.75rem;
+        margin-left: 4px;
+        transition: transform 0.2s ease;
+    }
+    
+    .user-menu.open .user-dropdown-icon {
+        transform: rotate(180deg);
+    }
+    
+    /* User Dropdown */
+    .user-dropdown {
+        position: absolute;
+        top: 60px;
+        right: 0;
+        min-width: 240px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px 0 rgba(16, 30, 54, 0.12);
+        z-index: 9999 !important;
+        padding: 0;
+        display: none;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    .user-dropdown.show {
+        display: block;
+    }
+    
+    .dropdown-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .dropdown-user-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 2px;
+    }
+    
+    .dropdown-user-email {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    .dropdown-menu {
+        padding: 0;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        color: var(--gray-700);
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background: var(--gray-100);
+        color: var(--gray-900);
+    }
+    
+    .dropdown-item i {
+        width: 16px;
+        text-align: center;
+        color: var(--gray-500);
+        font-size: 0.875rem;
+    }
+    
+    .dropdown-divider {
+        margin: 8px 12px;
+        border-top: 1px solid var(--gray-200);
+    }
+    
+    .dropdown-item.text-danger {
+        color: var(--danger);
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .dropdown-item.text-danger i {
+        color: var(--danger);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .navbar-elias {
+            left: 0;
+            height: 70px;
+        }
+        
+        .navbar-brand-mobile {
+            display: flex;
+        }
+        
+        .navbar-search {
+            display: none;
+        }
+        
+        .navbar-container {
+            padding: 0 20px;
+        }
+        
+        .user-info {
+            display: none;
+        }
+        
+        .user-avatar-btn {
+            padding: 6px;
+            gap: 0;
+        }
+        
+        .user-dropdown {
+            right: -10px;
+            min-width: 200px;
+        }
+    }
+</style>
+
+<nav class="navbar-elias" id="navbarElias">
+    <div class="navbar-container">
+        <!-- Brand Mobile -->
+        <a href="{% url 'dashboard' %}" class="navbar-brand-mobile">
+            <i class="fas fa-cut" style="color: #74C0FC;"></i>
+            <span>Costuraai</span>
+        </a>
+        
+        <!-- Search Bar -->
+        <div class="navbar-search">
+            <div class="navbar-search-container">
+                <i class="fas fa-search navbar-search-icon"></i>
+                <input 
+                    type="text" 
+                    class="navbar-search-input" 
+                    placeholder="Buscar produtos, clientes, ordens de produção..."
+                    id="globalSearch"
+                >
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="navbar-actions">
+            <!-- Notifications -->
+            <button class="notification-btn" title="Notificações">
+                <i class="far fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            
+            <!-- Indicador do Plano (só aparece em situações de urgência) -->
+            {% if plano_info.urgencia != 'normal' and plano_info.mostrar_contador %}
+            <div class="plano-indicator plano-indicator-{{ plano_info.cor_status }}" title="{{ plano_info.mensagem_status }}">
+                <i class="fas fa-{{ plano_info.icone_status }}"></i>
+                {% if plano_info.is_trial %}
+                    <span class="plano-indicator-text">{{ plano_info.dias_restantes }}d</span>
+                {% else %}
+                    <span class="plano-indicator-text">{{ plano_info.dias_para_vencimento }}d</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- User Menu -->
+            <div class="dropdown">
+                <button class="btn btn-light d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="avatar bg-primary text-white rounded me-2">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</span>
+                    <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+                    <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <li><h6 class="dropdown-header">Minha Conta</h6></li>
+                    <li><a class="dropdown-item" href="{% url 'accounts:gestao_conta' %}"><i class="fas fa-user me-2"></i>Minha Conta</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificações</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userMenu = document.getElementById('userMenu');
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const navbar = document.getElementById('navbarElias');
+    const sidebar = document.getElementById('sidebarModern');
+    
+    // User menu toggle
+    if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userMenu.classList.toggle('open');
+            userDropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userMenu.contains(e.target)) {
+                userMenu.classList.remove('open');
+                userDropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    // Adjust navbar position when sidebar collapses
+    if (sidebar) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    if (sidebar.classList.contains('collapsed')) {
+                        navbar.classList.add('sidebar-collapsed');
+                    } else {
+                        navbar.classList.remove('sidebar-collapsed');
+                    }
+                }
+            });
+        });
+        
+        observer.observe(sidebar, { attributes: true });
+        
+        // Set initial state
+        if (sidebar.classList.contains('collapsed')) {
+            navbar.classList.add('sidebar-collapsed');
+        }
+    }
+    
+    // Global search functionality (placeholder)
+    const globalSearch = document.getElementById('globalSearch');
+    if (globalSearch) {
+        globalSearch.addEventListener('input', function(e) {
+            const query = e.target.value;
+            // Implementar busca global aqui
+            console.log('Buscar:', query);
+        });
+        
+        globalSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Implementar ação de busca
+                console.log('Executar busca:', e.target.value);
+            }
+        });
+    }
+});
+</script>

@@ -1,0 +1,550 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ fornecedor.razao_social }} - Fornecedores - {{ empresa.nome }} - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para detalhes do fornecedor */
+    .supplier-header {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 32px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .supplier-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .supplier-info {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+    
+    .supplier-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        flex-shrink: 0;
+    }
+    
+    .supplier-details {
+        flex: 1;
+    }
+    
+    .supplier-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .supplier-subtitle {
+        font-size: 1.125rem;
+        color: var(--gray-600);
+        margin-bottom: 12px;
+    }
+    
+    .supplier-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .supplier-actions {
+        display: flex;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    .detail-card-header {
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .detail-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+    }
+    
+    .detail-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+    }
+    
+    .detail-card-body {
+        padding: 24px;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .detail-item:first-child {
+        padding-top: 0;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        color: var(--gray-600);
+        min-width: 120px;
+    }
+    
+    .detail-value {
+        color: var(--gray-900);
+        text-align: right;
+        flex: 1;
+        font-weight: 500;
+    }
+    
+    .detail-value.empty {
+        color: var(--gray-400);
+        font-style: italic;
+    }
+    
+    .detail-value.code {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        background: var(--gray-100);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+    
+    .detail-value.link {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .detail-value.link:hover {
+        text-decoration: underline;
+    }
+    
+    .tipo-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .tipo-faccao { background: #dbeafe; color: #1d4ed8; }
+    .tipo-materia_prima { background: #dcfce7; color: #16a34a; }
+    .tipo-aviamentos { background: #fef3c7; color: #d97706; }
+    .tipo-servicos { background: #e0e7ff; color: #6366f1; }
+    .tipo-outros { background: #f3f4f6; color: #6b7280; }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .status-ativo {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .status-inativo {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .notes-card {
+        grid-column: 1 / -1;
+    }
+    
+    .notes-content {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        color: var(--gray-700);
+    }
+    
+    .system-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    
+    .system-item {
+        text-align: center;
+        padding: 16px;
+        background: var(--gray-50);
+        border-radius: 8px;
+    }
+    
+    .system-item-label {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: 4px;
+    }
+    
+    .system-item-value {
+        font-weight: 600;
+        color: var(--gray-900);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .supplier-info {
+            flex-direction: column;
+            text-align: center;
+            gap: 16px;
+        }
+        
+        .supplier-actions {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .detail-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .detail-value {
+            text-align: left;
+        }
+        
+        .system-info {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <div class="page-header-back">
+            <a href="{% url 'cadastros:fornecedores_listar' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <div>
+            <h1 class="page-title">Detalhes do Fornecedor</h1>
+            <p class="page-subtitle">Informações completas de {{ fornecedor.razao_social }}</p>
+        </div>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'cadastros:fornecedor_editar' fornecedor.id %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-edit"></i>
+            Editar
+        </a>
+    </div>
+</div>
+
+<!-- Supplier Header -->
+<div class="supplier-header">
+    <div class="supplier-info">
+        <div class="supplier-avatar">
+            {{ fornecedor.razao_social.0|upper }}{{ fornecedor.razao_social.1|upper|default:'' }}
+        </div>
+        <div class="supplier-details">
+            <h2 class="supplier-name">{{ fornecedor.razao_social }}</h2>
+            {% if fornecedor.nome_fantasia and fornecedor.nome_fantasia != fornecedor.razao_social %}
+            <p class="supplier-subtitle">{{ fornecedor.nome_fantasia }}</p>
+            {% endif %}
+            <div class="supplier-badges">
+                <span class="tipo-badge tipo-{{ fornecedor.tipo_fornecedor|lower }}">
+                    {{ fornecedor.get_tipo_fornecedor_display }}
+                </span>
+                <span class="status-badge status-{{ fornecedor.ativo|yesno:'ativo,inativo' }}">
+                    {{ fornecedor.ativo|yesno:'Ativo,Inativo' }}
+                </span>
+            </div>
+        </div>
+        <div class="supplier-actions">
+            <a href="{% url 'cadastros:fornecedor_editar' fornecedor.id %}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-edit"></i>
+                Editar
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Details Grid -->
+<div class="details-grid">
+    
+    <!-- Dados Básicos -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div class="detail-card-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3 class="detail-card-title">Dados Básicos</h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="detail-item">
+                <span class="detail-label">Razão Social</span>
+                <span class="detail-value">{{ fornecedor.razao_social }}</span>
+            </div>
+            {% if fornecedor.nome_fantasia %}
+            <div class="detail-item">
+                <span class="detail-label">Nome Fantasia</span>
+                <span class="detail-value">{{ fornecedor.nome_fantasia }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-item">
+                <span class="detail-label">Tipo</span>
+                <span class="detail-value">
+                    <span class="tipo-badge tipo-{{ fornecedor.tipo_fornecedor|lower }}">
+                        {{ fornecedor.get_tipo_fornecedor_display }}
+                    </span>
+                </span>
+            </div>
+            {% if fornecedor.cnpj_cpf %}
+            <div class="detail-item">
+                <span class="detail-label">CNPJ/CPF</span>
+                <span class="detail-value code">{{ fornecedor.cnpj_cpf }}</span>
+            </div>
+            {% endif %}
+            {% if fornecedor.inscricao_estadual %}
+            <div class="detail-item">
+                <span class="detail-label">Inscrição Estadual</span>
+                <span class="detail-value">{{ fornecedor.inscricao_estadual }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div class="detail-card-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h3 class="detail-card-title">Endereço</h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="detail-item">
+                <span class="detail-label">CEP</span>
+                <span class="detail-value">{{ fornecedor.cep|default_if_none:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Endereço</span>
+                <span class="detail-value">{{ fornecedor.endereco|default_if_none:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Bairro</span>
+                <span class="detail-value">{{ fornecedor.bairro|default_if_none:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Cidade</span>
+                <span class="detail-value">{{ fornecedor.cidade|default_if_none:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Estado</span>
+                <span class="detail-value">{{ fornecedor.uf|default_if_none:"-" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contato -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div class="detail-card-icon">
+                <i class="fas fa-phone"></i>
+            </div>
+            <h3 class="detail-card-title">Contato</h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="detail-item">
+                <span class="detail-label">Contato Principal</span>
+                <span class="detail-value">{{ fornecedor.contato_principal|default_if_none:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Telefone</span>
+                <span class="detail-value">
+                    {% if fornecedor.telefone %}
+                        <a href="tel:{{ fornecedor.telefone }}" class="detail-value link">{{ fornecedor.telefone }}</a>
+                    {% else %}
+                        <span class="empty">Não informado</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">E-mail</span>
+                <span class="detail-value">
+                    {% if fornecedor.email %}
+                        <a href="mailto:{{ fornecedor.email }}" class="detail-value link">{{ fornecedor.email }}</a>
+                    {% else %}
+                        <span class="empty">Não informado</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if fornecedor.website %}
+            <div class="detail-item">
+                <span class="detail-label">Website</span>
+                <span class="detail-value">
+                    <a href="{{ fornecedor.website }}" target="_blank" class="detail-value link">
+                        {{ fornecedor.website }}
+                        <i class="fas fa-external-link-alt ms-1"></i>
+                    </a>
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informações do Sistema -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div class="detail-card-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <h3 class="detail-card-title">Informações do Sistema</h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="system-info">
+                <div class="system-item">
+                    <div class="system-item-label">Status</div>
+                    <div class="system-item-value">
+                        <span class="status-badge status-{{ fornecedor.ativo|yesno:'ativo,inativo' }}">
+                            {{ fornecedor.ativo|yesno:'Ativo,Inativo' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="system-item">
+                    <div class="system-item-label">Cadastrado em</div>
+                    <div class="system-item-value">{{ fornecedor.created_at|date:"d/m/Y" }}</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-item-label">Última atualização</div>
+                    <div class="system-item-value">{{ fornecedor.updated_at|date:"d/m/Y" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observações -->
+    {% if fornecedor.observacoes %}
+    <div class="detail-card notes-card">
+        <div class="detail-card-header">
+            <div class="detail-card-icon">
+                <i class="fas fa-sticky-note"></i>
+            </div>
+            <h3 class="detail-card-title">Observações</h3>
+        </div>
+        <div class="detail-card-body">
+            <div class="notes-content">
+                {{ fornecedor.observacoes|linebreaks }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex justify-content-center gap-3 mt-4">
+    <a href="{% url 'cadastros:fornecedor_editar' fornecedor.id %}" class="btn-modern btn-modern-primary">
+        <i class="fas fa-edit"></i>
+        Editar Fornecedor
+    </a>
+    <a href="{% url 'cadastros:fornecedores_listar' %}" class="btn-modern btn-modern-outline">
+        <i class="fas fa-list"></i>
+        Listar Fornecedores
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Adicionar funcionalidades específicas se necessário
+document.addEventListener('DOMContentLoaded', function() {
+    // Copiar dados para clipboard
+    document.querySelectorAll('.detail-value.code').forEach(function(element) {
+        element.style.cursor = 'pointer';
+        element.title = 'Clique para copiar';
+        
+        element.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.textContent.trim()).then(function() {
+                // Feedback visual
+                const original = element.textContent;
+                element.textContent = 'Copiado!';
+                element.style.background = 'var(--success-light)';
+                element.style.color = 'var(--success)';
+                
+                setTimeout(function() {
+                    element.textContent = original;
+                    element.style.background = 'var(--gray-100)';
+                    element.style.color = 'var(--gray-900)';
+                }, 1000);
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

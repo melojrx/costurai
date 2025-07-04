@@ -1,0 +1,1 @@
+# Apps package do ConfecçãoManager Pro SaaS 

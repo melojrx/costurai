@@ -1,0 +1,773 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ conta.numero_conta }} - Detalhes da Conta - {{ empresa.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .account-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.1; }
+    }
+    
+    .account-status-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        animation: blink 2s infinite;
+    }
+    
+    .status-pago .account-status-indicator { background: #10b981; }
+    .status-pendente .account-status-indicator { background: #f59e0b; }
+    .status-vencido .account-status-indicator { background: #ef4444; }
+    .status-parcial .account-status-indicator { background: #6366f1; }
+    
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0.3; }
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--card-accent);
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .info-card.account { --card-accent: #10b981; }
+    .info-card.client { --card-accent: #3b82f6; }
+    .info-card.op { --card-accent: #8b5cf6; }
+    .info-card.date { --card-accent: #f59e0b; }
+    .info-card.value { --card-accent: #10b981; }
+    .info-card.status { --card-accent: #6b7280; }
+    
+    .info-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-icon {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        opacity: 0.1;
+        color: var(--card-accent);
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 2px solid;
+    }
+    
+    .status-pago {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+        border-color: #10b981;
+    }
+    
+    .status-pendente {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #92400e;
+        border-color: #f59e0b;
+    }
+    
+    .status-vencido {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+        border-color: #ef4444;
+    }
+    
+    .status-parcial {
+        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+        color: #3730a3;
+        border-color: #6366f1;
+    }
+    
+    .valor-display {
+        font-family: 'Roboto Mono', monospace;
+        font-weight: 700;
+    }
+    
+    .valor-positivo { color: #10b981; }
+    .valor-alerta { color: #f59e0b; }
+    .valor-neutro { color: #6b7280; }
+    
+    .payments-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .payments-table {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .payments-table .table th {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        border: none;
+        padding: 1rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .payments-table .table td {
+        padding: 1rem;
+        border-color: #f3f4f6;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .payments-table .table tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .payments-table .table tbody tr:hover {
+        background: #f8fafc;
+        transform: scale(1.001);
+    }
+    
+    .payments-table .table tfoot th {
+        background: #f8fafc;
+        color: #374151;
+        border-top: 2px solid #10b981;
+        font-weight: 700;
+    }
+    
+    .payment-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .empty-payments {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-payments i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .btn-modern {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .btn-back {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
+    .btn-back:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-payment {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .btn-payment:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+    
+    .op-link {
+        color: #8b5cf6;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .op-link:hover {
+        color: #7c3aed;
+        text-decoration: underline;
+    }
+    
+    .due-warning {
+        color: #f59e0b;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+    
+    .due-danger {
+        color: #ef4444;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+    
+    .observations-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .observations-card .info-label {
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .observations-card .info-value {
+        color: #6b7280;
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .info-card {
+            padding: 1rem;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+        }
+        
+        .account-header {
+            padding: 1.5rem;
+        }
+        
+        .payments-section {
+            padding: 1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .payments-table .table th,
+        .payments-table .table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.85rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .account-header {
+            padding: 1rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .payments-section {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho da Conta -->
+    <div class="account-header status-{{ conta.status }}">
+        <div class="account-status-indicator"></div>
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-file-invoice-dollar me-3"></i>
+                    {{ conta.numero_conta }}
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Detalhes completos da conta a receber e histórico de pagamentos
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="action-buttons">
+                    <a href="{% url 'financeiro:contas_receber' %}" class="btn btn-modern btn-back">
+                        <i class="fas fa-arrow-left"></i>Voltar
+                    </a>
+                    {% if conta.valor_pendente > 0 %}
+                    <a href="{% url 'financeiro:registrar_pagamento' conta.id %}" class="btn btn-modern btn-payment">
+                        <i class="fas fa-dollar-sign"></i>Registrar Pagamento
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Conta -->
+    <div class="info-grid">
+        <div class="info-card account">
+            <div class="info-icon">
+                <i class="fas fa-hashtag"></i>
+            </div>
+            <div class="info-label">Número da Conta</div>
+            <div class="info-value">{{ conta.numero_conta }}</div>
+        </div>
+        
+        <div class="info-card client">
+            <div class="info-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="info-label">Cliente</div>
+            <div class="info-value">{{ conta.cliente.nome }}</div>
+            {% if conta.cliente.telefone %}
+            <small class="text-muted">
+                <i class="fas fa-phone me-1"></i>{{ conta.cliente.telefone }}
+            </small>
+            {% endif %}
+        </div>
+        
+        <div class="info-card op">
+            <div class="info-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <div class="info-label">Ordem de Produção</div>
+            <div class="info-value">
+                {% if conta.ordem_producao %}
+                <a href="{% url 'producao:op_detalhes' conta.ordem_producao.id %}" class="op-link">
+                    <i class="fas fa-external-link-alt"></i>
+                    {{ conta.ordem_producao.numero_op }}
+                </a>
+                {% else %}
+                <span class="valor-neutro">Não vinculada</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="info-card date">
+            <div class="info-icon">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <div class="info-label">Data de Vencimento</div>
+            <div class="info-value">{{ conta.data_vencimento|date:"d/m/Y" }}</div>
+            {% if conta.esta_vencido %}
+            <div class="due-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                Vencido há {{ conta.dias_vencimento }} dias
+            </div>
+            {% elif conta.dias_vencimento <= 7 and conta.dias_vencimento >= 0 %}
+            <div class="due-warning">
+                <i class="fas fa-clock"></i>
+                Vence em {{ conta.dias_vencimento }} dias
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="info-card value">
+            <div class="info-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="info-label">Valor Total</div>
+            <div class="info-value valor-display valor-positivo">
+                R$ {{ conta.valor_total|floatformat:2 }}
+            </div>
+        </div>
+        
+        <div class="info-card value">
+            <div class="info-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="info-label">Valor Pago</div>
+            <div class="info-value valor-display valor-positivo">
+                R$ {{ conta.valor_pago|floatformat:2 }}
+            </div>
+        </div>
+        
+        <div class="info-card value">
+            <div class="info-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="info-label">Valor Pendente</div>
+            <div class="info-value valor-display {% if conta.valor_pendente > 0 %}valor-alerta{% else %}valor-positivo{% endif %}">
+                R$ {{ conta.valor_pendente|floatformat:2 }}
+            </div>
+        </div>
+        
+        <div class="info-card status">
+            <div class="info-icon">
+                <i class="fas fa-flag"></i>
+            </div>
+            <div class="info-label">Status</div>
+            <div class="info-value">
+                <span class="status-badge status-{{ conta.status }}">
+                    {% if conta.status == 'pago' %}
+                        <i class="fas fa-check"></i> Pago
+                    {% elif conta.status == 'pendente' %}
+                        <i class="fas fa-clock"></i> Pendente
+                    {% elif conta.status == 'vencido' %}
+                        <i class="fas fa-exclamation-triangle"></i> Vencido
+                    {% elif conta.status == 'parcial' %}
+                        <i class="fas fa-hourglass-half"></i> Parcialmente Pago
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    {% if conta.observacoes %}
+    <div class="observations-card">
+        <div class="info-label">
+            <i class="fas fa-sticky-note me-1"></i>Observações
+        </div>
+        <div class="info-value">{{ conta.observacoes }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Histórico de Pagamentos -->
+    <div class="payments-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2" style="color: #10b981;"></i>
+                Histórico de Pagamentos
+                <span class="badge bg-primary ms-2">{{ pagamentos.count }}</span>
+            </h5>
+            {% if conta.valor_pendente > 0 %}
+            <a href="{% url 'financeiro:registrar_pagamento' conta.id %}" class="btn btn-modern btn-payment">
+                <i class="fas fa-plus"></i>Novo Pagamento
+            </a>
+            {% endif %}
+        </div>
+        
+        {% if pagamentos %}
+        <div class="payments-table">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Data do Pagamento</th>
+                        <th>Valor Pago</th>
+                        <th>Forma de Pagamento</th>
+                        <th>Observações</th>
+                        <th>Registrado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pagamento in pagamentos %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ pagamento.data_pagamento|date:"d/m/Y" }}</div>
+                            <small class="text-muted">{{ pagamento.data_pagamento|date:"l" }}</small>
+                        </td>
+                        <td>
+                            <div class="valor-display valor-positivo">
+                                R$ {{ pagamento.valor|floatformat:2 }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="payment-badge bg-info text-white">
+                                {{ pagamento.get_forma_pagamento_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if pagamento.observacoes %}
+                            <span title="{{ pagamento.observacoes }}">
+                                {{ pagamento.observacoes|truncatechars:40 }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ pagamento.criado_em|date:"d/m/Y H:i" }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total Pago:</th>
+                        <th class="valor-display valor-positivo">
+                            R$ {{ conta.valor_pago|floatformat:2 }}
+                        </th>
+                        <th colspan="3">
+                            <small class="text-muted">
+                                Restante: 
+                                <span class="{% if conta.valor_pendente > 0 %}valor-alerta{% else %}valor-positivo{% endif %}">
+                                    R$ {{ conta.valor_pendente|floatformat:2 }}
+                                </span>
+                            </small>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-payments">
+            <i class="fas fa-receipt"></i>
+            <h5>Nenhum pagamento registrado</h5>
+            <p>Esta conta ainda não possui pagamentos registrados.</p>
+            {% if conta.valor_pendente > 0 %}
+            <a href="{% url 'financeiro:registrar_pagamento' conta.id %}" class="btn btn-modern btn-payment">
+                <i class="fas fa-plus"></i>Registrar Primeiro Pagamento
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            placement: 'top',
+            trigger: 'hover'
+        });
+    });
+    
+    // Smooth animations for cards
+    document.querySelectorAll('.info-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Status-based header styling
+    const accountHeader = document.querySelector('.account-header');
+    const statusBadge = document.querySelector('.status-badge');
+    
+    if (statusBadge && accountHeader) {
+        if (statusBadge.classList.contains('status-vencido')) {
+            accountHeader.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        } else if (statusBadge.classList.contains('status-pago')) {
+            accountHeader.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        } else if (statusBadge.classList.contains('status-pendente')) {
+            const vencimentoElement = document.querySelector('.due-warning');
+            if (vencimentoElement) {
+                accountHeader.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            }
+        }
+    }
+    
+    // Auto-refresh for real-time updates (every 30 seconds)
+    let refreshInterval;
+    
+    function startAutoRefresh() {
+        refreshInterval = setInterval(() => {
+            // Only refresh if the page is visible
+            if (!document.hidden) {
+                const currentUrl = window.location.href;
+                fetch(currentUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Update only the payments section
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(html, 'text/html');
+                    const newPaymentsSection = newDoc.querySelector('.payments-section');
+                    const currentPaymentsSection = document.querySelector('.payments-section');
+                    
+                    if (newPaymentsSection && currentPaymentsSection) {
+                        currentPaymentsSection.innerHTML = newPaymentsSection.innerHTML;
+                        showNotification('Dados atualizados automaticamente', 'info');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar dados:', error);
+                });
+            }
+        }, 30000); // 30 seconds
+    }
+    
+    // Start auto-refresh
+    startAutoRefresh();
+    
+    // Stop auto-refresh when page becomes hidden
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            clearInterval(refreshInterval);
+        } else {
+            startAutoRefresh();
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + P for new payment
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            const paymentBtn = document.querySelector('a[href*="registrar_pagamento"]');
+            if (paymentBtn) {
+                window.location.href = paymentBtn.href;
+            }
+        }
+        
+        // Escape to go back
+        if (e.key === 'Escape') {
+            const backBtn = document.querySelector('.btn-back');
+            if (backBtn) {
+                window.location.href = backBtn.href;
+            }
+        }
+    });
+    
+    // Loading states for buttons
+    document.querySelectorAll('.btn-modern').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.classList.contains('btn-back')) {
+                const originalHtml = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Carregando...';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHtml;
+                    this.disabled = false;
+                }, 2000);
+            }
+        });
+    });
+});
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %} 

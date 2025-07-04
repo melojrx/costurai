@@ -1,0 +1,446 @@
+<!-- Aba Empresa -->
+<div class="tab-pane fade" id="empresa" role="tabpanel">
+    {% if empresa_atual %}
+        <form id="empresaForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+            
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-building"></i>
+                    Informações da Empresa
+                </h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Nome Fantasia</label>
+                            <input type="text" class="form-control" name="nome" value="{{ empresa_atual.nome }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Razão Social</label>
+                            <input type="text" class="form-control" name="razao_social" value="{{ empresa_atual.razao_social }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" name="cnpj" value="{{ empresa_atual.cnpj }}" placeholder="00.000.000/0000-00">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Capacidade Produtiva (peças/dia)</label>
+                            <input type="number" class="form-control" name="capacidade_produtiva" value="{{ empresa_atual.capacidade_produtiva }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Endereço
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">Endereço Completo</label>
+                    <textarea class="form-control" name="endereco" rows="3">{{ empresa_atual.endereco }}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" name="cidade" value="{{ empresa_atual.cidade }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" name="estado">
+                                <option value="">Selecione...</option>
+                                <option value="AC" {% if empresa_atual.estado == 'AC' %}selected{% endif %}>Acre</option>
+                                <option value="AL" {% if empresa_atual.estado == 'AL' %}selected{% endif %}>Alagoas</option>
+                                <option value="AP" {% if empresa_atual.estado == 'AP' %}selected{% endif %}>Amapá</option>
+                                <option value="AM" {% if empresa_atual.estado == 'AM' %}selected{% endif %}>Amazonas</option>
+                                <option value="BA" {% if empresa_atual.estado == 'BA' %}selected{% endif %}>Bahia</option>
+                                <option value="CE" {% if empresa_atual.estado == 'CE' %}selected{% endif %}>Ceará</option>
+                                <option value="DF" {% if empresa_atual.estado == 'DF' %}selected{% endif %}>Distrito Federal</option>
+                                <option value="ES" {% if empresa_atual.estado == 'ES' %}selected{% endif %}>Espírito Santo</option>
+                                <option value="GO" {% if empresa_atual.estado == 'GO' %}selected{% endif %}>Goiás</option>
+                                <option value="MA" {% if empresa_atual.estado == 'MA' %}selected{% endif %}>Maranhão</option>
+                                <option value="MT" {% if empresa_atual.estado == 'MT' %}selected{% endif %}>Mato Grosso</option>
+                                <option value="MS" {% if empresa_atual.estado == 'MS' %}selected{% endif %}>Mato Grosso do Sul</option>
+                                <option value="MG" {% if empresa_atual.estado == 'MG' %}selected{% endif %}>Minas Gerais</option>
+                                <option value="PA" {% if empresa_atual.estado == 'PA' %}selected{% endif %}>Pará</option>
+                                <option value="PB" {% if empresa_atual.estado == 'PB' %}selected{% endif %}>Paraíba</option>
+                                <option value="PR" {% if empresa_atual.estado == 'PR' %}selected{% endif %}>Paraná</option>
+                                <option value="PE" {% if empresa_atual.estado == 'PE' %}selected{% endif %}>Pernambuco</option>
+                                <option value="PI" {% if empresa_atual.estado == 'PI' %}selected{% endif %}>Piauí</option>
+                                <option value="RJ" {% if empresa_atual.estado == 'RJ' %}selected{% endif %}>Rio de Janeiro</option>
+                                <option value="RN" {% if empresa_atual.estado == 'RN' %}selected{% endif %}>Rio Grande do Norte</option>
+                                <option value="RS" {% if empresa_atual.estado == 'RS' %}selected{% endif %}>Rio Grande do Sul</option>
+                                <option value="RO" {% if empresa_atual.estado == 'RO' %}selected{% endif %}>Rondônia</option>
+                                <option value="RR" {% if empresa_atual.estado == 'RR' %}selected{% endif %}>Roraima</option>
+                                <option value="SC" {% if empresa_atual.estado == 'SC' %}selected{% endif %}>Santa Catarina</option>
+                                <option value="SP" {% if empresa_atual.estado == 'SP' %}selected{% endif %}>São Paulo</option>
+                                <option value="SE" {% if empresa_atual.estado == 'SE' %}selected{% endif %}>Sergipe</option>
+                                <option value="TO" {% if empresa_atual.estado == 'TO' %}selected{% endif %}>Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">CEP</label>
+                            <input type="text" class="form-control" name="cep" value="{{ empresa_atual.cep }}" placeholder="00000-000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-phone"></i>
+                    Contato
+                </h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="telefone" value="{{ empresa_atual.telefone }}" placeholder="(11) 1234-5678">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email" value="{{ empresa_atual.email }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-image"></i>
+                    Logo da Empresa
+                </h3>
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="logo-preview">
+                            {% if empresa_atual.logo %}
+                                <img src="{{ empresa_atual.logo.url }}" alt="Logo" class="img-fluid rounded" style="max-height: 120px;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    <i class="fas fa-image text-muted fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="form-group">
+                            <label class="form-label">Selecionar Logo</label>
+                            <input type="file" class="form-control" name="logo" accept="image/*">
+                            <div class="form-text">Formatos aceitos: JPG, PNG, SVG. Tamanho máximo: 2MB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    Salvar Alterações
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="resetForm('empresaForm')">
+                    <i class="fas fa-undo me-2"></i>
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+            <h4>Nenhuma empresa selecionada</h4>
+            <p class="text-muted">Selecione uma empresa para gerenciar suas informações.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Aba Plano & Assinatura -->
+<div class="tab-pane fade" id="plano" role="tabpanel">
+    {% if assinatura_atual %}
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-crown"></i>
+                Plano Atual
+            </h3>
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="info-card-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div>
+                        <h4 class="info-card-title">{{ assinatura_atual.plano.nome }}</h4>
+                        <p class="mb-0 text-muted">{{ assinatura_atual.get_status_display }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Preço:</strong> R$ {{ assinatura_atual.plano.preco_mensal }}/mês
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Status:</strong> 
+                        <span class="badge bg-{% if assinatura_atual.status == 'ATIVA' %}success{% elif assinatura_atual.status == 'TRIAL' %}warning{% else %}danger{% endif %}">
+                            {{ assinatura_atual.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-4">
+                        {% if assinatura_atual.trial_ativo and assinatura_atual.trial_fim %}
+                            <strong>Trial até:</strong> {{ assinatura_atual.trial_fim|date:'d/m/Y' }}
+                        {% elif assinatura_atual.data_proximo_pagamento %}
+                            <strong>Próximo pagamento:</strong> {{ assinatura_atual.data_proximo_pagamento|date:'d/m/Y' }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estender Trial (se aplicável) -->
+        {% if assinatura_atual.status == 'TRIAL' %}
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-clock"></i>
+                    Estender Período Gratuito
+                </h3>
+                <div class="info-card">
+                    <p>Seu período gratuito expira em {{ assinatura_atual.trial_fim|date:'d/m/Y' }}. Você pode estender por mais alguns dias.</p>
+                    <form id="estenderTrialForm" class="d-flex gap-3 align-items-end">
+                        {% csrf_token %}
+                        <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+                        <div class="form-group">
+                            <label class="form-label">Dias adicionais</label>
+                            <select class="form-select" name="dias_extensao">
+                                <option value="7">7 dias</option>
+                                <option value="15">15 dias</option>
+                                <option value="30">30 dias</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Estender Trial
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Planos Disponíveis -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-rocket"></i>
+                Planos Disponíveis
+            </h3>
+            <div class="row">
+                {% for plano in planos_disponiveis %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="plan-card {% if plano.id == assinatura_atual.plano.id %}current-plan{% endif %}">
+                            <div class="plan-name">{{ plano.nome }}</div>
+                            <div class="plan-price">
+                                R$ {{ plano.preco_mensal }}
+                                <small>/mês</small>
+                            </div>
+                            <ul class="plan-features">
+                                {% for feature in plano.features_lista %}
+                                    <li><i class="fas fa-check"></i> {{ feature }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% if plano.id != assinatura_atual.plano.id %}
+                                <button type="button" class="btn btn-primary w-100" onclick="showUpgradeModal({{ plano.id }}, '{{ plano.nome }}', {{ plano.preco_mensal }})">
+                                    <i class="fas fa-arrow-up me-2"></i>
+                                    Alterar Plano
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-success w-100" disabled>
+                                    <i class="fas fa-check me-2"></i>
+                                    Plano Atual
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-crown fa-3x text-muted mb-3"></i>
+            <h4>Nenhuma assinatura encontrada</h4>
+            <p class="text-muted">Não foi possível carregar as informações da assinatura.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Aba Segurança -->
+<div class="tab-pane fade" id="seguranca" role="tabpanel">
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-key"></i>
+            Alterar Senha
+        </h3>
+        <form id="senhaForm">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Senha Atual</label>
+                        <input type="password" class="form-control" name="senha_atual" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" name="nova_senha" required minlength="8">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" name="confirmar_senha" required minlength="8">
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                A senha deve ter pelo menos 8 caracteres.
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>
+                Alterar Senha
+            </button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-history"></i>
+            Histórico de Logins
+        </h3>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>IP</th>
+                        <th>Dispositivo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for login in logins_recentes %}
+                        <tr>
+                            <td>{{ login.data_login|date:'d/m/Y H:i' }}</td>
+                            <td>{{ login.ip_address }}</td>
+                            <td>
+                                {% if 'Mobile' in login.user_agent %}
+                                    <i class="fas fa-mobile-alt me-1"></i> Mobile
+                                {% elif 'Tablet' in login.user_agent %}
+                                    <i class="fas fa-tablet-alt me-1"></i> Tablet
+                                {% else %}
+                                    <i class="fas fa-desktop me-1"></i> Desktop
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if login.sucesso %}
+                                    <span class="badge bg-success">Sucesso</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Falha</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Nenhum login registrado</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Aba Histórico -->
+<div class="tab-pane fade" id="historico" role="tabpanel">
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Histórico de Assinatura
+        </h3>
+        <div id="historicoContent">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Upgrade -->
+<div class="modal fade" id="upgradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alterar Plano</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upgradeForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+                    <input type="hidden" name="plano_id" id="upgradePlanoId">
+                    
+                    <div class="mb-3">
+                        <h6>Plano Selecionado:</h6>
+                        <div class="alert alert-info">
+                            <strong id="upgradeNomePlano"></strong><br>
+                            <span id="upgradePrecoPlano"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Cupom de Desconto (opcional)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="cupom_codigo" id="cupomCodigo" placeholder="Digite o código do cupom">
+                            <button type="button" class="btn btn-outline-secondary" id="validarCupomBtn">Validar</button>
+                        </div>
+                        <div id="cupomFeedback" class="mt-2"></div>
+                    </div>
+                    
+                    <div id="resumoCobranca" class="alert alert-light" style="display: none;">
+                        <h6>Resumo da Cobrança:</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>Valor original:</span>
+                            <span id="valorOriginal"></span>
+                        </div>
+                        <div class="d-flex justify-content-between" id="descontoRow" style="display: none;">
+                            <span>Desconto:</span>
+                            <span id="valorDesconto" class="text-success"></span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="valorFinal"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarUpgradeBtn">Confirmar Alteração</button>
+            </div>
+        </div>
+    </div>
+</div> 

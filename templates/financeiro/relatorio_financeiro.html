@@ -1,0 +1,1059 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Financeiro - costurai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cabeçalho Premium */
+    .page-header {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(30, 64, 175, 0.3);
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    /* Cards de KPIs */
+    .kpi-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: var(--card-gradient);
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .kpi-card.receitas::before {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .kpi-card.despesas::before {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+    
+    .kpi-card.fluxo::before {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+    }
+    
+    .kpi-card.resultado::before {
+        background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+    }
+    
+    .kpi-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .kpi-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--icon-gradient);
+        border-radius: 18px;
+    }
+    
+    .kpi-icon i {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .kpi-receitas .kpi-icon::before {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .kpi-despesas .kpi-icon::before {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+    
+    .kpi-fluxo .kpi-icon::before {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    
+    .kpi-resultado .kpi-icon::before {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+    
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        line-height: 1.1;
+    }
+    
+    .kpi-label {
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+    
+    .kpi-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #f3f4f6;
+    }
+    
+    .kpi-change {
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+    }
+    
+    .kpi-change.positive {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .kpi-change.negative {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .kpi-change.neutral {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    /* Seções de Conteúdo */
+    .content-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title i {
+        color: #3b82f6;
+        font-size: 1.1rem;
+    }
+    
+    /* Gráficos */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-legend {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    
+    .chart-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .chart-legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    
+    /* Tabelas Modernas */
+    .modern-table {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .modern-table .table {
+        margin-bottom: 0;
+    }
+    
+    .modern-table .table th {
+        background: linear-gradient(135deg, #1e40af, #1e3a8a);
+        color: white;
+        border: none;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .modern-table .table td {
+        padding: 1rem 1.5rem;
+        border-color: #f8fafc;
+        vertical-align: middle;
+        font-weight: 500;
+    }
+    
+    .modern-table .table tbody tr:hover {
+        background: #f8fafc;
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pago {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-pendente {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-vencido {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-parcial {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    /* Valores Coloridos */
+    .valor-receita {
+        color: #10b981;
+        font-weight: 700;
+    }
+    
+    .valor-despesa {
+        color: #ef4444;
+        font-weight: 700;
+    }
+    
+    .valor-neutro {
+        color: #6b7280;
+        font-weight: 600;
+    }
+    
+    .valor-alerta {
+        color: #f59e0b;
+        font-weight: 700;
+    }
+    
+    /* Contas Urgentes */
+    .conta-urgente {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .conta-urgente:hover {
+        background: #fef3c7;
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    }
+    
+    .conta-vencida {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .conta-vencida:hover {
+        background: #fee2e2;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+    
+    /* Botões Modernos */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+    
+    .btn-success-modern {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .btn-danger-modern {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    .btn-outline-modern {
+        background: white;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .btn-outline-modern:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #1f2937;
+    }
+    
+    /* Progresso Circular */
+    .progress-circle {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: conic-gradient(var(--progress-color) var(--progress-value), #e5e7eb 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
+    
+    .progress-circle::before {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: white;
+    }
+    
+    .progress-circle span {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.3;
+    }
+    
+    .empty-state h5 {
+        color: #374151;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .empty-state p {
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .kpi-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .kpi-value {
+            font-size: 1.8rem;
+        }
+        
+        .content-section {
+            padding: 1.5rem;
+        }
+        
+        .chart-container {
+            height: 250px;
+        }
+        
+        .kpi-details {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+        
+        .section-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .page-header {
+            padding: 1rem;
+        }
+        
+        .kpi-card {
+            padding: 1rem;
+        }
+        
+        .content-section {
+            padding: 1rem;
+        }
+        
+        .modern-table .table th,
+        .modern-table .table td {
+            padding: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .chart-legend {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+    
+    /* Animações */
+    .fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .slide-up {
+        animation: slideUp 0.8s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Cabeçalho Premium -->
+    <div class="page-header fade-in">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Dashboard Financeiro
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Controle completo de receitas, despesas e fluxo de caixa em tempo real
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-flex flex-column align-items-md-end gap-2">
+                    <span class="badge bg-white bg-opacity-20 text-white px-3 py-2">
+                        <i class="fas fa-calendar me-2"></i>
+                        {{ stats.faturamento_mes.periodo_formatado }}
+                    </span>
+                    <span class="text-white opacity-75">
+                        <i class="fas fa-clock me-1"></i>
+                        Atualizado: {{ "now"|date:"H:i" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- KPIs Principais -->
+        <div class="row g-4 mb-4">
+            <!-- Receitas -->
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card kpi-receitas slide-up">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="kpi-value">R$ {{ stats.total_a_receber|floatformat:2 }}</div>
+                    <div class="kpi-label">Total a Receber</div>
+                    <div class="kpi-details">
+                        <div>
+                            <small class="text-muted">Recebido no mês:</small><br>
+                            <strong class="valor-receita">R$ {{ stats.recebido_mes|floatformat:2 }}</strong>
+                        </div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            {{ stats.contas_receber_vencendo.count }} vencendo
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Despesas -->
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card kpi-despesas slide-up" style="animation-delay: 0.1s;">
+                    <div class="kpi-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="kpi-value">R$ {{ stats.total_a_pagar|floatformat:2 }}</div>
+                    <div class="kpi-label">Total a Pagar</div>
+                    <div class="kpi-details">
+                        <div>
+                            <small class="text-muted">Pago no mês:</small><br>
+                            <strong class="valor-despesa">R$ {{ stats.pago_mes|floatformat:2 }}</strong>
+                        </div>
+                        <div class="kpi-change negative">
+                            <i class="fas fa-arrow-down me-1"></i>
+                            {{ stats.contas_pagar_vencendo.count }} vencendo
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fluxo de Caixa -->
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card kpi-fluxo slide-up" style="animation-delay: 0.2s;">
+                    <div class="kpi-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="kpi-value">R$ {{ stats.saldo_previsto|floatformat:2 }}</div>
+                    <div class="kpi-label">Saldo Previsto (30 dias)</div>
+                    <div class="kpi-details">
+                        <div>
+                            <small class="text-muted">Entradas previstas:</small><br>
+                            <strong class="valor-receita">R$ {{ stats.entradas_previstas|floatformat:2 }}</strong>
+                        </div>
+                        <div class="kpi-change {% if stats.saldo_previsto > 0 %}positive{% else %}negative{% endif %}">
+                            <i class="fas fa-{% if stats.saldo_previsto > 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>
+                            {% if stats.saldo_previsto > 0 %}Positivo{% else %}Negativo{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resultado do Mês -->
+            <div class="col-lg-3 col-md-6">
+                <div class="kpi-card kpi-resultado slide-up" style="animation-delay: 0.3s;">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="kpi-value">R$ {{ stats.resultado_mes|floatformat:2 }}</div>
+                    <div class="kpi-label">Resultado do Mês</div>
+                    <div class="kpi-details">
+                        <div>
+                            <small class="text-muted">Margem:</small><br>
+                            <strong>{{ stats.margem_lucro }}%</strong>
+                        </div>
+                        <div class="kpi-change {% if stats.resultado_mes > 0 %}positive{% else %}negative{% endif %}">
+                            <i class="fas fa-{% if stats.resultado_mes > 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>
+                            {% if stats.resultado_mes > 0 %}Lucro{% else %}Prejuízo{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas de Vencimento -->
+        {% if stats.contas_receber_vencidas.count > 0 or stats.contas_pagar_vencidas.count > 0 %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Atenção! Contas Vencidas</h5>
+                        <p class="mb-0">
+                            {% if stats.contas_receber_vencidas.count > 0 %}
+                                <strong>{{ stats.contas_receber_vencidas.count }}</strong> conta(s) a receber vencida(s) - 
+                                <strong class="valor-receita">R$ {{ stats.contas_receber_vencidas.valor|floatformat:2 }}</strong>
+                            {% endif %}
+                            {% if stats.contas_pagar_vencidas.count > 0 %}
+                                {% if stats.contas_receber_vencidas.count > 0 %} | {% endif %}
+                                <strong>{{ stats.contas_pagar_vencidas.count }}</strong> conta(s) a pagar vencida(s) - 
+                                <strong class="valor-despesa">R$ {{ stats.contas_pagar_vencidas.valor|floatformat:2 }}</strong>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Evolução Mensal -->
+            <div class="col-lg-8">
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-chart-line"></i>
+                            Evolução Mensal - Receitas vs Despesas
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'financeiro:relatorio_dre' %}" class="btn btn-outline-modern btn-sm">
+                                <i class="fas fa-file-alt me-2"></i>DRE
+                            </a>
+                            <a href="{% url 'financeiro:relatorio_fluxo_caixa' %}" class="btn btn-outline-modern btn-sm">
+                                <i class="fas fa-chart-area me-2"></i>Fluxo de Caixa
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="evolucaoChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-legend">
+                        <div class="chart-legend-item">
+                            <div class="chart-legend-color" style="background: #10b981;"></div>
+                            <span>Receitas</span>
+                        </div>
+                        <div class="chart-legend-item">
+                            <div class="chart-legend-color" style="background: #ef4444;"></div>
+                            <span>Despesas</span>
+                        </div>
+                        <div class="chart-legend-item">
+                            <div class="chart-legend-color" style="background: #3b82f6;"></div>
+                            <span>Resultado</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Faturamento Mensal -->
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-table"></i>
+                            Faturamento Mensal - {{ ano_atual }}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'financeiro:relatorio_faturamento' %}" class="btn btn-primary-modern btn-sm">
+                                <i class="fas fa-chart-bar me-2"></i>Ver Completo
+                            </a>
+                            <a href="{% url 'financeiro:exportar_faturamento' %}?ano={{ ano_atual }}" class="btn btn-success-modern btn-sm">
+                                <i class="fas fa-file-excel me-2"></i>Exportar
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-table">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mês</th>
+                                    <th>Entradas</th>
+                                    <th>Saídas</th>
+                                    <th>A Produzir</th>
+                                    <th>V. Entradas</th>
+                                    <th>V. Recebido</th>
+                                    <th>Falta Receber</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faturamento in faturamentos_recentes %}
+                                <tr>
+                                    <td><strong>{{ faturamento.periodo_formatado }}</strong></td>
+                                    <td>{{ faturamento.entradas }}</td>
+                                    <td>{{ faturamento.saidas }}</td>
+                                    <td>{{ faturamento.a_produzir }}</td>
+                                    <td class="valor-receita">R$ {{ faturamento.valor_entradas|floatformat:2 }}</td>
+                                    <td class="valor-receita">R$ {{ faturamento.valor_recebido|floatformat:2 }}</td>
+                                    <td class="{% if faturamento.falta_receber > 0 %}valor-alerta{% else %}valor-receita{% endif %}">
+                                        R$ {{ faturamento.falta_receber|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Contas Urgentes a Receber -->
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            Contas a Receber Urgentes
+                        </div>
+                    </div>
+                    
+                    {% for conta in contas_receber_urgentes %}
+                    <div class="conta-urgente {% if conta.esta_vencido %}conta-vencida{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ conta.numero_conta }}</div>
+                                <div class="text-muted small">{{ conta.cliente.nome|truncatechars:25 }}</div>
+                                <div class="small mt-1">
+                                    <span class="status-badge {% if conta.esta_vencido %}status-vencido{% else %}status-pendente{% endif %}">
+                                        {% if conta.esta_vencido %}
+                                            Vencido há {{ conta.dias_vencimento|add:'-1' }} dias
+                                        {% else %}
+                                            Vence em {{ conta.dias_vencimento }} dias
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold {% if conta.esta_vencido %}valor-despesa{% else %}valor-alerta{% endif %}">
+                                    R$ {{ conta.valor_pendente|floatformat:2 }}
+                                </div>
+                                <a href="{% url 'financeiro:conta_detalhes' conta.id %}" class="btn btn-sm btn-outline-modern mt-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <h5>Nenhuma conta urgente!</h5>
+                        <p>Todas as contas a receber estão em dia.</p>
+                    </div>
+                    {% endfor %}
+                    
+                    <a href="{% url 'financeiro:contas_receber' %}" class="btn btn-outline-modern w-100 mt-3">
+                        <i class="fas fa-list me-2"></i>Ver Todas as Contas a Receber
+                    </a>
+                </div>
+                
+                <!-- Contas Urgentes a Pagar -->
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                            Contas a Pagar Urgentes
+                        </div>
+                    </div>
+                    
+                    {% for conta in contas_pagar_urgentes %}
+                    <div class="conta-urgente {% if conta.esta_vencido %}conta-vencida{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ conta.numero_documento }}</div>
+                                <div class="text-muted small">{{ conta.fornecedor_nome|truncatechars:25 }}</div>
+                                <div class="small mt-1">
+                                    <span class="badge bg-secondary">{{ conta.categoria.nome }}</span>
+                                </div>
+                                <div class="small mt-1">
+                                    <span class="status-badge {% if conta.esta_vencido %}status-vencido{% else %}status-pendente{% endif %}">
+                                        {% if conta.esta_vencido %}
+                                            Vencido há {{ conta.dias_vencimento|add:'-1' }} dias
+                                        {% else %}
+                                            Vence em {{ conta.dias_vencimento }} dias
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold {% if conta.esta_vencido %}valor-despesa{% else %}valor-alerta{% endif %}">
+                                    R$ {{ conta.valor_pendente|floatformat:2 }}
+                                </div>
+                                <a href="{% url 'financeiro:conta_pagar_detalhes' conta.id %}" class="btn btn-sm btn-outline-modern mt-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <h5>Nenhuma conta urgente!</h5>
+                        <p>Todas as contas a pagar estão em dia.</p>
+                    </div>
+                    {% endfor %}
+                    
+                    <a href="{% url 'financeiro:contas_pagar' %}" class="btn btn-outline-modern w-100 mt-3">
+                        <i class="fas fa-list me-2"></i>Ver Todas as Contas a Pagar
+                    </a>
+                </div>
+                
+                <!-- Despesas por Categoria -->
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Despesas por Categoria
+                        </div>
+                    </div>
+                    
+                    {% for despesa in despesas_por_categoria %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <div class="fw-bold">{{ despesa.categoria }}</div>
+                            <div class="small text-muted">Este mês</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold valor-despesa">R$ {{ despesa.total|floatformat:2 }}</div>
+                            <div class="small text-muted">{{ despesa.percentual }}%</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie"></i>
+                        <h5>Nenhuma despesa registrada</h5>
+                        <p>Não há despesas neste mês.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Ações Rápidas -->
+                <div class="content-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-bolt"></i>
+                            Ações Rápidas
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'financeiro:contas_receber' %}" class="btn btn-success-modern">
+                            <i class="fas fa-money-bill me-2"></i>Contas a Receber
+                        </a>
+                        <a href="{% url 'financeiro:contas_pagar' %}" class="btn btn-danger-modern">
+                            <i class="fas fa-credit-card me-2"></i>Contas a Pagar
+                        </a>
+                        <a href="{% url 'financeiro:conta_nova' %}" class="btn btn-primary-modern">
+                            <i class="fas fa-plus me-2"></i>Nova Conta a Receber
+                        </a>
+                        <a href="{% url 'financeiro:conta_pagar_nova' %}" class="btn btn-outline-modern">
+                            <i class="fas fa-plus me-2"></i>Nova Conta a Pagar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dados da evolução mensal
+    const evolucaoData = {
+        labels: [{% for item in evolucao_mensal %}'{{ item.mes }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Receitas',
+            data: [{% for item in evolucao_mensal %}{{ item.entradas|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.4
+        }, {
+            label: 'Despesas',
+            data: [{% for item in evolucao_mensal %}{{ item.saidas|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.4
+        }, {
+            label: 'Resultado',
+            data: [{% for item in evolucao_mensal %}{{ item.resultado|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    // Configuração do gráfico
+    const ctx = document.getElementById('evolucaoChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: evolucaoData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+
+    // Animação dos números
+    function animateValue(element, start, end, duration) {
+        const startTime = performance.now();
+        const startValue = start;
+        const endValue = end;
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const currentValue = startValue + (endValue - startValue) * progress;
+            element.textContent = 'R$ ' + currentValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+        
+        requestAnimationFrame(update);
+    }
+    
+    // Animar valores dos KPIs
+    document.querySelectorAll('.kpi-value').forEach(el => {
+        const text = el.textContent.replace(/[^\d.-]/g, '');
+        const target = parseFloat(text);
+        if (!isNaN(target)) {
+            el.textContent = 'R$ 0,00';
+            animateValue(el, 0, target, 1500);
+        }
+    });
+    
+    // Atualização automática a cada 5 minutos
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %} 

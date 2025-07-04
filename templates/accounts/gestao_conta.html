@@ -1,0 +1,1087 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Conta - {{ empresa.nome }} - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Ajustes para o avatar no header */
+    .avatar-upload {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-preview {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .avatar-upload:hover .avatar-preview {
+        border-color: #4f46e5;
+    }
+    
+    .avatar-upload-btn {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 20px;
+        height: 20px;
+        background: #4f46e5;
+        border-radius: 50%;
+        border: none;
+        color: white;
+        font-size: 0.625rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-upload-btn:hover {
+        background: #3730a3;
+        transform: scale(1.1);
+    }
+
+    /* Tabs Navigation */
+    .account-tabs {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 0;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .nav-tabs {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .nav-tabs .nav-item {
+        margin: 0;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        padding: 20px 30px;
+        font-weight: 600;
+        color: var(--gray-600);
+        background: transparent;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-blue);
+        background: var(--gray-50);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-blue);
+        background: var(--gray-50);
+        border-bottom: 3px solid var(--primary-blue);
+    }
+    
+    .nav-tabs .nav-link i {
+        font-size: 1.125rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    /* Tab Content */
+    .tab-content {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 30px;
+    }
+    
+    .tab-pane {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form Styles */
+    .form-section {
+        margin-bottom: 40px;
+    }
+    
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .section-title i {
+        color: var(--primary-blue);
+        font-size: 1.125rem;
+    }
+    
+    /* Info Cards */
+    .info-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    .info-card:hover {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .info-card-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+    
+    .info-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+    }
+    
+    /* Plan Cards */
+    .plan-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        border: 2px solid var(--gray-200);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    .plan-card.current-plan {
+        border-color: var(--success);
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+    
+    .plan-card.current-plan::before {
+        content: 'Plano Atual';
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: var(--success);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    
+    .plan-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+    }
+    
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 16px;
+    }
+    
+    .plan-price small {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        font-weight: 400;
+    }
+    
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 24px;
+    }
+    
+    .plan-features li {
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+    }
+    
+    .plan-features li i {
+        color: var(--success);
+        width: 16px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .nav-tabs .nav-link {
+            padding: 16px 20px;
+            font-size: 0.875rem;
+        }
+        
+        .tab-content {
+            padding: 20px;
+        }
+        
+        .plan-card {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Gestão de Conta</h1>
+        <p class="page-subtitle">Gerencie seu perfil, empresa e plano de assinatura</p>
+    </div>
+    <div class="page-actions">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar-upload">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" alt="Avatar" class="avatar-preview" id="avatarPreview">
+                {% else %}
+                    <div class="avatar-preview d-flex align-items-center justify-content-center bg-primary text-white" style="font-size: 1.5rem; font-weight: 600;">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    </div>
+                {% endif %}
+                <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+            </div>
+            <div>
+                <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                <div class="text-muted small">{{ profile.get_cargo_display }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="account-tabs">
+    <ul class="nav nav-tabs" id="accountTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="perfil-tab" data-bs-toggle="tab" data-bs-target="#perfil" type="button" role="tab">
+                <i class="fas fa-user"></i>
+                Perfil Pessoal
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="empresa-tab" data-bs-toggle="tab" data-bs-target="#empresa" type="button" role="tab">
+                <i class="fas fa-building"></i>
+                Empresa
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="plano-tab" data-bs-toggle="tab" data-bs-target="#plano" type="button" role="tab">
+                <i class="fas fa-crown"></i>
+                Plano & Assinatura
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="seguranca-tab" data-bs-toggle="tab" data-bs-target="#seguranca" type="button" role="tab">
+                <i class="fas fa-shield-alt"></i>
+                Segurança
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab">
+                <i class="fas fa-history"></i>
+                Histórico
+            </button>
+        </li>
+    </ul>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="accountTabsContent">
+    <!-- Perfil Pessoal -->
+    <div class="tab-pane fade show active" id="perfil" role="tabpanel">
+        <form id="perfilForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Informações Pessoais
+                </h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Sobrenome</label>
+                            <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">CPF</label>
+                            <input type="text" class="form-control" name="cpf" value="{{ profile.cpf }}" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-phone"></i>
+                    Contato
+                </h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="telefone" value="{{ profile.telefone }}" placeholder="(11) 1234-5678">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Celular</label>
+                            <input type="text" class="form-control" name="celular" value="{{ profile.celular }}" placeholder="(11) 98765-4321">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-modern">
+                    <label class="form-label">Endereço</label>
+                    <textarea class="form-control" name="endereco" rows="3" placeholder="Endereço completo">{{ profile.endereco }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-briefcase"></i>
+                    Informações Profissionais
+                </h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Cargo</label>
+                            <select class="form-control" name="cargo">
+                                {% for value, label in profile.CARGO_CHOICES %}
+                                    <option value="{{ value }}" {% if profile.cargo == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Data de Admissão</label>
+                            <input type="text" class="form-control" value="{{ profile.data_admissao|date:'d/m/Y' }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-bell"></i>
+                    Notificações
+                </h3>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" name="receber_email_notificacoes" id="emailNotif" {% if profile.receber_email_notificacoes %}checked{% endif %}>
+                    <label class="form-check-label" for="emailNotif">
+                        Receber notificações por e-mail
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="receber_sms_notificacoes" id="smsNotif" {% if profile.receber_sms_notificacoes %}checked{% endif %}>
+                    <label class="form-check-label" for="smsNotif">
+                        Receber notificações por SMS
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+                <button type="button" class="btn-modern btn-modern-outline" onclick="resetForm('perfilForm')">
+                    <i class="fas fa-undo"></i>
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Aba Empresa -->
+    <div class="tab-pane fade" id="empresa" role="tabpanel">
+        {% if empresa_atual %}
+            <form id="empresaForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+                
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-building"></i>
+                        Informações da Empresa
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-modern">
+                                <label class="form-label">Nome Fantasia</label>
+                                <input type="text" class="form-control" name="nome" value="{{ empresa_atual.nome }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-modern">
+                                <label class="form-label">Razão Social</label>
+                                <input type="text" class="form-control" name="razao_social" value="{{ empresa_atual.razao_social }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-modern">
+                                <label class="form-label">CNPJ</label>
+                                <input type="text" class="form-control" name="cnpj" value="{{ empresa_atual.cnpj }}" placeholder="00.000.000/0000-00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-modern">
+                                <label class="form-label">Capacidade Produtiva (peças/dia)</label>
+                                <input type="number" class="form-control" name="capacidade_produtiva" value="{{ empresa_atual.capacidade_produtiva }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save"></i>
+                        Salvar Alterações
+                    </button>
+                    <button type="button" class="btn-modern btn-modern-outline" onclick="resetForm('empresaForm')">
+                        <i class="fas fa-undo"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                <h4>Nenhuma empresa selecionada</h4>
+                <p class="text-muted">Selecione uma empresa para gerenciar suas informações.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Aba Plano & Assinatura -->
+    <div class="tab-pane fade" id="plano" role="tabpanel">
+        {% if assinatura_atual %}
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-crown"></i>
+                    Plano Atual
+                </h3>
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div>
+                            <h4 class="info-card-title">{{ assinatura_atual.plano.nome }}</h4>
+                            <p class="mb-0 text-muted">{{ assinatura_atual.get_status_display }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Preço:</strong> R$ {{ assinatura_atual.plano.preco_mensal }}/mês
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{% if assinatura_atual.status == 'ATIVA' %}success{% elif assinatura_atual.status == 'TRIAL' %}warning{% else %}danger{% endif %}">
+                                {{ assinatura_atual.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            {% if assinatura_atual.trial_ativo and assinatura_atual.trial_fim %}
+                                <strong>Trial até:</strong> {{ assinatura_atual.trial_fim|date:'d/m/Y' }}
+                            {% elif assinatura_atual.data_proximo_pagamento %}
+                                <strong>Próximo pagamento:</strong> {{ assinatura_atual.data_proximo_pagamento|date:'d/m/Y' }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aplicar Cupom de Extensão (se no plano gratuito) -->
+            {% if assinatura_atual.status == 'TRIAL' and assinatura_atual.plano.tipo == 'GRATUITO' %}
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-gift"></i>
+                        Aplicar Cupom de Extensão
+                    </h3>
+                    <div class="info-card">
+                        <p>Tem um cupom para estender seu período gratuito? Digite o código abaixo:</p>
+                        <form id="aplicarCupomTrialForm" class="row g-3">
+                            {% csrf_token %}
+                            <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+                            <div class="col-md-8">
+                                <div class="form-modern">
+                                    <label class="form-label">Código do Cupom</label>
+                                    <input type="text" class="form-control" name="cupom_codigo" placeholder="Ex: TRIAL30DIAS" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn-modern btn-modern-primary w-100">
+                                    <i class="fas fa-gift"></i>
+                                    Aplicar Cupom
+                                </button>
+                            </div>
+                        </form>
+                        <div class="mt-2 small text-muted">
+                            💡 Dica: Use o código <strong>TRIAL30DIAS</strong> para ganhar 30 dias extras gratuitos!
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Planos Disponíveis -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-rocket"></i>
+                    Planos Disponíveis
+                </h3>
+                <div class="row">
+                    {% for plano in planos_disponiveis %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="plan-card {% if plano.id == assinatura_atual.plano.id %}current-plan{% endif %}">
+                                <div class="plan-name">{{ plano.nome }}</div>
+                                <div class="plan-price">
+                                    R$ {{ plano.preco_mensal }}
+                                    <small>/mês</small>
+                                </div>
+                                <ul class="plan-features">
+                                    {% for feature in plano.features_lista %}
+                                        <li><i class="fas fa-check"></i> {{ feature }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if plano.id != assinatura_atual.plano.id %}
+                                    <button type="button" class="btn-modern btn-modern-primary w-100" onclick="showUpgradeModal({{ plano.id }}, '{{ plano.nome }}', {{ plano.preco_mensal }})">
+                                        <i class="fas fa-arrow-up"></i>
+                                        Alterar Plano
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn-modern btn-modern-success w-100" disabled>
+                                        <i class="fas fa-check"></i>
+                                        Plano Atual
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Aba Segurança -->
+    <div class="tab-pane fade" id="seguranca" role="tabpanel">
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-key"></i>
+                Alterar Senha
+            </h3>
+            <form id="senhaForm">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Senha Atual</label>
+                            <input type="password" class="form-control" name="senha_atual" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Nova Senha</label>
+                            <input type="password" class="form-control" name="nova_senha" required minlength="8">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-modern">
+                            <label class="form-label">Confirmar Nova Senha</label>
+                            <input type="password" class="form-control" name="confirmar_senha" required minlength="8">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-save"></i>
+                    Alterar Senha
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aba Histórico -->
+    <div class="tab-pane fade" id="historico" role="tabpanel">
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Histórico de Assinatura
+            </h3>
+            <div id="historicoContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Upgrade -->
+<div class="modal fade" id="upgradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alterar Plano</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upgradeForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="empresa_id" value="{{ empresa_atual.id }}">
+                    <input type="hidden" name="plano_id" id="upgradePlanoId">
+                    
+                    <div class="mb-3">
+                        <h6>Plano Selecionado:</h6>
+                        <div class="alert alert-info">
+                            <strong id="upgradeNomePlano"></strong><br>
+                            <span id="upgradePrecoPlano"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Cupom de Desconto (opcional)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="cupom_codigo" id="cupomCodigo" placeholder="Digite o código do cupom">
+                            <button type="button" class="btn btn-outline-secondary" id="validarCupomBtn">Validar</button>
+                        </div>
+                        <div id="cupomFeedback" class="mt-2"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarUpgradeBtn">Confirmar Alteração</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicialização
+    initializeGestaoContaPage();
+    
+    // Event listeners para formulários
+    setupFormHandlers();
+    
+    // Carregar histórico quando aba for ativada
+    setupHistoricoTab();
+});
+
+function initializeGestaoContaPage() {
+    // Configurar upload de avatar
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                // Upload automático do avatar
+                uploadAvatar(file);
+            }
+        });
+    }
+}
+
+function setupFormHandlers() {
+    // Formulário de perfil
+    const perfilForm = document.getElementById('perfilForm');
+    if (perfilForm) {
+        perfilForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm(this, '{% url "accounts:atualizar_perfil_ajax" %}');
+        });
+    }
+    
+    // Formulário de empresa
+    const empresaForm = document.getElementById('empresaForm');
+    if (empresaForm) {
+        empresaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm(this, '{% url "accounts:atualizar_empresa_ajax" %}');
+        });
+    }
+    
+    // Formulário de senha
+    const senhaForm = document.getElementById('senhaForm');
+    if (senhaForm) {
+        senhaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const novaSenha = this.nova_senha.value;
+            const confirmarSenha = this.confirmar_senha.value;
+            
+            if (novaSenha !== confirmarSenha) {
+                showAlert('As senhas não coincidem!', 'error');
+                return;
+            }
+            
+            submitForm(this, '{% url "accounts:alterar_senha_ajax" %}');
+        });
+    }
+    
+    // Botão validar cupom
+    const validarCupomBtn = document.getElementById('validarCupomBtn');
+    if (validarCupomBtn) {
+        validarCupomBtn.addEventListener('click', validarCupom);
+    }
+    
+    // Botão confirmar upgrade
+    const confirmarUpgradeBtn = document.getElementById('confirmarUpgradeBtn');
+    if (confirmarUpgradeBtn) {
+        confirmarUpgradeBtn.addEventListener('click', confirmarUpgrade);
+    }
+
+    // Formulário de aplicar cupom de trial
+    const aplicarCupomTrialForm = document.getElementById('aplicarCupomTrialForm');
+    if (aplicarCupomTrialForm) {
+        aplicarCupomTrialForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            aplicarCupomTrial();
+        });
+    }
+}
+
+function setupHistoricoTab() {
+    const historicoTab = document.getElementById('historico-tab');
+    if (historicoTab) {
+        historicoTab.addEventListener('shown.bs.tab', function() {
+            carregarHistorico();
+        });
+    }
+}
+
+function submitForm(form, url) {
+    const formData = new FormData(form);
+    
+    showLoading(true);
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao processar solicitação', 'error');
+    })
+    .finally(() => {
+        showLoading(false);
+    });
+}
+
+function uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "accounts:atualizar_perfil_ajax" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Avatar atualizado com sucesso!', 'success');
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao fazer upload do avatar', 'error');
+    });
+}
+
+function showUpgradeModal(planoId, nomeP, precoP) {
+    document.getElementById('upgradePlanoId').value = planoId;
+    document.getElementById('upgradeNomePlano').textContent = nomeP;
+    document.getElementById('upgradePrecoPlano').textContent = `R$ ${precoP}/mês`;
+    
+    // Limpar cupom
+    document.getElementById('cupomCodigo').value = '';
+    document.getElementById('cupomFeedback').innerHTML = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+    modal.show();
+}
+
+function validarCupom() {
+    const cupomCodigo = document.getElementById('cupomCodigo').value.trim();
+    const planoId = document.getElementById('upgradePlanoId').value;
+    
+    if (!cupomCodigo) {
+        showAlert('Digite o código do cupom', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('cupom_codigo', cupomCodigo);
+    formData.append('plano_id', planoId);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "accounts:validar_cupom" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const feedback = document.getElementById('cupomFeedback');
+        if (data.success) {
+            feedback.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+        } else {
+            feedback.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao validar cupom', 'error');
+    });
+}
+
+function confirmarUpgrade() {
+    const formData = new FormData(document.getElementById('upgradeForm'));
+    
+    showLoading(true);
+    
+    fetch('{% url "accounts:upgrade_plano" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('upgradeModal'));
+            modal.hide();
+            // Recarregar página após 2 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao processar upgrade', 'error');
+    })
+    .finally(() => {
+        showLoading(false);
+    });
+}
+
+function carregarHistorico() {
+    const empresaId = '{{ empresa_atual.id }}';
+    if (!empresaId) return;
+    
+    fetch(`{% url "accounts:historico_assinatura" %}?empresa_id=${empresaId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderHistorico(data.historico, data.transacoes);
+        } else {
+            document.getElementById('historicoContent').innerHTML = 
+                '<div class="alert alert-danger">Erro ao carregar histórico</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        document.getElementById('historicoContent').innerHTML = 
+            '<div class="alert alert-danger">Erro ao carregar histórico</div>';
+    });
+}
+
+function renderHistorico(historico, transacoes) {
+    let html = '';
+    
+    if (historico.length > 0) {
+        html += '<h5>Histórico de Mudanças</h5>';
+        html += '<div class="table-responsive mb-4">';
+        html += '<table class="table table-hover">';
+        html += '<thead><tr><th>Data</th><th>Ação</th><th>Plano</th><th>Valor</th><th>Usuário</th></tr></thead>';
+        html += '<tbody>';
+        
+        historico.forEach(item => {
+            html += `<tr>
+                <td>${item.data_mudanca}</td>
+                <td><span class="badge bg-info">${item.acao}</span></td>
+                <td>${item.plano_novo}</td>
+                <td>R$ ${item.valor_novo}</td>
+                <td>${item.usuario}</td>
+            </tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+    }
+    
+    if (transacoes.length > 0) {
+        html += '<h5>Transações</h5>';
+        html += '<div class="table-responsive">';
+        html += '<table class="table table-hover">';
+        html += '<thead><tr><th>ID</th><th>Data</th><th>Tipo</th><th>Valor</th><th>Status</th></tr></thead>';
+        html += '<tbody>';
+        
+        transacoes.forEach(item => {
+            const statusClass = item.status === 'Aprovada' ? 'success' : 
+                              item.status === 'Pendente' ? 'warning' : 'danger';
+            html += `<tr>
+                <td>${item.id_transacao}</td>
+                <td>${item.data_criacao}</td>
+                <td>${item.tipo}</td>
+                <td>R$ ${item.valor_final}</td>
+                <td><span class="badge bg-${statusClass}">${item.status}</span></td>
+            </tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+    }
+    
+    if (historico.length === 0 && transacoes.length === 0) {
+        html = '<div class="text-center py-4"><i class="fas fa-inbox fa-3x text-muted mb-3"></i><h5>Nenhum histórico encontrado</h5></div>';
+    }
+    
+    document.getElementById('historicoContent').innerHTML = html;
+}
+
+function resetForm(formId) {
+    document.getElementById(formId).reset();
+}
+
+function showAlert(message, type) {
+    // Criar toast/alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (show) {
+        overlay.classList.remove('d-none');
+    } else {
+        overlay.classList.add('d-none');
+    }
+}
+</script>
+{% endblock %} 

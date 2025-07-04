@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Costuraai.com.br</title>
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+        }
+        
+        /* Header Simples */
+        .auth-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.97);
+            border-bottom: 1px solid var(--gray-200);
+            z-index: 1000;
+            height: 80px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+        
+        .logo:hover {
+            color: var(--primary-blue-dark);
+        }
+        
+        .login-link {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .login-link:hover {
+            color: var(--primary-blue);
+        }
+        
+        /* Conteúdo Principal */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.13);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 48px 32px 32px;
+            position: relative;
+        }
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .card-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .card-header p {
+            font-size: 1.1rem;
+            opacity: 0.92;
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 40px 32px 32px;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .section-title h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+        
+        .section-title p {
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+        
+        /* Opções de Cadastro */
+        .choice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .choice-button {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 22px 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--gray-800);
+            background: white;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.04);
+        }
+        
+        .choice-button:hover {
+            border-color: var(--primary-blue-light);
+            box-shadow: 0 8px 32px rgba(59,130,246,0.10);
+            color: var(--primary-blue);
+            transform: translateY(-2px) scale(1.01);
+        }
+        
+        .choice-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .google-choice .choice-icon {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+        }
+        
+        .manual-choice .choice-icon {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+        }
+        
+        .choice-content {
+            flex: 1;
+        }
+        
+        .choice-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--gray-900);
+        }
+        
+        .choice-content p {
+            color: var(--gray-600);
+            margin: 0;
+            font-size: 0.97rem;
+        }
+        
+        .choice-arrow {
+            color: var(--gray-400);
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .choice-button:hover .choice-arrow {
+            color: var(--primary-blue);
+            transform: translateX(5px);
+        }
+        
+        /* Benefícios */
+        .benefits-section {
+            background: var(--gray-50);
+            border-radius: 16px;
+            padding: 24px 18px;
+            margin-bottom: 10px;
+        }
+        
+        .benefits-title {
+            text-align: center;
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 18px;
+        }
+        
+        .benefits-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .benefit-icon {
+            width: 22px;
+            height: 22px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        .benefit-text {
+            color: var(--gray-700);
+            font-size: 0.97rem;
+            line-height: 1.5;
+        }
+        
+        /* Footer */
+        .auth-footer {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .auth-footer p {
+            color: var(--gray-500);
+            font-size: 0.87rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .auth-footer a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .auth-footer a:hover {
+            color: var(--primary-blue-dark);
+            text-decoration: underline;
+        }
+        
+        /* Animações */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .auth-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .auth-card {
+                border-radius: 16px;
+            }
+            
+            .card-header {
+                padding: 36px 12px 24px;
+            }
+            
+            .card-body {
+                padding: 24px 10px 18px;
+            }
+            
+            .choice-button {
+                padding: 16px 10px;
+                gap: 12px;
+            }
+            
+            .choice-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="auth-header">
+        <div class="header-container">
+            <a href="{% url 'home' %}" class="logo">
+                <i class="fas fa-cut"></i>
+                <span>Costuraai.com.br</span>
+            </a>
+            
+            <a href="{% url 'accounts:login' %}" class="login-link">
+                Já tem conta? Entre aqui
+            </a>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="card-header">
+                <h1>
+                    <i class="fas fa-user-plus me-2"></i>
+                    Criar Conta
+                </h1>
+                <p>
+                    Junte-se a centenas de confecções que já transformaram 
+                    sua gestão com o Costuraai.com.br
+                </p>
+            </div>
+            
+            <div class="card-body">
+                <div class="section-title">
+                    <h2>Como deseja se cadastrar?</h2>
+                    <p>Escolha a opção mais conveniente para você</p>
+                </div>
+                
+                <div class="choice-options">
+                    <!-- Opção Google -->
+                    <a href="#" class="choice-button google-choice" onclick="alert('Integração com Google em desenvolvimento')">
+                        <div class="choice-icon">
+                            <i class="fab fa-google"></i>
+                        </div>
+                        <div class="choice-content">
+                            <h3>Continuar com Google</h3>
+                            <p>Rápido, seguro e sem complicações</p>
+                        </div>
+                        <div class="choice-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+                    
+                    <!-- Opção Manual -->
+                    <a href="{% url 'accounts:registro_etapa1' %}" class="choice-button manual-choice">
+                        <div class="choice-icon">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <div class="choice-content">
+                            <h3>Cadastro Manual</h3>
+                            <p>Preencha seus dados manualmente</p>
+                        </div>
+                        <div class="choice-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Benefícios -->
+                <div class="benefits-section">
+                    <h3 class="benefits-title">
+                        Por que criar uma conta no Costuraai.com.br?
+                    </h3>
+                    
+                    <div class="benefits-list">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <strong>Gestão completa</strong> da sua confecção em um só lugar
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <strong>30 dias gratuitos</strong> para testar todas as funcionalidades
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <strong>Suporte especializado</strong> para o setor de confecção
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="benefit-text">
+                                <strong>Atualizações constantes</strong> e novos recursos regularmente
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="auth-footer">
+                    <p>
+                        Ao se cadastrar, você concorda com nossos 
+                        <a href="#">Termos de Serviço</a> e 
+                        <a href="#">Política de Privacidade</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Adicionar efeitos visuais suaves
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animação suave nos botões
+            const choiceButtons = document.querySelectorAll('.choice-button');
+            
+            choiceButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px) scale(1.01)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+            
+            // Scroll suave para links internos (se houver)
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

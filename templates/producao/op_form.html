@@ -1,0 +1,816 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}{% if is_edit %}Editar{% else %}Nova{% endif %} Ordem de Produção - {{ empresa.nome }}{% endblock %}
+
+{% block page_title %}{% if is_edit %}Editar Ordem de Produção{% else %}Nova Ordem de Produção{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'producao:ops_listar' %}">Ordens de Produção</a></li>
+        <li class="breadcrumb-item active">{% if is_edit %}Editar{% else %}Nova OP{% endif %}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .form-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(254, 243, 199, 0.9);
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .action-buttons {
+        margin-bottom: 2rem;
+    }
+
+    .btn-action {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-right: 0.75rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .section-header i {
+        margin-right: 0.75rem;
+        color: #6366f1;
+        font-size: 1.25rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-control:read-only {
+        background-color: #f9fafb;
+        color: #6b7280;
+    }
+
+    .size-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: end;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .size-item:hover {
+        border-color: #6366f1;
+        background: #f0f9ff;
+    }
+
+    .size-item .form-control {
+        margin-bottom: 0;
+    }
+
+    .size-item .btn {
+        flex-shrink: 0;
+    }
+
+    .add-size-btn {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px dashed #0ea5e9;
+        color: #0ea5e9;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        font-weight: 600;
+    }
+
+    .add-size-btn:hover {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        border-color: #0ea5e9;
+        transform: translateY(-2px);
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border: 2px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 1.5rem;
+        position: sticky;
+        top: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #cbd5e1;
+    }
+
+    .summary-header h5 {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .summary-header i {
+        margin-right: 0.5rem;
+        color: #6366f1;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: #1f2937;
+        margin-top: 0.75rem;
+        padding-top: 1rem;
+        border-top: 2px solid #cbd5e1;
+    }
+
+    .summary-label {
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.875rem;
+    }
+
+    .summary-item:last-child .summary-value {
+        color: #059669;
+        font-size: 1.125rem;
+    }
+
+    .totals-section {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+        border: 2px solid #e5e7eb;
+    }
+
+    .totals-section .form-control {
+        font-weight: 600;
+        background: white;
+        border: 2px solid #d1d5db;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 48px !important;
+        border-radius: 12px !important;
+        border: 2px solid #e5e7eb !important;
+        padding: 0 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 44px !important;
+        padding-left: 1rem !important;
+        color: #374151 !important;
+        font-size: 0.875rem !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 44px !important;
+        right: 1rem !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .select2-dropdown {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    @media (max-width: 768px) {
+        .form-header {
+            padding: 1.5rem;
+        }
+
+        .form-avatar {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .btn-action {
+            width: 100%;
+            margin-right: 0;
+        }
+
+        .size-item {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .summary-card {
+            position: static;
+            margin-top: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Form Header -->
+<div class="form-header">
+    <div class="row align-items-center">
+        <div class="col-md-2 text-center">
+            <div class="form-avatar">
+                {% if is_edit %}
+                    <i class="fas fa-edit"></i>
+                {% else %}
+                    <i class="fas fa-plus-circle"></i>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h1 class="h2 mb-2">
+                {% if is_edit %}
+                    Editar Ordem de Produção
+                {% else %}
+                    Nova Ordem de Produção
+                {% endif %}
+            </h1>
+            <p class="h5 mb-2 opacity-90">
+                {% if is_edit %}
+                    Atualize os dados da ordem de produção #{{ op.numero_op }}
+                {% else %}
+                    Configure todos os detalhes da nova ordem
+                {% endif %}
+            </p>
+            <p class="mb-2">
+                <i class="fas fa-factory me-2"></i>Produção Interna
+                {% if is_edit and op %}
+                | <i class="fas fa-barcode me-1"></i>{{ op.numero_op }}
+                {% endif %}
+            </p>
+            <p class="mb-0">
+                <i class="fas fa-calendar me-2"></i>{{ "now"|date:"d/m/Y H:i" }}
+                | <i class="fas fa-user me-1"></i>{{ user.get_full_name }}
+            </p>
+        </div>
+        <div class="col-md-2 text-center">
+            <span class="status-badge">
+                <i class="fas fa-edit me-2"></i>
+                {% if is_edit %}Editando{% else %}Rascunho{% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-secondary btn-action">
+        <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+    </a>
+    {% if is_edit %}
+    <a href="{% url 'producao:op_detalhes' op.id %}" class="btn btn-outline-info btn-action">
+        <i class="fas fa-eye me-2"></i>Ver Detalhes
+    </a>
+    {% endif %}
+    <button type="submit" form="opForm" class="btn btn-success btn-action">
+        <i class="fas fa-save me-2"></i>
+        {% if is_edit %}Atualizar OP{% else %}Criar OP{% endif %}
+    </button>
+</div>
+
+<form method="post" id="opForm" action="">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Informações Básicas -->
+            <div class="form-card">
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Informações Básicas</h3>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Número da OP</label>
+                            <input type="text" class="form-control" name="numero_op" 
+                                   value="{{ op.numero_op|default:'Será gerado automaticamente' }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">OP Externa (do Cliente)</label>
+                            <input type="text" class="form-control" name="op_externa" 
+                                   value="{{ op.op_externa|default:'' }}" 
+                                   placeholder="Ex: NF-12345, REF-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Data de Entrega <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="data_previsao" 
+                                   value="{{ op.data_previsao|date:'Y-m-d' }}" 
+                                   onchange="atualizarResumo()" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" name="prioridade">
+                                <option value="1" {% if op.prioridade == 1 %}selected{% endif %}>1 - Baixa</option>
+                                <option value="2" {% if not op or op.prioridade == 2 %}selected{% endif %}>2 - Normal</option>
+                                <option value="3" {% if op.prioridade == 3 %}selected{% endif %}>3 - Média</option>
+                                <option value="4" {% if op.prioridade == 4 %}selected{% endif %}>4 - Alta</option>
+                                <option value="5" {% if op.prioridade == 5 %}selected{% endif %}>5 - Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Produto e Cliente -->
+            <div class="form-card">
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-tshirt"></i>
+                        <h3>Produto e Cliente</h3>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Cliente <span class="text-danger">*</span></label>
+                            <select class="form-select" id="cliente_select" name="cliente" required>
+                                {% if op.cliente %}
+                                <option value="{{ op.cliente.id }}" selected>{{ op.cliente.nome }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Produto <span class="text-danger">*</span></label>
+                            <select class="form-select" id="produto_select" name="produto" required>
+                                {% if op.produto %}
+                                <option value="{{ op.produto.id }}" selected>{{ op.produto.nome }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preço Unitário (R$)</label>
+                            <input type="number" class="form-control" id="preco_unitario" 
+                                   name="preco_unitario" value="{{ op.preco_unitario|default:'' }}" 
+                                   step="0.01" placeholder="0,00" onchange="calcularTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preço será</label>
+                            <div class="form-control bg-light">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                Preenchido automaticamente pelo produto
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grade de Tamanhos -->
+            <div class="form-card">
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-ruler"></i>
+                        <h3>Grade de Tamanhos e Quantidades</h3>
+                    </div>
+                    
+                    <div id="tamanhos-container">
+                        {% for item in op.itens_grade.all %}
+                        <div class="size-item">
+                            <div class="flex-grow-1">
+                                <label class="form-label">Tamanho</label>
+                                <input type="text" class="form-control" name="tamanhos[]" 
+                                       placeholder="Ex: P, M, G, 38, 40" value="{{ item.tamanho }}">
+                            </div>
+                            <div style="width: 120px;">
+                                <label class="form-label">Quantidade</label>
+                                <input type="number" class="form-control" name="quantidades[]" 
+                                       placeholder="Qtd" value="{{ item.quantidade }}" 
+                                       oninput="calcularTotal()" min="1">
+                            </div>
+                            <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)"
+                                    title="Remover tamanho">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% empty %}
+                        <div class="size-item">
+                            <div class="flex-grow-1">
+                                <label class="form-label">Tamanho</label>
+                                <input type="text" class="form-control" name="tamanhos[]" 
+                                       placeholder="Ex: P, M, G, 38, 40">
+                            </div>
+                            <div style="width: 120px;">
+                                <label class="form-label">Quantidade</label>
+                                <input type="number" class="form-control" name="quantidades[]" 
+                                       placeholder="Qtd" oninput="calcularTotal()" min="1">
+                            </div>
+                            <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)"
+                                    title="Remover tamanho">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" class="btn add-size-btn w-100" onclick="adicionarTamanho()">
+                        <i class="fas fa-plus me-2"></i>Adicionar Tamanho
+                    </button>
+                    
+                    <div class="totals-section">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantidade Total</label>
+                                <input type="number" class="form-control" name="quantidade_total" 
+                                       readonly id="quantidadeTotal" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Valor Total (R$)</label>
+                                <input type="text" class="form-control" name="valor_total" 
+                                       readonly id="valorTotal" value="R$ 0,00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="form-card">
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-comment"></i>
+                        <h3>Observações</h3>
+                    </div>
+                    <textarea class="form-control" name="observacoes" rows="4" 
+                              placeholder="Instruções especiais, detalhes de acabamento, cores específicas, etc...">{{ op.observacoes|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Resumo da OP -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h5>Resumo da OP</h5>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Cliente:</span>
+                    <span class="summary-value" id="resumoCliente">-</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Produto:</span>
+                    <span class="summary-value" id="resumoProduto">-</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Qtd. Total:</span>
+                    <span class="summary-value" id="resumoQtd">0 peças</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Valor Unit.:</span>
+                    <span class="summary-value" id="resumoPrecoUnit">R$ 0,00</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">Data Entrega:</span>
+                    <span class="summary-value" id="resumoEntrega">-</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span class="summary-label">VALOR TOTAL:</span>
+                    <span class="summary-value" id="resumoTotal">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar Select2 para produtos
+    $('#produto_select').select2({
+        placeholder: 'Busque por nome ou código do produto',
+        allowClear: true,
+        minimumInputLength: 2,
+        ajax: {
+            url: "{% url 'producao:buscar_produtos' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results || []
+                };
+            },
+            cache: true
+        }
+    });
+
+    // Inicializar Select2 para clientes
+    $('#cliente_select').select2({
+        placeholder: 'Busque pelo nome do cliente',
+        allowClear: true,
+        minimumInputLength: 2,
+        ajax: {
+            url: "{% url 'producao:buscar_clientes' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results || []
+                };
+            },
+            cache: true
+        }
+    });
+
+    // Quando selecionar um produto, atualizar preço
+    $('#produto_select').on('select2:select', function (e) {
+        var data = e.params.data;
+        if (data.preco) {
+            $('#preco_unitario').val(data.preco);
+        }
+        calcularTotal();
+        atualizarResumo();
+    });
+
+    // Quando selecionar um cliente, atualizar resumo
+    $('#cliente_select').on('select2:select', function (e) {
+        atualizarResumo();
+    });
+
+    // Calcular totais ao carregar a página
+    calcularTotal();
+    atualizarResumo();
+});
+
+function adicionarTamanho() {
+    const container = document.getElementById('tamanhos-container');
+    const novoItem = document.createElement('div');
+    novoItem.className = 'size-item';
+    novoItem.innerHTML = `
+        <div class="flex-grow-1">
+            <label class="form-label">Tamanho</label>
+            <input type="text" class="form-control" name="tamanhos[]" 
+                   placeholder="Ex: P, M, G, 38, 40">
+        </div>
+        <div style="width: 120px;">
+            <label class="form-label">Quantidade</label>
+            <input type="number" class="form-control" name="quantidades[]" 
+                   placeholder="Qtd" oninput="calcularTotal()" min="1">
+        </div>
+        <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)"
+                title="Remover tamanho">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(novoItem);
+}
+
+function removerLinha(btn) {
+    const container = document.getElementById('tamanhos-container');
+    if (container.children.length > 1) {
+        btn.closest('.size-item').remove();
+        calcularTotal();
+    } else {
+        alert('É necessário manter pelo menos um tamanho.');
+    }
+}
+
+function calcularTotal() {
+    let total = 0;
+    document.getElementsByName('quantidades[]').forEach(input => {
+        total += parseInt(input.value) || 0;
+    });
+    
+    document.getElementById('quantidadeTotal').value = total;
+    
+    const precoUnitario = parseFloat(document.getElementById('preco_unitario').value) || 0;
+    const valorTotal = total * precoUnitario;
+    
+    document.getElementById('valorTotal').value = 'R$ ' + valorTotal.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2
+    });
+    
+    atualizarResumo();
+}
+
+function atualizarResumo() {
+    // Cliente
+    const clienteSelect = $('#cliente_select').select2('data');
+    if (clienteSelect && clienteSelect.length > 0) {
+        document.getElementById('resumoCliente').textContent = clienteSelect[0].text;
+    } else {
+        document.getElementById('resumoCliente').textContent = '-';
+    }
+
+    // Produto
+    const produtoSelect = $('#produto_select').select2('data');
+    if (produtoSelect && produtoSelect.length > 0) {
+        document.getElementById('resumoProduto').textContent = produtoSelect[0].text;
+    } else {
+        document.getElementById('resumoProduto').textContent = '-';
+    }
+
+    // Quantidade
+    const qtdTotal = document.getElementById('quantidadeTotal').value || 0;
+    document.getElementById('resumoQtd').textContent = qtdTotal + ' peças';
+
+    // Preço Unitário
+    const precoUnit = parseFloat(document.getElementById('preco_unitario').value) || 0;
+    document.getElementById('resumoPrecoUnit').textContent = 'R$ ' + precoUnit.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2
+    });
+    
+    // Valor Total
+    const valorTotal = (parseInt(qtdTotal) || 0) * precoUnit;
+    document.getElementById('resumoTotal').textContent = 'R$ ' + valorTotal.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2
+    });
+    
+    // Data de Entrega
+    const dataEntrega = document.querySelector('[name="data_previsao"]').value;
+    if (dataEntrega) {
+        const data = new Date(dataEntrega + 'T00:00:00');
+        document.getElementById('resumoEntrega').textContent = data.toLocaleDateString('pt-BR');
+    } else {
+        document.getElementById('resumoEntrega').textContent = '-';
+    }
+}
+
+// Validação do formulário
+document.getElementById('opForm').addEventListener('submit', function(e) {
+    const cliente = $('#cliente_select').val();
+    const produto = $('#produto_select').val();
+    const dataPrevisao = document.querySelector('[name="data_previsao"]').value;
+    const quantidades = document.getElementsByName('quantidades[]');
+    
+    let temQuantidade = false;
+    for (let input of quantidades) {
+        if (parseInt(input.value) > 0) {
+            temQuantidade = true;
+            break;
+        }
+    }
+    
+    if (!cliente) {
+        alert('Por favor, selecione um cliente.');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!produto) {
+        alert('Por favor, selecione um produto.');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!dataPrevisao) {
+        alert('Por favor, informe a data de entrega.');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!temQuantidade) {
+        alert('Por favor, informe pelo menos uma quantidade maior que zero.');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+{% endblock %} 

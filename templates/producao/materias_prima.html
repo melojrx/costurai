@@ -1,0 +1,108 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Matérias Primas - {{ empresa.nome }} - costurai.com.br{% endblock %}
+
+{% block content %}
+<!-- Incluir Sidebar Component -->
+{% include 'base/components/_sidebar.html' %}
+
+<!-- Main Content -->
+<div class="main-content sidebar-expanded" id="mainContent">
+    <div class="container-fluid" style="padding-top: 20px; padding-bottom: 20px;">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 mb-1">
+                    <i class="fas fa-boxes me-3"></i>
+                    Matérias Primas
+                </h2>
+                <p class="text-muted mb-0">Gestão do estoque de materiais</p>
+            </div>
+            <div>
+                <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <button class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nova Matéria Prima
+                </button>
+            </div>
+        </div>
+
+        <!-- Matérias Primas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Matérias Primas
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if materias %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Material</th>
+                                    <th>Fornecedor</th>
+                                    <th>Estoque Atual</th>
+                                    <th>Estoque Mínimo</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for materia in materias %}
+                                <tr>
+                                    <td><strong>{{ materia.codigo }}</strong></td>
+                                    <td>
+                                        <strong>{{ materia.nome }}</strong>
+                                        <br><small class="text-muted">{{ materia.descricao|default:"--" }}</small>
+                                    </td>
+                                    <td>{{ materia.fornecedor.nome|default:"--" }}</td>
+                                    <td>
+                                        <span class="{% if materia.estoque_atual <= materia.estoque_minimo %}text-danger{% else %}text-success{% endif %}">
+                                            {{ materia.estoque_atual }} {{ materia.unidade_medida }}
+                                        </span>
+                                    </td>
+                                    <td>{{ materia.estoque_minimo }} {{ materia.unidade_medida }}</td>
+                                    <td>
+                                        {% if materia.ativo %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                        
+                                        {% if materia.estoque_atual <= materia.estoque_minimo %}
+                                            <span class="badge bg-warning">Baixo Estoque</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" title="Histórico">
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma matéria prima cadastrada</h5>
+                        <p class="text-muted">Comece cadastrando suas primeiras matérias primas.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Cadastrar Primeira Matéria Prima
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

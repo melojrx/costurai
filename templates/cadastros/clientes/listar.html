@@ -1,0 +1,476 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}Clientes - {{ empresa.nome }} - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para a listagem de clientes */
+    .search-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+    
+    .search-form {
+        display: grid;
+        grid-template-columns: 1fr 200px 1fr;
+        gap: 20px;
+        align-items: end;
+    }
+    
+    .search-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .clients-table-container {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    .clients-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    
+    .clients-table th {
+        background: var(--gray-50);
+        padding: 16px 20px;
+        text-align: left;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .clients-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 0.875rem;
+        color: var(--gray-800);
+        vertical-align: middle;
+    }
+    
+    .clients-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .clients-table tr:hover {
+        background: var(--gray-50);
+    }
+    
+    .client-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .client-name {
+        font-weight: 600;
+        color: var(--gray-900);
+        font-size: 0.875rem;
+    }
+    
+    .client-subtitle {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .status-ativo {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .status-inativo {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    .btn-action.btn-view {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
+    
+    .btn-action.btn-edit {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .btn-action.btn-delete {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--gray-500);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--gray-300);
+        margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+    }
+    
+    .empty-state p {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        margin-bottom: 24px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .search-form {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        .search-actions {
+            justify-content: stretch;
+        }
+        
+        .search-actions .btn-modern {
+            flex: 1;
+        }
+        
+        .clients-table-container {
+            overflow-x: auto;
+        }
+        
+        .clients-table {
+            min-width: 800px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .btn-action {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Clientes</h1>
+        <p class="page-subtitle">Gerencie os clientes da sua confecção</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'cadastros:cliente_criar' %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-plus"></i>
+            Novo Cliente
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid-modern grid-cols-4 mb-4">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total de Clientes</div>
+        <div class="stat-value">{{ total_clientes|default:"0" }}</div>
+        <div class="stat-change neutral">
+            <i class="fas fa-database"></i>
+            Cadastrados
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Clientes Ativos</div>
+        <div class="stat-value">{{ clientes_ativos|default:"0" }}</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            Em atividade
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-pause-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Clientes Inativos</div>
+        <div class="stat-value">{{ clientes_inativos|default:"0" }}</div>
+        <div class="stat-change negative">
+            <i class="fas fa-arrow-down"></i>
+            Suspensos
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="stat-label">Resultados</div>
+        <div class="stat-value">{{ clientes|length }}</div>
+        <div class="stat-change neutral">
+            <i class="fas fa-filter"></i>
+            Filtrados
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-card">
+    <form method="GET" class="search-form">
+        <div class="form-modern">
+            <label class="form-label">Buscar Cliente</label>
+            <input type="text" class="form-control" name="search" value="{{ search }}" 
+                   placeholder="Nome, CNPJ, contato ou email...">
+        </div>
+        <div class="form-modern">
+            <label class="form-label">Status</label>
+            <select class="form-control" name="status">
+                <option value="">Todos</option>
+                <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativos</option>
+                <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativos</option>
+            </select>
+        </div>
+        <div class="search-actions">
+            <button type="submit" class="btn-modern btn-modern-primary">
+                <i class="fas fa-search"></i>
+                Buscar
+            </button>
+            <a href="{% url 'cadastros:clientes_listar' %}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-times"></i>
+                Limpar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Clients Table -->
+<div class="clients-table-container">
+    {% if clientes %}
+    <table class="clients-table">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>CNPJ</th>
+                <th>Contato</th>
+                <th>Telefone</th>
+                <th>Cidade/UF</th>
+                <th>Status</th>
+                <th width="180">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-name">{{ cliente.nome }}</div>
+                        {% if cliente.nome_fantasia %}
+                        <div class="client-subtitle">{{ cliente.nome_fantasia }}</div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    {% if cliente.cnpj %}
+                        <code style="background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ cliente.cnpj }}</code>
+                    {% else %}
+                        <span style="color: var(--gray-400);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cliente.contato %}
+                        <div class="client-info">
+                            <div class="client-name">{{ cliente.contato }}</div>
+                            {% if cliente.email %}
+                            <div class="client-subtitle">{{ cliente.email }}</div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <span style="color: var(--gray-400);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cliente.telefone %}
+                        <code style="background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ cliente.telefone }}</code>
+                    {% else %}
+                        <span style="color: var(--gray-400);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cliente.cidade and cliente.estado %}
+                        <div class="client-info">
+                            <div class="client-name">{{ cliente.cidade }}</div>
+                            <div class="client-subtitle">{{ cliente.estado }}</div>
+                        </div>
+                    {% else %}
+                        <span style="color: var(--gray-400);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge status-{{ cliente.ativo|yesno:'ativo,inativo' }}">
+                        {{ cliente.ativo|yesno:'Ativo,Inativo' }}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'cadastros:cliente_detalhes' cliente.id %}" class="btn-action btn-view" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'cadastros:cliente_editar' cliente.id %}" class="btn-action btn-edit" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn-action btn-delete" title="Excluir" 
+                                onclick="confirmDelete('{{ cliente.nome }}', '{% url 'cadastros:cliente_deletar' cliente.id %}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h3>Nenhum cliente encontrado</h3>
+        <p>{% if search %}Não encontramos clientes com os termos "{{ search }}".{% else %}Você ainda não possui clientes cadastrados.{% endif %}</p>
+        <a href="{% url 'cadastros:cliente_criar' %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-plus"></i>
+            Cadastrar Primeiro Cliente
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(clientName, deleteUrl) {
+    if (confirm('Tem certeza que deseja excluir o cliente "' + clientName + '"?\n\nEsta ação não pode ser desfeita.')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = deleteUrl;
+        
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        var searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                // Busca em tempo real pode ser implementada aqui
+            }, 500);
+        });
+    }
+});
+</script>
+{% endblock %} 

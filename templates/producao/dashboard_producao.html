@@ -1,0 +1,732 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}Dashboard de Produção - costurai.com.br{% endblock %}
+
+{% block extra_dashboard_css %}
+<style>
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin-bottom: 15px;
+    }
+    
+    .stats-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 8px;
+        line-height: 1;
+    }
+    
+    .stats-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stats-trend {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .trend-up {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .trend-down {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 25px;
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+    }
+    
+    .chart-title i {
+        margin-right: 10px;
+        color: #6366f1;
+    }
+    
+    .production-line {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .production-line:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .line-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .line-name {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+    
+    .line-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-ativa {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-parada {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-manutencao {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .line-progress {
+        width: 100%;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        transition: width 0.5s ease;
+    }
+    
+    .line-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .info-item {
+        text-align: center;
+    }
+    
+    .info-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+    
+    .urgentes-list {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .urgente-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #fffbeb;
+        transition: all 0.3s ease;
+    }
+    
+    .urgente-item:hover {
+        border-color: #f59e0b;
+        background: #fef3c7;
+    }
+    
+    .urgente-item.critico {
+        border-color: #fee2e2;
+        border-left-color: #ef4444;
+        background: #fef2f2;
+    }
+    
+    .urgente-item.critico:hover {
+        border-color: #ef4444;
+        background: #fee2e2;
+    }
+    
+    .urgente-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .urgente-item.critico .urgente-icon {
+        background: #ef4444;
+    }
+    
+    .urgente-info {
+        flex: 1;
+    }
+    
+    .urgente-op {
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 2px;
+    }
+    
+    .urgente-produto {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+    
+    .urgente-prazo {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #f59e0b;
+    }
+    
+    .urgente-item.critico .urgente-prazo {
+        color: #ef4444;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .quick-action {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .quick-action:hover {
+        border-color: #6366f1;
+        transform: translateY(-2px);
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .quick-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .quick-action:hover::before {
+        opacity: 1;
+    }
+    
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        color: white;
+        font-size: 1.3rem;
+    }
+    
+    .action-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 5px;
+    }
+    
+    .action-desc {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+    
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 20px 15px !important;
+        }
+        
+        .stats-card {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .line-info {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .chart-card {
+            padding: 20px 15px;
+        }
+        
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .urgente-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .urgente-icon {
+            margin: 0 0 10px 0;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-2">
+                        <i class="fas fa-industry me-3"></i>
+                        Dashboard de Produção
+                    </h1>
+                    <p class="mb-0 opacity-90">
+                        Visão geral completa da produção, linhas ativas e indicadores em tempo real
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <span class="badge bg-success bg-opacity-20 text-success px-3 py-2">
+                        <i class="fas fa-circle me-2" style="font-size: 0.6rem;"></i>
+                        Sistema Online
+                    </span>
+                    <span class="ms-2 text-white opacity-75">{{ "now"|date:"H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- KPIs Principais -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <span class="stats-trend trend-up">+12%</span>
+                    <div class="stats-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stats-number">24</div>
+                    <div class="stats-label">OPs Ativas</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <span class="stats-trend trend-up">+8%</span>
+                    <div class="stats-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <div class="stats-number">12</div>
+                    <div class="stats-label">Em Produção</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <span class="stats-trend trend-down">-3%</span>
+                    <div class="stats-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-number">3</div>
+                    <div class="stats-label">Atrasadas</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <span class="stats-trend trend-up">+25%</span>
+                    <div class="stats-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <div class="stats-number">1.850</div>
+                    <div class="stats-label">Peças/Dia</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Gráfico de Produção -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-line"></i>
+                            Produção dos Últimos 7 Dias
+                        </h3>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary active">7 dias</button>
+                            <button class="btn btn-outline-primary">30 dias</button>
+                            <button class="btn btn-outline-primary">90 dias</button>
+                        </div>
+                    </div>
+                    <canvas id="producaoChart" height="100"></canvas>
+                </div>
+
+                <!-- Linhas de Produção -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">
+                            <i class="fas fa-industry"></i>
+                            Status das Linhas de Produção
+                        </h3>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-sync me-2"></i>Atualizar
+                        </button>
+                    </div>
+                    
+                    <div class="production-line">
+                        <div class="line-header">
+                            <div class="line-name">Linha de Calças</div>
+                            <span class="line-status status-ativa">Ativa</span>
+                        </div>
+                        <div class="line-progress">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        <div class="line-info">
+                            <div class="info-item">
+                                <div class="info-number">150</div>
+                                <div class="info-label">Meta Diária</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">112</div>
+                                <div class="info-label">Produzidas</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">75%</div>
+                                <div class="info-label">Eficiência</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">6h</div>
+                                <div class="info-label">Restante</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="production-line">
+                        <div class="line-header">
+                            <div class="line-name">Linha de Camisas</div>
+                            <span class="line-status status-ativa">Ativa</span>
+                        </div>
+                        <div class="line-progress">
+                            <div class="progress-fill" style="width: 60%;"></div>
+                        </div>
+                        <div class="line-info">
+                            <div class="info-item">
+                                <div class="info-number">200</div>
+                                <div class="info-label">Meta Diária</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">120</div>
+                                <div class="info-label">Produzidas</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">60%</div>
+                                <div class="info-label">Eficiência</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">8h</div>
+                                <div class="info-label">Restante</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="production-line">
+                        <div class="line-header">
+                            <div class="line-name">Linha de Acabamento</div>
+                            <span class="line-status status-manutencao">Manutenção</span>
+                        </div>
+                        <div class="line-progress">
+                            <div class="progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="line-info">
+                            <div class="info-item">
+                                <div class="info-number">0</div>
+                                <div class="info-label">Meta Diária</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">0</div>
+                                <div class="info-label">Produzidas</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">0%</div>
+                                <div class="info-label">Eficiência</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">2h</div>
+                                <div class="info-label">Previsão</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- OPs Urgentes -->
+                <div class="urgentes-list">
+                    <h5 class="mb-3">
+                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                        OPs Críticas
+                    </h5>
+                    
+                    <div class="urgente-item critico">
+                        <div class="urgente-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="urgente-info">
+                            <div class="urgente-op">#OP-001</div>
+                            <div class="urgente-produto">Calça Jeans Masculina</div>
+                            <div class="urgente-prazo">Vence HOJE!</div>
+                        </div>
+                    </div>
+                    
+                    <div class="urgente-item">
+                        <div class="urgente-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="urgente-info">
+                            <div class="urgente-op">#OP-005</div>
+                            <div class="urgente-produto">Camisa Social</div>
+                            <div class="urgente-prazo">Vence em 2 dias</div>
+                        </div>
+                    </div>
+                    
+                    <div class="urgente-item">
+                        <div class="urgente-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="urgente-info">
+                            <div class="urgente-op">#OP-012</div>
+                            <div class="urgente-produto">Vestido Estampado</div>
+                            <div class="urgente-prazo">Vence em 3 dias</div>
+                        </div>
+                    </div>
+                    
+                    <a href="#" class="btn btn-outline-danger btn-sm w-100 mt-3">
+                        <i class="fas fa-list me-2"></i>Ver Todas as OPs Urgentes
+                    </a>
+                </div>
+                
+                <!-- Ações Rápidas -->
+                <div class="chart-card mt-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Ações Rápidas
+                    </h5>
+                    
+                    <div class="quick-actions-grid">
+                        <a href="{% url 'producao:op_novo' %}" class="quick-action">
+                            <div class="action-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="action-title">Nova OP</div>
+                            <div class="action-desc">Criar ordem de produção</div>
+                        </a>
+                        
+                        <a href="{% url 'financeiro:relatorio_financeiro' %}" class="quick-action">
+                            <div class="action-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="action-title">Financeiro</div>
+                            <div class="action-desc">Contas a receber e faturamento</div>
+                        </a>
+                        
+                        <a href="{% url 'producao:materias_prima' %}" class="quick-action">
+                            <div class="action-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="action-title">Matéria Prima</div>
+                            <div class="action-desc">Verificar estoque</div>
+                        </a>
+                        
+                        <a href="{% url 'producao:relatorios' %}" class="quick-action">
+                            <div class="action-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="action-title">Relatórios</div>
+                            <div class="action-desc">Gerar relatórios</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Produção
+    const ctx = document.getElementById('producaoChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['18/01', '19/01', '20/01', '21/01', '22/01', '23/01', '24/01'],
+            datasets: [{
+                label: 'Peças Produzidas',
+                data: [1200, 1850, 1600, 2100, 1900, 2200, 1750],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Meta Diária',
+                data: [1800, 1800, 1800, 1800, 1800, 1800, 1800],
+                borderColor: '#f59e0b',
+                borderDash: [5, 5],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' pç';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Atualização automática dos dados
+    setInterval(function() {
+        // Aqui seria implementada a atualização via AJAX
+        console.log('Atualizando dados...');
+    }, 30000); // A cada 30 segundos
+    
+    // Animação dos contadores
+    function animateCounter(element, target) {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current);
+        }, 20);
+    }
+    
+    // Animar números das estatísticas
+    document.querySelectorAll('.stats-number').forEach(el => {
+        const target = parseInt(el.textContent);
+        animateCounter(el, target);
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,638 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}Dashboard - {{ empresa.nome|default:"Costuraai.com.br" }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Bem-vindo, {{ user.first_name|default:user.username }}!</h1>
+        <p class="page-subtitle">Este é o seu painel de controle do Costuraai.com.br. Aqui você pode gerenciar todos os aspectos da sua confecção.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-modern btn-modern-outline">
+            <i class="fas fa-download"></i>
+            Exportar Relatório
+        </button>
+        <a href="{% url 'producao:op_novo' %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-plus"></i>
+            Nova OP
+        </a>
+    </div>
+</div>
+
+<!-- Contador do Plano -->
+{% if plano_info.mostrar_contador %}
+<div class="plano-contador-wrapper mb-4">
+    <div class="plano-contador plano-contador-{{ plano_info.cor_status }}">
+        <div class="plano-contador-content">
+            <div class="plano-contador-icon">
+                <i class="fas fa-{{ plano_info.icone_status }}"></i>
+            </div>
+            <div class="plano-contador-info">
+                <div class="plano-contador-titulo">
+                    {% if plano_info.is_trial %}
+                        Período de Trial - {{ plano_info.nome }}
+                    {% else %}
+                        {{ plano_info.nome }} - R$ {{ plano_info.preco_mensal|floatformat:2 }}/mês
+                    {% endif %}
+                </div>
+                <div class="plano-contador-mensagem">{{ plano_info.mensagem_status }}</div>
+            </div>
+            <div class="plano-contador-dias">
+                {% if plano_info.is_trial %}
+                    <div class="contador-numero">{{ plano_info.dias_restantes }}</div>
+                    <div class="contador-label">dia{{ plano_info.dias_restantes|pluralize:"s" }} restante{{ plano_info.dias_restantes|pluralize:"s" }}</div>
+                {% else %}
+                    <div class="contador-numero">{{ plano_info.dias_para_vencimento }}</div>
+                    <div class="contador-label">dia{{ plano_info.dias_para_vencimento|pluralize:"s" }} p/ vencimento</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="plano-contador-actions">
+            {% if plano_info.is_trial %}
+                <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-upgrade">
+                    <i class="fas fa-crown"></i>
+                    Assinar Plano
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-manage">
+                    <i class="fas fa-cog"></i>
+                    Gerenciar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.plano-contador-wrapper {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.plano-contador {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--gray-200);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.plano-contador:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.plano-contador::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--success);
+    transition: all 0.3s ease;
+}
+
+.plano-contador-success::before {
+    background: linear-gradient(90deg, var(--success), #059669);
+}
+
+.plano-contador-primary::before {
+    background: linear-gradient(90deg, var(--primary-blue-light), var(--primary-blue-dark));
+}
+
+.plano-contador-warning::before {
+    background: linear-gradient(90deg, var(--warning), #d97706);
+}
+
+.plano-contador-danger::before {
+    background: linear-gradient(90deg, var(--danger), #dc2626);
+}
+
+.plano-contador-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.plano-contador-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.plano-contador-success .plano-contador-icon {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.plano-contador-primary .plano-contador-icon {
+    background: var(--accent-blue);
+    color: var(--primary-blue-light);
+}
+
+.plano-contador-warning .plano-contador-icon {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.plano-contador-danger .plano-contador-icon {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.plano-contador-info {
+    flex: 1;
+}
+
+.plano-contador-titulo {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.plano-contador-mensagem {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+
+.plano-contador-dias {
+    text-align: center;
+    padding: 0 24px;
+    border-left: 1px solid var(--gray-200);
+    flex-shrink: 0;
+}
+
+.contador-numero {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--primary-blue-light), var(--primary-blue-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.plano-contador-warning .contador-numero {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.plano-contador-danger .contador-numero {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.contador-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.plano-contador-actions {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.btn-contador {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-contador-upgrade {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+}
+
+.btn-contador-upgrade:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(245, 158, 11, 0.3);
+    color: white;
+}
+
+.btn-contador-manage {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.btn-contador-manage:hover {
+    background: var(--gray-200);
+    color: var(--gray-800);
+}
+
+/* Animação de pulso para urgência */
+.plano-contador-danger .plano-contador-icon {
+    animation: pulse-danger 2s infinite;
+}
+
+.plano-contador-warning .plano-contador-icon {
+    animation: pulse-warning 3s infinite;
+}
+
+@keyframes pulse-danger {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes pulse-warning {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .plano-contador-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+    
+    .plano-contador-dias {
+        border-left: none;
+        border-top: 1px solid var(--gray-200);
+        padding: 16px 0 0 0;
+    }
+    
+    .plano-contador-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .btn-contador {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .contador-numero {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endif %}
+
+<!-- Stats Cards -->
+<div class="grid-modern grid-cols-4 mb-4">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="stat-label">Clientes</div>
+        <div class="stat-value">{{ total_clientes|default:"42" }}</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            12% este mês
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+        </div>
+        <div class="stat-label">OPs em Produção</div>
+        <div class="stat-value">{{ ops_producao|default:"12" }}</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            8% esta semana
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+        <div class="stat-label">Entregas Hoje</div>
+        <div class="stat-value">{{ entregas_hoje|default:"3" }}</div>
+        <div class="stat-change negative">
+            <i class="fas fa-arrow-down"></i>
+            2 atrasadas
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon danger">
+                <i class="fas fa-brazilian-real-sign"></i>
+            </div>
+        </div>
+        <div class="stat-label">Faturamento Mês</div>
+        <div class="stat-value">R$ {{ faturamento_mes|default:"3.250"|floatformat:3 }}</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            23% vs mês anterior
+        </div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="grid-modern grid-cols-3" style="grid-template-columns: 2fr 1fr;">
+    <!-- Recent Activities -->
+    <div class="card-modern">
+        <div class="card-header-modern">
+            <h3 class="card-title-modern">Atividades Recentes</h3>
+            <p class="card-subtitle-modern">Últimas movimentações do sistema</p>
+        </div>
+        <div class="card-body-modern" style="padding: 0;">
+            <div class="table-modern">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 20px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="stat-icon primary" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="fas fa-user-plus"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Novo cliente cadastrado</div>
+                                        <div class="text-sm text-gray-600">Maria Santos adicionada ao sistema</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 20px; text-align: right;">
+                                <span class="text-xs text-gray-500">Há 30 min</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="stat-icon success" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">OP Finalizada</div>
+                                        <div class="text-sm text-gray-600">OP #1234 - 50 peças produzidas</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 20px; text-align: right;">
+                                <span class="text-xs text-gray-500">Há 2 horas</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="stat-icon warning" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Material em falta</div>
+                                        <div class="text-sm text-gray-600">Tecido azul marinho - estoque baixo</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 20px; text-align: right;">
+                                <span class="text-xs text-gray-500">Há 3 horas</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="stat-icon danger" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Pagamento recebido</div>
+                                        <div class="text-sm text-gray-600">Cliente João Silva - R$ 1.500,00</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 20px; text-align: right;">
+                                <span class="text-xs text-gray-500">Há 5 horas</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer-modern">
+            <a href="{% url 'producao:ops_listar' %}" class="btn-modern btn-modern-outline btn-modern-sm">
+                <i class="fas fa-arrow-right"></i>
+                Ver todas as atividades
+            </a>
+        </div>
+    </div>
+    
+    <!-- Right Sidebar -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Quick Actions -->
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h3 class="card-title-modern">Ações Rápidas</h3>
+                <p class="card-subtitle-modern">Acesso direto às principais funcionalidades</p>
+            </div>
+            <div class="card-body-modern">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="{% url 'cadastros:cliente_criar' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-user-plus"></i>
+                        Adicionar cliente
+                    </a>
+                    <a href="{% url 'producao:op_novo' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-file-alt"></i>
+                        Criar nova OP
+                    </a>
+                    <a href="{% url 'financeiro:conta_nova' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Entrada financeira
+                    </a>
+                    <a href="{% url 'producao:relatorios' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-chart-bar"></i>
+                        Ver relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming Deliveries -->
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h3 class="card-title-modern">Próximas Entregas</h3>
+                <p class="card-subtitle-modern">Agendamentos dos próximos dias</p>
+            </div>
+            <div class="card-body-modern">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div class="font-semibold text-gray-900">OP #1235 - Maria Silva</div>
+                            <div class="text-sm text-gray-600">30 camisetas</div>
+                        </div>
+                        <span class="badge-modern warning">Hoje</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div class="font-semibold text-gray-900">OP #1236 - João Santos</div>
+                            <div class="text-sm text-gray-600">50 calças</div>
+                        </div>
+                        <span class="badge-modern primary">Amanhã</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div class="font-semibold text-gray-900">OP #1237 - Pedro Lima</div>
+                            <div class="text-sm text-gray-600">20 jaquetas</div>
+                        </div>
+                        <span class="badge-modern success">Sexta</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer-modern">
+                <a href="{% url 'producao:ops_listar' %}" class="btn-modern btn-modern-outline btn-modern-sm">
+                    <i class="fas fa-calendar"></i>
+                    Ver agenda completa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Production Chart -->
+<div class="card-modern" style="margin-top: 32px;">
+    <div class="card-header-modern">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <h3 class="card-title-modern">Produção Semanal</h3>
+                <p class="card-subtitle-modern">Acompanhe o desempenho da sua produção</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-modern btn-modern-secondary btn-modern-sm">Semana</button>
+                <button class="btn-modern btn-modern-secondary btn-modern-sm">Mês</button>
+                <button class="btn-modern btn-modern-primary btn-modern-sm">Ano</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body-modern">
+        <canvas id="productionChart" style="height: 300px;"></canvas>
+    </div>
+</div>
+
+<!-- Footer -->
+{% include 'base/components/_footer.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Produção
+    const ctx = document.getElementById('productionChart').getContext('2d');
+    const productionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+            datasets: [{
+                label: 'Peças Produzidas',
+                data: [65, 78, 90, 81, 96, 55, 40],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: 'rgb(59, 130, 246)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)',
+                        borderDash: [5, 5]
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverBorderWidth: 3
+                }
+            }
+        }
+    });
+    
+    // Adicionar interatividade aos botões do gráfico
+    document.querySelectorAll('.card-header-modern button').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active state from all buttons
+            document.querySelectorAll('.card-header-modern button').forEach(btn => {
+                btn.classList.remove('btn-modern-primary');
+                btn.classList.add('btn-modern-secondary');
+            });
+            
+            // Add active state to clicked button
+            this.classList.remove('btn-modern-secondary');
+            this.classList.add('btn-modern-primary');
+            
+            // Update chart data (placeholder)
+            const period = this.textContent.toLowerCase();
+            console.log('Updating chart for period:', period);
+        });
+    });
+</script>
+{% endblock %} 

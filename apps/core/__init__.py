@@ -1,0 +1,1 @@
+# Core module - Base para sistema multitenant 

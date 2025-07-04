@@ -1,0 +1,671 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}{{ form_title|default:"Cliente" }} - {{ empresa.nome }} - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para o formulário de cliente */
+    .form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .form-card-header {
+        padding: 24px 28px 20px;
+        border-bottom: 1px solid var(--gray-200);
+        background: var(--gray-50);
+    }
+    
+    .form-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .form-card-body {
+        padding: 28px;
+    }
+    
+    .form-modern .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .form-modern .required {
+        color: var(--danger);
+        font-weight: 600;
+    }
+    
+    .form-modern .form-control,
+    .form-modern .form-select {
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius-sm);
+        padding: 10px 14px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-modern .form-control:focus,
+    .form-modern .form-select:focus {
+        border-color: var(--primary-blue-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .form-modern .input-group-text {
+        border: 1px solid var(--gray-300);
+        background: var(--gray-50);
+        color: var(--gray-500);
+        border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+    }
+    
+    .form-modern .input-group .form-control {
+        border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        border-left: none;
+    }
+    
+    .form-modern .input-group .form-control:focus {
+        border-left: 1px solid var(--primary-blue-light);
+    }
+    
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        margin-top: 4px;
+    }
+    
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-top: 0;
+        border: 2px solid var(--gray-300);
+        border-radius: 4px;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-blue-light);
+        border-color: var(--primary-blue-light);
+    }
+    
+    .form-check-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-left: 8px;
+    }
+    
+    .is-invalid {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 4px;
+        font-size: 0.75rem;
+        color: var(--danger);
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-top: 24px;
+        border-top: 1px solid var(--gray-200);
+        margin-top: 32px;
+    }
+    
+    /* Loading state */
+    .loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+    
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid var(--gray-300);
+        border-top: 2px solid var(--primary-blue-light);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-card-header,
+        .form-card-body {
+            padding: 20px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .form-actions .btn-modern {
+            width: 100%;
+        }
+        
+        .page-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">{{ form_title|default:"Novo Cliente" }}</h1>
+        <p class="page-subtitle">Preencha os dados do cliente para cadastro no sistema</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'cadastros:clientes_listar' %}" class="btn-modern btn-modern-outline">
+            <i class="fas fa-arrow-left"></i>
+            Voltar para Lista
+        </a>
+    </div>
+</div>
+
+<!-- Form -->
+<form method="POST" id="clienteForm" class="form-modern">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-user"></i>
+                Dados Básicos
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">
+                        Razão Social <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="nome" 
+                           value="{% if cliente %}{{ cliente.nome }}{% elif form_data %}{{ form_data.nome }}{% endif %}"
+                           required maxlength="100" placeholder="Nome oficial da empresa ou pessoa">
+                    <div class="help-text">Nome completo para documentos oficiais</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nome Fantasia</label>
+                    <input type="text" class="form-control" name="nome_fantasia" 
+                           value="{% if cliente %}{{ cliente.nome_fantasia }}{% elif form_data %}{{ form_data.nome_fantasia }}{% endif %}"
+                           maxlength="100" placeholder="Nome comercial">
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">CNPJ</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-id-card"></i>
+                        </span>
+                        <input type="text" class="form-control" name="cnpj" id="cnpj"
+                               value="{% if cliente %}{{ cliente.cnpj }}{% elif form_data %}{{ form_data.cnpj }}{% endif %}"
+                               placeholder="00.000.000/0000-00" maxlength="18">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Inscrição Estadual</label>
+                    <input type="text" class="form-control" name="inscricao_estadual" 
+                           value="{% if cliente %}{{ cliente.inscricao_estadual }}{% elif form_data %}{{ form_data.inscricao_estadual }}{% endif %}"
+                           maxlength="20" placeholder="Número da IE">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Endereço
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">
+                        CEP <span class="required">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-mail-bulk"></i>
+                        </span>
+                        <input type="text" class="form-control" name="cep" id="cep"
+                               value="{% if cliente %}{{ cliente.cep }}{% elif form_data %}{{ form_data.cep }}{% endif %}"
+                               placeholder="00000-000" maxlength="10" required>
+                    </div>
+                    <div class="help-text">Preenchimento automático do endereço</div>
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label">
+                        Endereço <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="endereco" id="endereco"
+                           value="{% if cliente %}{{ cliente.endereco }}{% elif form_data %}{{ form_data.endereco }}{% endif %}"
+                           placeholder="Rua, Avenida, número..." required maxlength="200">
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Bairro <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="bairro" id="bairro"
+                           value="{% if cliente %}{{ cliente.bairro }}{% elif form_data %}{{ form_data.bairro }}{% endif %}"
+                           required maxlength="50" placeholder="Nome do bairro">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Cidade <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="cidade" id="cidade"
+                           value="{% if cliente %}{{ cliente.cidade }}{% elif form_data %}{{ form_data.cidade }}{% endif %}"
+                           required maxlength="50" placeholder="Nome da cidade">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        UF <span class="required">*</span>
+                    </label>
+                    <select class="form-select" name="estado" id="estado" required>
+                        <option value="">-</option>
+                        <option value="AC" {% if cliente.estado == 'AC' or form_data.estado == 'AC' %}selected{% endif %}>AC</option>
+                        <option value="AL" {% if cliente.estado == 'AL' or form_data.estado == 'AL' %}selected{% endif %}>AL</option>
+                        <option value="AP" {% if cliente.estado == 'AP' or form_data.estado == 'AP' %}selected{% endif %}>AP</option>
+                        <option value="AM" {% if cliente.estado == 'AM' or form_data.estado == 'AM' %}selected{% endif %}>AM</option>
+                        <option value="BA" {% if cliente.estado == 'BA' or form_data.estado == 'BA' %}selected{% endif %}>BA</option>
+                        <option value="CE" {% if cliente.estado == 'CE' or form_data.estado == 'CE' %}selected{% endif %}>CE</option>
+                        <option value="DF" {% if cliente.estado == 'DF' or form_data.estado == 'DF' %}selected{% endif %}>DF</option>
+                        <option value="ES" {% if cliente.estado == 'ES' or form_data.estado == 'ES' %}selected{% endif %}>ES</option>
+                        <option value="GO" {% if cliente.estado == 'GO' or form_data.estado == 'GO' %}selected{% endif %}>GO</option>
+                        <option value="MA" {% if cliente.estado == 'MA' or form_data.estado == 'MA' %}selected{% endif %}>MA</option>
+                        <option value="MT" {% if cliente.estado == 'MT' or form_data.estado == 'MT' %}selected{% endif %}>MT</option>
+                        <option value="MS" {% if cliente.estado == 'MS' or form_data.estado == 'MS' %}selected{% endif %}>MS</option>
+                        <option value="MG" {% if cliente.estado == 'MG' or form_data.estado == 'MG' %}selected{% endif %}>MG</option>
+                        <option value="PA" {% if cliente.estado == 'PA' or form_data.estado == 'PA' %}selected{% endif %}>PA</option>
+                        <option value="PB" {% if cliente.estado == 'PB' or form_data.estado == 'PB' %}selected{% endif %}>PB</option>
+                        <option value="PR" {% if cliente.estado == 'PR' or form_data.estado == 'PR' %}selected{% endif %}>PR</option>
+                        <option value="PE" {% if cliente.estado == 'PE' or form_data.estado == 'PE' %}selected{% endif %}>PE</option>
+                        <option value="PI" {% if cliente.estado == 'PI' or form_data.estado == 'PI' %}selected{% endif %}>PI</option>
+                        <option value="RJ" {% if cliente.estado == 'RJ' or form_data.estado == 'RJ' %}selected{% endif %}>RJ</option>
+                        <option value="RN" {% if cliente.estado == 'RN' or form_data.estado == 'RN' %}selected{% endif %}>RN</option>
+                        <option value="RS" {% if cliente.estado == 'RS' or form_data.estado == 'RS' %}selected{% endif %}>RS</option>
+                        <option value="RO" {% if cliente.estado == 'RO' or form_data.estado == 'RO' %}selected{% endif %}>RO</option>
+                        <option value="RR" {% if cliente.estado == 'RR' or form_data.estado == 'RR' %}selected{% endif %}>RR</option>
+                        <option value="SC" {% if cliente.estado == 'SC' or form_data.estado == 'SC' %}selected{% endif %}>SC</option>
+                        <option value="SP" {% if cliente.estado == 'SP' or form_data.estado == 'SP' %}selected{% endif %}>SP</option>
+                        <option value="SE" {% if cliente.estado == 'SE' or form_data.estado == 'SE' %}selected{% endif %}>SE</option>
+                        <option value="TO" {% if cliente.estado == 'TO' or form_data.estado == 'TO' %}selected{% endif %}>TO</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contato -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-phone"></i>
+                Informações de Contato
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Representante <span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="contato" 
+                           value="{% if cliente %}{{ cliente.contato }}{% elif form_data %}{{ form_data.contato }}{% endif %}"
+                           placeholder="Nome do responsável" required maxlength="100">
+                    <div class="help-text">Pessoa de contato principal</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">E-mail</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input type="email" class="form-control" name="email" 
+                               value="{% if cliente %}{{ cliente.email }}{% elif form_data %}{{ form_data.email }}{% endif %}"
+                               placeholder="email@exemplo.com" maxlength="150">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Telefone</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-phone"></i>
+                        </span>
+                        <input type="text" class="form-control" name="telefone" id="telefone"
+                               value="{% if cliente %}{{ cliente.telefone }}{% elif form_data %}{{ form_data.telefone }}{% endif %}"
+                               placeholder="(00) 00000-0000" maxlength="20">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">WhatsApp</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fab fa-whatsapp"></i>
+                        </span>
+                        <input type="text" class="form-control" name="whatsapp" id="whatsapp"
+                               value="{% if cliente %}{{ cliente.whatsapp }}{% elif form_data %}{{ form_data.whatsapp }}{% endif %}"
+                               placeholder="(00) 00000-0000" maxlength="20">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-cog"></i>
+                Configurações Adicionais
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Observações</label>
+                    <textarea class="form-control" name="observacoes" rows="3" 
+                              placeholder="Informações adicionais sobre o cliente, preferências, histórico, etc...">{% if cliente %}{{ cliente.observacoes }}{% elif form_data %}{{ form_data.observacoes }}{% endif %}</textarea>
+                    <div class="help-text">Informações que podem ser úteis para futuras negociações</div>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-3">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="ativo" id="ativo" 
+                               {% if not cliente or cliente.ativo %}checked{% endif %}>
+                        <label class="form-check-label" for="ativo">
+                            Cliente ativo no sistema
+                        </label>
+                        <div class="help-text">Clientes inativos não aparecerão em novas ordens de produção</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <a href="{% url 'cadastros:clientes_listar' %}" class="btn-modern btn-modern-outline">
+            <i class="fas fa-times"></i>
+            Cancelar
+        </a>
+        <button type="submit" class="btn-modern btn-modern-primary" id="submitBtn">
+            <i class="fas fa-save"></i>
+            {% if cliente %}Atualizar Cliente{% else %}Criar Cliente{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscaras para os campos
+    if (typeof $ !== 'undefined') {
+        $('#cnpj').mask('00.000.000/0000-00');
+        $('#cep').mask('00000-000');
+        $('#telefone').mask('(00) 00000-0000');
+        $('#whatsapp').mask('(00) 00000-0000');
+    }
+    
+    // Busca automática de endereço por CEP
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            
+            if (cep.length === 8) {
+                // Mostrar loading
+                const enderecoInput = document.getElementById('endereco');
+                const bairroInput = document.getElementById('bairro');
+                const cidadeInput = document.getElementById('cidade');
+                const estadoInput = document.getElementById('estado');
+                
+                enderecoInput.value = 'Buscando...';
+                enderecoInput.classList.add('loading');
+                
+                // Buscar endereço via ViaCEP
+                fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                    .then(response => response.json())
+                    .then(data => {
+                        enderecoInput.classList.remove('loading');
+                        
+                        if (!data.erro) {
+                            enderecoInput.value = data.logradouro || '';
+                            bairroInput.value = data.bairro || '';
+                            cidadeInput.value = data.localidade || '';
+                            estadoInput.value = data.uf || '';
+                            
+                            // Focar no próximo campo vazio
+                            if (!data.logradouro) {
+                                enderecoInput.focus();
+                            }
+                        } else {
+                            enderecoInput.value = '';
+                            alert('CEP não encontrado. Verifique e tente novamente.');
+                            cepInput.focus();
+                        }
+                    })
+                    .catch(error => {
+                        enderecoInput.classList.remove('loading');
+                        enderecoInput.value = '';
+                        console.log('Erro ao buscar CEP:', error);
+                    });
+            }
+        });
+    }
+    
+    // Validação do CNPJ
+    const cnpjInput = document.getElementById('cnpj');
+    if (cnpjInput) {
+        cnpjInput.addEventListener('blur', function() {
+            const cnpj = this.value.replace(/\D/g, '');
+            
+            if (cnpj.length === 14) {
+                if (!validarCNPJ(cnpj)) {
+                    this.classList.add('is-invalid');
+                    removeExistingFeedback(this);
+                    this.insertAdjacentHTML('afterend', '<div class="invalid-feedback">CNPJ inválido</div>');
+                } else {
+                    this.classList.remove('is-invalid');
+                    removeExistingFeedback(this);
+                }
+            } else if (cnpj.length > 0) {
+                this.classList.add('is-invalid');
+                removeExistingFeedback(this);
+                this.insertAdjacentHTML('afterend', '<div class="invalid-feedback">CNPJ deve ter 14 dígitos</div>');
+            } else {
+                this.classList.remove('is-invalid');
+                removeExistingFeedback(this);
+            }
+        });
+    }
+    
+    // Validação do email
+    const emailInput = document.querySelector('input[type="email"]');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !validarEmail(email)) {
+                this.classList.add('is-invalid');
+                removeExistingFeedback(this);
+                this.insertAdjacentHTML('afterend', '<div class="invalid-feedback">E-mail inválido</div>');
+            } else {
+                this.classList.remove('is-invalid');
+                removeExistingFeedback(this);
+            }
+        });
+    }
+    
+    // Validação do formulário
+    const form = document.getElementById('clienteForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Remover validações anteriores
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            
+            // Validar campos obrigatórios
+            this.querySelectorAll('[required]').forEach(function(field) {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    field.insertAdjacentHTML('afterend', '<div class="invalid-feedback">Este campo é obrigatório</div>');
+                    isValid = false;
+                }
+            });
+            
+            // Validar CNPJ se preenchido
+            const cnpj = cnpjInput ? cnpjInput.value.replace(/\D/g, '') : '';
+            if (cnpj && (cnpj.length !== 14 || !validarCNPJ(cnpj))) {
+                cnpjInput.classList.add('is-invalid');
+                cnpjInput.insertAdjacentHTML('afterend', '<div class="invalid-feedback">CNPJ inválido</div>');
+                isValid = false;
+            }
+            
+            // Validar email se preenchido
+            const email = emailInput ? emailInput.value : '';
+            if (email && !validarEmail(email)) {
+                emailInput.classList.add('is-invalid');
+                emailInput.insertAdjacentHTML('afterend', '<div class="invalid-feedback">E-mail inválido</div>');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Scroll para o primeiro erro
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                
+                return false;
+            }
+            
+            // Mostrar loading no botão
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+});
+
+// Função auxiliar para remover feedback existente
+function removeExistingFeedback(element) {
+    const feedback = element.nextElementSibling;
+    if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.remove();
+    }
+}
+
+// Função para validar CNPJ
+function validarCNPJ(cnpj) {
+    cnpj = cnpj.replace(/[^\d]+/g,'');
+    
+    if(cnpj == '') return false;
+    if (cnpj.length != 14) return false;
+    
+    // Elimina CNPJs invalidos conhecidos
+    if (cnpj == "00000000000000" || 
+        cnpj == "11111111111111" || 
+        cnpj == "22222222222222" || 
+        cnpj == "33333333333333" || 
+        cnpj == "44444444444444" || 
+        cnpj == "55555555555555" || 
+        cnpj == "66666666666666" || 
+        cnpj == "77777777777777" || 
+        cnpj == "88888888888888" || 
+        cnpj == "99999999999999")
+        return false;
+        
+    // Valida DVs
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0,tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+    
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    
+    let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(0)) return false;
+    
+    tamanho = tamanho + 1;
+    numeros = cnpj.substring(0,tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    
+    resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(1)) return false;
+    
+    return true;
+}
+
+// Função para validar email
+function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,76 @@
+# Core Django 5
+Django==5.0.1
+djangorestframework==3.14.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# Cache e Background Tasks
+redis==5.0.1
+celery==5.3.4
+
+# CORS e Segurança
+django-cors-headers==4.3.1
+
+# Filtros e Paginação
+django-filter==23.5
+
+# Media e Uploads
+pillow==10.2.0
+
+# Configuração
+python-decouple==3.8
+
+# Relatórios e Export
+reportlab==4.0.8
+openpyxl==3.1.2
+
+# Frontend e Forms
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# Development Tools
+django-extensions==3.2.3
+django-debug-toolbar==4.2.0
+
+# Production
+whitenoise==6.6.0
+gunicorn==21.2.0
+
+# Timezone support
+pytz==2023.3
+
+# ==================== BILLING & PAYMENTS ====================
+
+# Stripe Integration
+stripe==7.10.0
+
+# Mercado Pago Integration
+mercadopago==2.2.1
+
+# HTTP Requests
+requests==2.31.0
+
+# UUID e Crypto
+cryptography==41.0.8
+
+# Email e Templates
+django-email-templates==1.1.3
+
+# Webhooks e Validação
+django-webhook==1.2.0
+
+# Cron Jobs para Billing
+django-crontab==0.7.1
+
+# Logging e Monitoramento
+sentry-sdk[django]==1.38.0
+
+# API Rate Limiting
+django-ratelimit==4.1.0
+
+# Validação de CPF/CNPJ
+python-cpf-cnpj==1.0.0
+
+# Formatação de números
+babel==2.13.1 

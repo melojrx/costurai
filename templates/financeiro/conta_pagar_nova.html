@@ -1,0 +1,884 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Nova Conta a Pagar - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cabeçalho de Criação */
+    .create-header {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .create-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+    }
+    
+    /* Seções do Formulário */
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .sidebar-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+    }
+    
+    .section-title {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: #dc2626;
+    }
+    
+    /* Cards de Ajuda */
+    .help-card {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #0369a1;
+    }
+    
+    .help-icon {
+        color: #0284c7;
+        font-size: 1.2rem;
+    }
+    
+    /* Grid de Formulário */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Floating Labels */
+    .form-floating {
+        position: relative;
+    }
+    
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        height: calc(3.5rem + 2px);
+        line-height: 1.25;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating > .form-control:focus,
+    .form-floating > .form-select:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
+    }
+    
+    .form-floating > label {
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    /* Campo Obrigatório */
+    .required-field {
+        color: #dc2626;
+        font-weight: bold;
+    }
+    
+    /* Botões Modernos */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-create {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+    }
+    
+    .btn-create:hover {
+        background: linear-gradient(135deg, #b91c1c, #991b1b);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
+    .btn-cancel:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    /* Preview Card */
+    .preview-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .preview-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .preview-item:last-child {
+        border-bottom: none;
+    }
+    
+    .preview-total {
+        background: #fee2e2;
+        margin: 0.5rem -1.5rem -1.5rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 10px 10px;
+        font-weight: 600;
+        color: #991b1b;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    
+    .empty-state h6 {
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+    
+    /* Últimas Contas */
+    .recent-accounts {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .recent-account-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .recent-account-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    /* Ações Rápidas */
+    .quick-action-btn {
+        transition: all 0.2s ease;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Checkbox e Radio Customizados */
+    .form-check-input:checked {
+        background-color: #dc2626;
+        border-color: #dc2626;
+    }
+    
+    .form-check-input:focus {
+        border-color: #fca5a5;
+        box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+    }
+    
+    /* Parcelamento Section */
+    .parcelamento-section {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    
+    .parcelamento-section.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid,
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+        
+        .create-header {
+            padding: 1.5rem;
+        }
+        
+        .form-section,
+        .sidebar-section {
+            padding: 1rem;
+        }
+        
+        .preview-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .create-header {
+            padding: 1rem;
+        }
+        
+        .form-section {
+            padding: 1rem;
+        }
+        
+        .sidebar-section {
+            padding: 1rem;
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="create-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-plus-circle me-3"></i>
+                    Nova Conta a Pagar
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Criar nova conta a pagar para controle financeiro
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'financeiro:contas_pagar' %}" class="btn btn-modern btn-cancel">
+                    <i class="fas fa-arrow-left"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Formulário Principal -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="fas fa-credit-card"></i>
+                    Dados da Conta
+                </h5>
+                
+                <div class="help-card">
+                    <i class="fas fa-lightbulb help-icon me-2"></i>
+                    <strong>Dicas Importantes:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Preencha todos os campos obrigatórios marcados com <span class="required-field">*</span></li>
+                        <li>Selecione a categoria e subcategoria para melhor organização</li>
+                        <li>Use parcelamento para contas que serão pagas em várias vezes</li>
+                        <li>Marque como recorrente para despesas mensais fixas</li>
+                    </ul>
+                </div>
+                
+                <form method="POST" id="contaForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Categorização -->
+                    <div class="form-grid">
+                        <div class="form-floating">
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="">Selecione uma categoria</option>
+                                {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}" data-centro-custo="{{ categoria.centro_custo }}">
+                                    {{ categoria.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label for="categoria">Categoria <span class="required-field">*</span></label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <select class="form-select" id="subcategoria" name="subcategoria" required disabled>
+                                <option value="">Primeiro selecione uma categoria</option>
+                            </select>
+                            <label for="subcategoria">Subcategoria <span class="required-field">*</span></label>
+                        </div>
+                    </div>
+                    
+                    <!-- Fornecedor -->
+                    <div class="form-grid">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="fornecedor_nome" name="fornecedor_nome" 
+                                   placeholder="Nome do fornecedor" required>
+                            <label for="fornecedor_nome">Fornecedor <span class="required-field">*</span></label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="fornecedor_documento" name="fornecedor_documento" 
+                                   placeholder="CNPJ/CPF do fornecedor">
+                            <label for="fornecedor_documento">CNPJ/CPF (opcional)</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Documento -->
+                    <div class="form-grid">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="numero_documento" name="numero_documento" 
+                                   placeholder="Número do documento" required>
+                            <label for="numero_documento">Número do Documento <span class="required-field">*</span></label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <select class="form-select" id="tipo_documento" name="tipo_documento" required>
+                                {% for value, label in tipo_documento_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="tipo_documento">Tipo de Documento</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Descrição -->
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="descricao" name="descricao" 
+                               placeholder="Descrição da conta" required>
+                        <label for="descricao">Descrição <span class="required-field">*</span></label>
+                    </div>
+                    
+                    <!-- Valores -->
+                    <div class="form-grid-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="valor_original" name="valor_original" 
+                                   step="0.01" min="0.01" placeholder="0,00" required>
+                            <label for="valor_original">Valor Original (R$) <span class="required-field">*</span></label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="valor_juros" name="valor_juros" 
+                                   step="0.01" min="0" placeholder="0,00" value="0">
+                            <label for="valor_juros">Juros/Multa (R$)</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="valor_desconto" name="valor_desconto" 
+                                   step="0.01" min="0" placeholder="0,00" value="0">
+                            <label for="valor_desconto">Desconto (R$)</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Datas -->
+                    <div class="form-grid">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="data_emissao" name="data_emissao" 
+                                   value="{{ hoje|date:'Y-m-d' }}" required>
+                            <label for="data_emissao">Data de Emissão <span class="required-field">*</span></label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" 
+                                   value="{{ hoje|date:'Y-m-d' }}" required>
+                            <label for="data_vencimento">Data de Vencimento <span class="required-field">*</span></label>
+                        </div>
+                    </div>
+                    
+                    <!-- Opções Avançadas -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="parcelado" name="parcelado">
+                                <label class="form-check-label" for="parcelado">
+                                    <strong>Conta Parcelada</strong>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="recorrente" name="recorrente">
+                                <label class="form-check-label" for="recorrente">
+                                    <strong>Conta Recorrente</strong>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Parcelamento (oculta por padrão) -->
+                    <div class="parcelamento-section" id="parcelamentoSection">
+                        <h6><i class="fas fa-calendar-alt me-2"></i>Configuração de Parcelamento</h6>
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="numero_parcelas" name="numero_parcelas" 
+                                   min="2" max="60" value="2">
+                            <label for="numero_parcelas">Número de Parcelas</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Centro de Custo e Observações -->
+                    <div class="form-grid">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="centro_custo" name="centro_custo" 
+                                   placeholder="Centro de custo">
+                            <label for="centro_custo">Centro de Custo</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="file" class="form-control" id="arquivo_documento" name="arquivo_documento" 
+                                   accept=".pdf,.jpg,.jpeg,.png">
+                            <label for="arquivo_documento">Anexar Documento</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <textarea class="form-control" id="observacoes" name="observacoes" 
+                                  style="height: 120px" placeholder="Observações sobre a conta"></textarea>
+                        <label for="observacoes">Observações (opcional)</label>
+                    </div>
+                    
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'financeiro:contas_pagar' %}" class="btn btn-modern btn-cancel">
+                            <i class="fas fa-times"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-modern btn-create">
+                            <i class="fas fa-check"></i>Criar Conta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Preview da Conta -->
+            <div class="sidebar-section">
+                <h6 class="section-title">
+                    <i class="fas fa-eye"></i>
+                    Preview da Conta
+                </h6>
+                
+                <div id="contaPreview" style="display: none;">
+                    <div class="preview-card">
+                        <h6 class="mb-3">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Resumo da Conta
+                        </h6>
+                        
+                        <div class="preview-item">
+                            <span>Fornecedor:</span>
+                            <strong id="previewFornecedor">-</strong>
+                        </div>
+                        <div class="preview-item">
+                            <span>Categoria:</span>
+                            <span id="previewCategoria">-</span>
+                        </div>
+                        <div class="preview-item">
+                            <span>Documento:</span>
+                            <span id="previewDocumento">-</span>
+                        </div>
+                        <div class="preview-item">
+                            <span>Vencimento:</span>
+                            <span id="previewVencimento">-</span>
+                        </div>
+                        <div class="preview-item preview-total">
+                            <span>Valor Total:</span>
+                            <strong id="previewValor">R$ 0,00</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="contaPlaceholder">
+                    <div class="empty-state">
+                        <i class="fas fa-credit-card"></i>
+                        <h6>Preview da Conta</h6>
+                        <p>Preencha os campos para ver o preview</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ações Rápidas -->
+            <div class="sidebar-section">
+                <h6 class="section-title">
+                    <i class="fas fa-bolt"></i>
+                    Ações Rápidas
+                </h6>
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success quick-action-btn" onclick="preencherVencimento30()">
+                        <i class="fas fa-calendar-plus me-2"></i>Vencimento em 30 dias
+                    </button>
+                    <button type="button" class="btn btn-outline-info quick-action-btn" onclick="preencherVencimento60()">
+                        <i class="fas fa-calendar-alt me-2"></i>Vencimento em 60 dias
+                    </button>
+                    <button type="button" class="btn btn-outline-warning quick-action-btn" onclick="limparFormulario()">
+                        <i class="fas fa-eraser me-2"></i>Limpar Formulário
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Últimas Contas -->
+            <div class="sidebar-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="section-title mb-0">
+                        <i class="fas fa-history"></i>
+                        Últimas Contas
+                    </h6>
+                    {% if ultimas_contas %}
+                    <span class="badge bg-primary">{{ ultimas_contas|length }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if ultimas_contas %}
+                <div class="recent-accounts">
+                    {% for conta in ultimas_contas %}
+                    <a href="{% url 'financeiro:conta_pagar_detalhes' conta.id %}" target="_blank" class="text-decoration-none">
+                        <div class="recent-account-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-primary">{{ conta.numero_documento }}</div>
+                                    <div class="text-muted small">
+                                        {{ conta.fornecedor_nome|truncatechars:20 }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ conta.data_emissao|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-danger fw-bold">
+                                        R$ {{ conta.valor_total|floatformat:2 }}
+                                    </div>
+                                    {% if conta.status == 'PAGO' %}
+                                    <span class="status-badge bg-success text-white">Pago</span>
+                                    {% elif conta.status == 'VENCIDO' %}
+                                    <span class="status-badge bg-danger text-white">Vencido</span>
+                                    {% elif conta.status == 'PENDENTE' %}
+                                    <span class="status-badge bg-warning text-dark">Pendente</span>
+                                    {% elif conta.status == 'PARCIAL' %}
+                                    <span class="status-badge bg-info text-white">Parcial</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'financeiro:contas_pagar' %}" class="btn btn-outline-info w-100">
+                        <i class="fas fa-list me-2"></i>Ver Todas as Contas
+                    </a>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h6>Nenhuma conta criada</h6>
+                    <p>Esta será sua primeira conta!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categoriaSelect = document.getElementById('categoria');
+    const subcategoriaSelect = document.getElementById('subcategoria');
+    const fornecedorInput = document.getElementById('fornecedor_nome');
+    const numeroDocumentoInput = document.getElementById('numero_documento');
+    const valorOriginalInput = document.getElementById('valor_original');
+    const valorJurosInput = document.getElementById('valor_juros');
+    const valorDescontoInput = document.getElementById('valor_desconto');
+    const vencimentoInput = document.getElementById('data_vencimento');
+    const parceladoCheckbox = document.getElementById('parcelado');
+    const parcelamentoSection = document.getElementById('parcelamentoSection');
+    const centroCustoInput = document.getElementById('centro_custo');
+    
+    const contaPreview = document.getElementById('contaPreview');
+    const contaPlaceholder = document.getElementById('contaPlaceholder');
+    
+    // Buscar subcategorias quando categoria mudar
+    categoriaSelect.addEventListener('change', function() {
+        const categoriaId = this.value;
+        subcategoriaSelect.disabled = true;
+        subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
+        
+        if (categoriaId) {
+            // Preencher centro de custo da categoria
+            const selectedOption = this.options[this.selectedIndex];
+            const centroCusto = selectedOption.getAttribute('data-centro-custo');
+            if (centroCusto && !centroCustoInput.value) {
+                centroCustoInput.value = centroCusto;
+            }
+            
+            fetch(`{% url 'financeiro:buscar_subcategorias' %}?categoria_id=${categoriaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    subcategoriaSelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                    data.subcategorias.forEach(sub => {
+                        subcategoriaSelect.innerHTML += `<option value="${sub.id}" data-recorrente="${sub.recorrente}" data-dia-vencimento="${sub.dia_vencimento}">${sub.nome}</option>`;
+                    });
+                    subcategoriaSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar subcategorias:', error);
+                    subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                });
+        } else {
+            subcategoriaSelect.innerHTML = '<option value="">Primeiro selecione uma categoria</option>';
+        }
+        
+        atualizarPreview();
+    });
+    
+    // Autocomplete de fornecedores
+    let fornecedorTimeout;
+    fornecedorInput.addEventListener('input', function() {
+        clearTimeout(fornecedorTimeout);
+        const query = this.value;
+        
+        if (query.length >= 3) {
+            fornecedorTimeout = setTimeout(() => {
+                fetch(`{% url 'financeiro:buscar_fornecedores' %}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Implementar dropdown de sugestões se necessário
+                        console.log('Fornecedores encontrados:', data.fornecedores);
+                    })
+                    .catch(error => console.error('Erro ao buscar fornecedores:', error));
+            }, 300);
+        }
+        
+        atualizarPreview();
+    });
+    
+    // Controlar seção de parcelamento
+    parceladoCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            parcelamentoSection.classList.add('show');
+        } else {
+            parcelamentoSection.classList.remove('show');
+        }
+    });
+    
+    // Atualizar preview quando campos mudarem
+    function atualizarPreview() {
+        const fornecedor = fornecedorInput.value;
+        const categoriaIndex = categoriaSelect.selectedIndex;
+        const categoria = categoriaIndex > 0 ? categoriaSelect.options[categoriaIndex].text : '';
+        const numeroDocumento = numeroDocumentoInput.value;
+        const vencimento = vencimentoInput.value;
+        
+        const valorOriginal = parseFloat(valorOriginalInput.value) || 0;
+        const valorJuros = parseFloat(valorJurosInput.value) || 0;
+        const valorDesconto = parseFloat(valorDescontoInput.value) || 0;
+        const valorTotal = valorOriginal + valorJuros - valorDesconto;
+        
+        if (fornecedor && categoria && numeroDocumento && vencimento && valorOriginal > 0) {
+            // Mostrar preview
+            contaPreview.style.display = 'block';
+            contaPlaceholder.style.display = 'none';
+            
+            // Atualizar dados
+            document.getElementById('previewFornecedor').textContent = fornecedor;
+            document.getElementById('previewCategoria').textContent = categoria;
+            document.getElementById('previewDocumento').textContent = numeroDocumento;
+            
+            // Formatar data
+            try {
+                const dataVenc = new Date(vencimento);
+                document.getElementById('previewVencimento').textContent = dataVenc.toLocaleDateString('pt-BR');
+            } catch (e) {
+                document.getElementById('previewVencimento').textContent = vencimento;
+            }
+            
+            // Formatar valor
+            document.getElementById('previewValor').textContent = 'R$ ' + valorTotal.toFixed(2).replace('.', ',');
+        } else {
+            // Esconder preview
+            contaPreview.style.display = 'none';
+            contaPlaceholder.style.display = 'block';
+        }
+    }
+    
+    // Event listeners para atualizar preview
+    [numeroDocumentoInput, valorOriginalInput, valorJurosInput, valorDescontoInput, vencimentoInput].forEach(input => {
+        input.addEventListener('input', atualizarPreview);
+    });
+    
+    subcategoriaSelect.addEventListener('change', atualizarPreview);
+    
+    // Validação do formulário
+    document.getElementById('contaForm').addEventListener('submit', function(e) {
+        if (!categoriaSelect.value) {
+            e.preventDefault();
+            showNotification('Por favor, selecione uma categoria.', 'error');
+            categoriaSelect.focus();
+            return;
+        }
+        
+        if (!subcategoriaSelect.value) {
+            e.preventDefault();
+            showNotification('Por favor, selecione uma subcategoria.', 'error');
+            subcategoriaSelect.focus();
+            return;
+        }
+        
+        const valor = parseFloat(valorOriginalInput.value) || 0;
+        if (valor <= 0) {
+            e.preventDefault();
+            showNotification('Por favor, informe um valor válido maior que zero.', 'error');
+            valorOriginalInput.focus();
+            return;
+        }
+        
+        // Mostrar loading
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Criando...';
+        submitBtn.disabled = true;
+    });
+    
+    // Trigger inicial
+    setTimeout(atualizarPreview, 100);
+});
+
+// Funções dos atalhos
+function preencherVencimento30() {
+    const hoje = new Date();
+    hoje.setDate(hoje.getDate() + 30);
+    const dataFormatada = hoje.toISOString().split('T')[0];
+    document.getElementById('data_vencimento').value = dataFormatada;
+    
+    showNotification('📅 Vencimento definido para 30 dias', 'success');
+}
+
+function preencherVencimento60() {
+    const hoje = new Date();
+    hoje.setDate(hoje.getDate() + 60);
+    const dataFormatada = hoje.toISOString().split('T')[0];
+    document.getElementById('data_vencimento').value = dataFormatada;
+    
+    showNotification('📅 Vencimento definido para 60 dias', 'success');
+}
+
+function limparFormulario() {
+    if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+        document.getElementById('contaForm').reset();
+        document.getElementById('contaPreview').style.display = 'none';
+        document.getElementById('contaPlaceholder').style.display = 'block';
+        document.getElementById('parcelamentoSection').classList.remove('show');
+        document.getElementById('subcategoria').disabled = true;
+        document.getElementById('subcategoria').innerHTML = '<option value="">Primeiro selecione uma categoria</option>';
+        showNotification('Formulário limpo', 'info');
+    }
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Matérias Primas - {{ op.numero_op }} - costurai.com.br{% endblock %}
+
+{% block content %}
+<!-- Incluir Sidebar Component -->
+{% include 'base/components/_sidebar.html' %}
+
+<!-- Main Content -->
+<div class="main-content sidebar-expanded" id="mainContent">
+    <div class="container-fluid" style="padding-top: 20px; padding-bottom: 20px;">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 mb-1">Matérias Primas - {{ op.numero_op }}</h2>
+                <p class="text-muted mb-0">{{ op.produto.nome|default:"Produto não informado" }}</p>
+            </div>
+            <div>
+                <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a href="{% url 'producao:op_detalhes' op.id %}" class="btn btn-primary">
+                    <i class="fas fa-eye me-2"></i>Ver OP
+                </a>
+            </div>
+        </div>
+
+        <!-- Matérias Primas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-boxes me-2"></i>
+                    Matérias Primas Utilizadas
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if materias %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Departamento</th>
+                                    <th>Quantidade</th>
+                                    <th>Unidade</th>
+                                    <th>Fornecedor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consumo in materias %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ consumo.materia_prima.nome }}</strong>
+                                        <br><small class="text-muted">{{ consumo.materia_prima.codigo }}</small>
+                                    </td>
+                                    <td>{{ consumo.departamento.nome }}</td>
+                                    <td>{{ consumo.quantidade_necessaria }}</td>
+                                    <td>{{ consumo.materia_prima.unidade_medida }}</td>
+                                    <td>{{ consumo.materia_prima.fornecedor.nome|default:"--" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma matéria prima definida</h5>
+                        <p class="text-muted">Esta OP ainda não tem matérias primas cadastradas.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

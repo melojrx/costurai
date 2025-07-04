@@ -1,0 +1,663 @@
+{% extends 'base/dashboard_base.html' %}
+
+{% block title %}{{ cliente.nome }} - Detalhes - Costuraai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para detalhes do cliente */
+    .client-header {
+        background: linear-gradient(135deg, var(--primary-blue-light), var(--primary-blue-dark));
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .client-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+    }
+    
+    .client-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .client-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+    
+    .client-subtitle {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        margin-bottom: 16px;
+        font-weight: 500;
+    }
+    
+    .client-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .client-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .info-card-header {
+        padding: 24px 28px 20px;
+        border-bottom: 1px solid var(--gray-200);
+        background: var(--gray-50);
+    }
+    
+    .info-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .info-card-body {
+        padding: 28px;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        min-width: 120px;
+    }
+    
+    .info-value {
+        color: var(--gray-900);
+        font-weight: 500;
+        text-align: right;
+        flex: 1;
+        word-break: break-word;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .status-ativo {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .status-inativo {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-item {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin: 0 auto 12px;
+    }
+    
+    .stat-icon.primary {
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
+    
+    .stat-icon.success {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .stat-icon.warning {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-blue-light);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 500;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+        font-size: 0.875rem;
+    }
+    
+    .activity-date {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+    
+    .observacoes-content {
+        background: var(--gray-50);
+        padding: 16px;
+        border-radius: var(--border-radius-sm);
+        border-left: 4px solid var(--primary-blue-light);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--gray-700);
+    }
+    
+    .contact-link {
+        color: var(--primary-blue-light);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .contact-link:hover {
+        color: var(--primary-blue-dark);
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .client-header {
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .client-meta {
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .info-card-header,
+        .info-card-body {
+            padding: 20px;
+        }
+        
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .info-value {
+            text-align: left;
+        }
+        
+        .page-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .quick-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Detalhes do Cliente</h1>
+        <p class="page-subtitle">Informações completas e histórico de atividades</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'cadastros:clientes_listar' %}" class="btn-modern btn-modern-outline">
+            <i class="fas fa-arrow-left"></i>
+            Voltar para Lista
+        </a>
+        <a href="{% url 'cadastros:cliente_editar' cliente.id %}" class="btn-modern btn-modern-primary">
+            <i class="fas fa-edit"></i>
+            Editar Cliente
+        </a>
+        <button type="button" class="btn-modern btn-modern-outline" style="color: var(--danger); border-color: var(--danger);" onclick="confirmDelete()">
+            <i class="fas fa-trash"></i>
+            Excluir
+        </button>
+    </div>
+</div>
+
+<!-- Client Header -->
+<div class="client-header">
+    <div class="row align-items-center">
+        <div class="col-md-2 text-center">
+            <div class="client-avatar d-inline-flex">
+                {{ cliente.nome.0|upper }}{% if cliente.nome|length > 1 %}{{ cliente.nome.1|upper }}{% endif %}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h1 class="client-title">{{ cliente.nome }}</h1>
+            {% if cliente.nome_fantasia %}
+            <p class="client-subtitle">{{ cliente.nome_fantasia }}</p>
+            {% endif %}
+            <div class="client-meta">
+                <div class="client-meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ cliente.contato|default:"Contato não informado" }}</span>
+                </div>
+                {% if cliente.telefone %}
+                <div class="client-meta-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ cliente.telefone }}</span>
+                </div>
+                {% endif %}
+                <div class="client-meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ cliente.cidade }}/{{ cliente.estado }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 text-center">
+            <span class="status-badge status-{{ cliente.ativo|yesno:'ativo,inativo' }}">
+                <i class="fas fa-{{ cliente.ativo|yesno:'check,times' }}"></i>
+                {{ cliente.ativo|yesno:'Ativo,Inativo' }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="quick-stats">
+    <div class="stat-item">
+        <div class="stat-icon primary">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Ordens de Produção</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-icon success">
+            <i class="fas fa-brazilian-real-sign"></i>
+        </div>
+        <div class="stat-value">R$ 0,00</div>
+        <div class="stat-label">Faturamento Total</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-icon warning">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-value">{{ cliente.created_at|timesince }}</div>
+        <div class="stat-label">Cliente há</div>
+    </div>
+</div>
+
+<div class="grid-modern grid-cols-3" style="grid-template-columns: 2fr 1fr;">
+    <!-- Main Information -->
+    <div>
+        <!-- Dados Básicos -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-id-card"></i>
+                    Dados da Empresa
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="info-item">
+                    <span class="info-label">Razão Social</span>
+                    <span class="info-value">{{ cliente.nome }}</span>
+                </div>
+                
+                {% if cliente.nome_fantasia %}
+                <div class="info-item">
+                    <span class="info-label">Nome Fantasia</span>
+                    <span class="info-value">{{ cliente.nome_fantasia }}</span>
+                </div>
+                {% endif %}
+                
+                {% if cliente.cnpj %}
+                <div class="info-item">
+                    <span class="info-label">CNPJ</span>
+                    <span class="info-value">
+                        <code style="background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ cliente.cnpj }}</code>
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if cliente.inscricao_estadual %}
+                <div class="info-item">
+                    <span class="info-label">Inscrição Estadual</span>
+                    <span class="info-value">{{ cliente.inscricao_estadual }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Endereço -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Endereço
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="info-item">
+                    <span class="info-label">CEP</span>
+                    <span class="info-value">{{ cliente.cep|default:"Não informado" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Endereço</span>
+                    <span class="info-value">{{ cliente.endereco|default:"Não informado" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Bairro</span>
+                    <span class="info-value">{{ cliente.bairro|default:"Não informado" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Cidade/UF</span>
+                    <span class="info-value">{{ cliente.cidade|default:"Não informado" }}/{{ cliente.estado|default:"--" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contato -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-phone"></i>
+                    Informações de Contato
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="info-item">
+                    <span class="info-label">Representante</span>
+                    <span class="info-value">{{ cliente.contato|default:"Não informado" }}</span>
+                </div>
+                
+                {% if cliente.email %}
+                <div class="info-item">
+                    <span class="info-label">E-mail</span>
+                    <span class="info-value">
+                        <a href="mailto:{{ cliente.email }}" class="contact-link">{{ cliente.email }}</a>
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if cliente.telefone %}
+                <div class="info-item">
+                    <span class="info-label">Telefone</span>
+                    <span class="info-value">
+                        <a href="tel:{{ cliente.telefone }}" class="contact-link">{{ cliente.telefone }}</a>
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if cliente.whatsapp %}
+                <div class="info-item">
+                    <span class="info-label">WhatsApp</span>
+                    <span class="info-value">
+                        <a href="https://wa.me/55{{ cliente.whatsapp|cut:' '|cut:'('|cut:')'|cut:'-' }}" target="_blank" class="contact-link">{{ cliente.whatsapp }}</a>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Observações -->
+        {% if cliente.observacoes %}
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-sticky-note"></i>
+                    Observações
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="observacoes-content">
+                    {{ cliente.observacoes|linebreaks }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Informações do Sistema -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informações do Sistema
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="info-item">
+                    <span class="info-label">Cadastrado em</span>
+                    <span class="info-value">{{ cliente.created_at|date:"d/m/Y \à\s H:i" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Última atualização</span>
+                    <span class="info-value">{{ cliente.updated_at|date:"d/m/Y \à\s H:i" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Status no sistema</span>
+                    <span class="info-value">
+                        <span class="status-badge status-{{ cliente.ativo|yesno:'ativo,inativo' }}">
+                            <i class="fas fa-{{ cliente.ativo|yesno:'check,times' }}"></i>
+                            {{ cliente.ativo|yesno:'Ativo,Inativo' }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+        <!-- Atividade Recente -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-history"></i>
+                    Atividade Recente
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Cliente cadastrado</div>
+                        <div class="activity-date">{{ cliente.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+                
+                {% if cliente.updated_at != cliente.created_at %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Dados atualizados</div>
+                        <div class="activity-date">{{ cliente.updated_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3 class="info-card-title">
+                    <i class="fas fa-bolt"></i>
+                    Ações Rápidas
+                </h3>
+            </div>
+            <div class="info-card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="#" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-plus"></i>
+                        Nova OP
+                    </a>
+                    <a href="{% url 'cadastros:cliente_editar' cliente.id %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-edit"></i>
+                        Editar Dados
+                    </a>
+                    {% if cliente.email %}
+                    <a href="mailto:{{ cliente.email }}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-envelope"></i>
+                        Enviar E-mail
+                    </a>
+                    {% endif %}
+                    {% if cliente.telefone %}
+                    <a href="tel:{{ cliente.telefone }}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fas fa-phone"></i>
+                        Ligar
+                    </a>
+                    {% endif %}
+                    {% if cliente.whatsapp %}
+                    <a href="https://wa.me/55{{ cliente.whatsapp|cut:' '|cut:'('|cut:')'|cut:'-' }}" target="_blank" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                        <i class="fab fa-whatsapp"></i>
+                        WhatsApp
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    if (confirm('Tem certeza que deseja excluir o cliente "{{ cliente.nome }}"?\n\nEsta ação não pode ser desfeita.')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "cadastros:cliente_deletar" cliente.id %}';
+        
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %} 
