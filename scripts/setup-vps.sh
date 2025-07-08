@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CosturaAI - Script de Configuração Inicial da VPS
+# CosturAI - Script de Configuração Inicial da VPS
 # =============================================================================
 # Execute este script como root na VPS Ubuntu 22.04
 
@@ -26,7 +26,7 @@ if [ "$EUID" -ne 0 ]; then
     error "Execute este script como root"
 fi
 
-log "Iniciando configuração da VPS para CosturaAI..."
+log "Iniciando configuração da VPS para CosturAI..."
 
 # 1. Atualizar sistema
 log "Atualizando sistema..."
@@ -91,7 +91,7 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 log "Aplicando otimizações do sistema..."
 cat >> /etc/sysctl.conf << EOF
 
-# Otimizações CosturaAI
+# Otimizações CosturAI
 net.core.somaxconn = 65535
 net.ipv4.tcp_max_syn_backlog = 65535
 net.ipv4.ip_local_port_range = 1024 65535
@@ -105,12 +105,12 @@ sysctl -p
 
 # 10. Criar estrutura de diretórios
 log "Criando estrutura de diretórios..."
-mkdir -p /home/deploy/{costuraai,backups,logs}
+mkdir -p /home/deploy/{costurai,backups,logs}
 chown -R deploy:deploy /home/deploy
 
 # 11. Configurar logrotate
 log "Configurando rotação de logs..."
-cat > /etc/logrotate.d/costuraai << EOF
+cat > /etc/logrotate.d/costurai << EOF
 /home/deploy/logs/*.log {
     daily
     missingok
@@ -121,7 +121,7 @@ cat > /etc/logrotate.d/costuraai << EOF
     create 0640 deploy deploy
     sharedscripts
     postrotate
-        docker exec costuraai_web kill -USR1 1
+        docker exec costurai_web kill -USR1 1
     endscript
 }
 EOF
@@ -141,7 +141,7 @@ echo "=== Containers Docker ==="
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 echo ""
 echo "=== Últimos logs ==="
-docker logs --tail 10 costuraai_web 2>&1 | grep ERROR || echo "Sem erros recentes"
+docker logs --tail 10 costurai_web 2>&1 | grep ERROR || echo "Sem erros recentes"
 EOF
 
 chmod +x /home/deploy/monitor.sh
@@ -149,28 +149,28 @@ chown deploy:deploy /home/deploy/monitor.sh
 
 # 13. Configurar backup automático via cron
 log "Configurando backup automático..."
-cat > /etc/cron.d/costuraai-backup << EOF
+cat > /etc/cron.d/costurai-backup << EOF
 # Backup diário às 3 AM
-0 3 * * * deploy cd /home/deploy/costuraai && ./scripts/backup.sh >> /home/deploy/logs/backup.log 2>&1
+0 3 * * * deploy cd /home/deploy/costurai && ./scripts/backup.sh >> /home/deploy/logs/backup.log 2>&1
 EOF
 
 # 14. Instalar certificado SSL
 log "Configurando SSL..."
 echo "Para configurar SSL, execute após o deploy:"
-echo "certbot --nginx -d costuraai.com.br -d www.costuraai.com.br"
+echo "certbot --nginx -d costurai.com.br -d www.costurai.com.br"
 
 # 15. Mensagem final
 log "Configuração inicial concluída!"
 echo ""
 echo "Próximos passos:"
-echo "1. Clone o repositório em /home/deploy/costuraai"
+echo "1. Clone o repositório em /home/deploy/costurai"
 echo "2. Configure o arquivo .env.prod"
 echo "3. Execute o script de deploy"
 echo "4. Configure o certificado SSL com Certbot"
 echo ""
 echo "Comandos úteis:"
 echo "- su - deploy (mudar para usuário deploy)"
-echo "- cd /home/deploy/costuraai"
+echo "- cd /home/deploy/costurai"
 echo "- ./scripts/deploy.sh"
 echo "- docker-compose -f docker-compose.prod.yml logs -f"
 echo ""

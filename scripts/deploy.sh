@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CosturaAI - Script de Deploy
+# CosturAI - Script de Deploy
 # =============================================================================
 
 set -e  # Parar em caso de erro
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configurações
-PROJECT_DIR="/home/deploy/costuraai"
+PROJECT_DIR="/home/deploy/costurai"
 BACKUP_DIR="/home/deploy/backups"
 ENV_FILE=".env.prod"
 COMPOSE_FILE="docker-compose.prod.yml"
@@ -41,7 +41,7 @@ if [ ! -f "$ENV_FILE" ]; then
     error "Arquivo $ENV_FILE não encontrado. Configure o ambiente de produção primeiro."
 fi
 
-log "Iniciando deploy do CosturaAI..."
+log "Iniciando deploy do CosturAI..."
 
 # 1. Fazer backup do banco de dados atual
 log "Criando backup do banco de dados..."
@@ -76,7 +76,7 @@ log "Verificando saúde dos containers..."
 sleep 10  # Aguardar containers iniciarem
 
 # Verificar se containers estão rodando
-CONTAINERS=("costuraai_web" "costuraai_db" "costuraai_redis" "costuraai_nginx")
+CONTAINERS=("costurai_web" "costurai_db" "costurai_redis" "costurai_nginx")
 for container in "${CONTAINERS[@]}"; do
     if [ "$(docker ps -q -f name=$container)" ]; then
         log "✓ $container está rodando"
@@ -103,9 +103,9 @@ log "Logs recentes da aplicação:"
 docker-compose -f $COMPOSE_FILE logs --tail=20 web
 
 log "Deploy concluído com sucesso! 🚀"
-log "Acesse: https://costuraai.com.br"
+log "Acesse: https://costurai.com.br"
 
 # Enviar notificação (opcional)
 # curl -X POST https://hooks.slack.com/services/YOUR/WEBHOOK/URL \
 #      -H 'Content-type: application/json' \
-#      -d '{"text":"Deploy do CosturaAI concluído com sucesso! 🚀"}' 
+#      -d '{"text":"Deploy do CosturAI concluído com sucesso! 🚀"}' 

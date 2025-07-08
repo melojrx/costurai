@@ -29,6 +29,19 @@ class WorkflowOP:
         "CANCELADA": ["CADASTRADA"],  # Permite reativar
     }
     
+    # Cores para cada status
+    CORES_STATUS = {
+        "CADASTRADA": "secondary",
+        "PREPARACAO": "info",
+        "FRENTE_EXTERNA": "warning",
+        "MONTAGEM": "primary",
+        "EM_PRODUCAO": "success",
+        "CONCLUIDA": "success",
+        "FINALIZADA": "dark",
+        "ENTREGUE": "dark",
+        "CANCELADA": "danger",
+    }
+    
     def __init__(self, ordem_producao):
         self.op = ordem_producao
     
@@ -36,6 +49,10 @@ class WorkflowOP:
         """Verifica se a OP pode transicionar para o novo status"""
         status_atual = self.op.status
         return novo_status in self.TRANSICOES_PERMITIDAS.get(status_atual, [])
+    
+    def obter_cor_status(self, status):
+        """Retorna a cor Bootstrap para o status"""
+        return self.CORES_STATUS.get(status, "secondary")
     
     def transicionar_para(self, novo_status, usuario=None, observacoes=""):
         """

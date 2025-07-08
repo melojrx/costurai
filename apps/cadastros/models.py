@@ -164,7 +164,7 @@ class Produto(TenantBaseModel):
         max_digits=8, 
         decimal_places=2, 
         default=0,
-        verbose_name="Consumo Linha Externa (metros)"
+        verbose_name="Consumo Linha Externa (Metros)"
     )
     consumo_linha_interna = models.DecimalField(
         max_digits=8, 
@@ -176,7 +176,7 @@ class Produto(TenantBaseModel):
         max_digits=8, 
         decimal_places=2, 
         default=0,
-        verbose_name="Consumo Fio (metros)"
+        verbose_name="Consumo Fio (Kg)"
     )
     
     # Cor

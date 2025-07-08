@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CosturaAI - Script de Restauração de Backup
+# CosturAI - Script de Restauração de Backup
 # =============================================================================
 
 set -e
@@ -27,12 +27,12 @@ warning() {
 # Verificar parâmetros
 if [ $# -eq 0 ]; then
     echo "Uso: $0 <arquivo_backup.sql.gz>"
-    echo "Exemplo: $0 /backups/costuraai_backup_20240115_120000.sql.gz"
+    echo "Exemplo: $0 /backups/costurai_backup_20240115_120000.sql.gz"
     exit 1
 fi
 
 BACKUP_FILE=$1
-DB_CONTAINER="costuraai_db"
+DB_CONTAINER="costurai_db"
 
 # Verificar se arquivo existe
 if [ ! -f "$BACKUP_FILE" ]; then

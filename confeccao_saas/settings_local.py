@@ -1,13 +1,19 @@
 """
-Configurações base do Django para CosturAI SaaS
-Configurações comuns a todos os ambientes
+Configurações locais para desenvolvimento
 """
-
 from pathlib import Path
 import os
 
-# Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-!o-r^kqy5d^6wdt#m(1s@1k74n*e4(&b+@0+p)%w=xxsp^b=^h"
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 DJANGO_APPS = [
@@ -26,6 +32,7 @@ THIRD_PARTY_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'django_extensions',
+    'debug_toolbar',
 ]
 
 LOCAL_APPS = [
@@ -42,6 +49,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -80,6 +88,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "confeccao_saas.wsgi.application"
+
+# Database - SQLite para desenvolvimento
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -142,14 +158,59 @@ REST_FRAMEWORK = {
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# Configurações de upload
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+CORS_ALLOW_CREDENTIALS = True
 
-# Configurações de trial
+# Cache - Local memory
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'costuraai_cache_dev',
+        'TIMEOUT': 300,
+    }
+}
+
+# Sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Celery - Executar sincronamente
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
+# Email - Console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Debug Toolbar
+INTERNAL_IPS = ['127.0.0.1', 'localhost']
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
+# Configurações customizadas
 TRIAL_PERIOD_DAYS = 30
-
-# Limites por plano
 PLANO_LIMITS = {
     'BASICO': {
         'max_empresas': 1,
@@ -164,9 +225,9 @@ PLANO_LIMITS = {
         'max_storage_mb': 500,
     },
     'ENTERPRISE': {
-        'max_empresas': -1,  # Ilimitado
-        'max_ops_mes': -1,   # Ilimitado
-        'max_usuarios': -1,  # Ilimitado
+        'max_empresas': -1,
+        'max_ops_mes': -1,
+        'max_usuarios': -1,
         'max_storage_mb': 2000,
     },
 }
@@ -174,34 +235,4 @@ PLANO_LIMITS = {
 # URLs de autenticação
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
-
-# Logging básico
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-} 
+LOGOUT_REDIRECT_URL = '/' 

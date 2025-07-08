@@ -1,16 +1,16 @@
 #!/bin/bash
 # =============================================================================
-# CosturaAI - Script de Backup
+# CosturAI - Script de Backup
 # =============================================================================
 
 set -e
 
 # Configurações
 BACKUP_DIR="/backups"
-DB_CONTAINER="costuraai_db"
+DB_CONTAINER="costurai_db"
 RETENTION_DAYS=30
 DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="costuraai_backup_${DATE}.sql"
+BACKUP_FILE="costurai_backup_${DATE}.sql"
 
 # Cores para output
 GREEN='\033[0;32m'
@@ -48,7 +48,7 @@ fi
 
 # Limpar backups antigos
 log "Removendo backups com mais de $RETENTION_DAYS dias..."
-find $BACKUP_DIR -name "costuraai_backup_*.gz" -mtime +$RETENTION_DAYS -delete
+find $BACKUP_DIR -name "costurai_backup_*.gz" -mtime +$RETENTION_DAYS -delete
 find $BACKUP_DIR -name "media_*.tar.gz" -mtime +$RETENTION_DAYS -delete
 
 # Listar backups atuais

@@ -1,6 +1,6 @@
-# 🚀 Guia de Deploy - CosturaAI SaaS
+# 🚀 Guia de Deploy - CosturAI SaaS
 
-Este guia detalha o processo completo de deploy do CosturaAI em uma VPS Ubuntu 22.04.
+Este guia detalha o processo completo de deploy do CosturAI em uma VPS Ubuntu 22.04.
 
 ## 📋 Pré-requisitos
 

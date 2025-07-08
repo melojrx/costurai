@@ -1,4 +1,4 @@
-# 🏭 CosturaAI SaaS - Sistema de Gestão para Confecções
+# 🏭 CosturAI SaaS - Sistema de Gestão para Confecções
 
 <p align="center">
   <img src="https://img.shields.io/badge/Django-5.0.1-green.svg" alt="Django 5.0.1">
@@ -9,7 +9,7 @@
 
 ## 🎯 Visão Geral
 
-**CosturaAI** é um sistema SaaS multitenant completo para gestão empresarial de confecções, desenvolvido com Django 5. O sistema substitui planilhas Excel por uma solução web moderna, escalável e segura, baseada na análise de dados reais de empresas do setor.
+**CosturAI** é um sistema SaaS multitenant completo para gestão empresarial de confecções, desenvolvido com Django 5. O sistema substitui planilhas Excel por uma solução web moderna, escalável e segura, baseada na análise de dados reais de empresas do setor.
 
 ### 🌟 Principais Características
 
@@ -357,14 +357,14 @@ python manage.py clearsessions
 ## 📞 Suporte e Contato
 
 ### 🔧 Suporte Técnico
-- **Email**: suporte@costuraai.com.br
+- **Email**: suporte@costurai.com.br
 - **Documentação**: Consulte a wiki do projeto
 - **Issues**: Use o sistema de issues do repositório
 
 ### 📈 Suporte Comercial
-- **Email**: comercial@costuraai.com.br
+- **Email**: comercial@costurai.com.br
 - **Telefone**: (11) 9999-9999
-- **Site**: https://costuraai.com.br
+- **Site**: https://costurai.com.br
 
 ### 🚀 Contribuição
 Este é um projeto privado. Para contribuições, entre em contato com a equipe de desenvolvimento.
@@ -372,7 +372,7 @@ Este é um projeto privado. Para contribuições, entre em contato com a equipe 
 ---
 
 <p align="center">
-  <strong>🏭 CosturaAI SaaS</strong><br>
+  <strong>🏭 CosturAI SaaS</strong><br>
   <em>Transformando a gestão de confecções com tecnologia</em>
 </p>
 

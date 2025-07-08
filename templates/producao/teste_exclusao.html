@@ -1,0 +1,104 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Teste de Exclusão de OP{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Teste de Exclusão de OP</h2>
+    
+    <!-- Token CSRF para AJAX -->
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Funcionalidade de Exclusão</h5>
+                </div>
+                <div class="card-body">
+                    <p>Esta página testa a funcionalidade de exclusão de OPs.</p>
+                    
+                    <button class="btn btn-danger" onclick="testarExclusao()">
+                        <i class="fas fa-trash me-2"></i>Testar Exclusão
+                    </button>
+                    
+                    <div id="resultado" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de teste -->
+<div class="modal fade" id="modalTeste" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Teste de Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Testando funcionalidade de exclusão...</p>
+                <div id="log"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function testarExclusao() {
+        const modal = new bootstrap.Modal(document.getElementById('modalTeste'));
+        modal.show();
+        
+        const log = document.getElementById('log');
+        log.innerHTML = '<p>Testando CSRF token...</p>';
+        
+        // Testar se conseguimos obter o token CSRF
+        const csrfToken = getCookie('csrftoken');
+        log.innerHTML += `<p>CSRF Token: ${csrfToken ? 'OK' : 'ERRO'}</p>`;
+        
+        // Testar se a URL existe
+        log.innerHTML += '<p>Testando URL de exclusão...</p>';
+        
+        fetch('/producao/ops/999/excluir/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            log.innerHTML += `<p>Status da resposta: ${response.status}</p>`;
+            return response.json();
+        })
+        .then(data => {
+            log.innerHTML += `<p>Resposta: ${JSON.stringify(data)}</p>`;
+        })
+        .catch(error => {
+            log.innerHTML += `<p>Erro: ${error.message}</p>`;
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %} 

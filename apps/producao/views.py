@@ -1676,18 +1676,88 @@ def api_alterar_status_linha(request, linha_id):
 
 @login_required
 def avancar_status_op(request, op_id):
-    """Avança status da OP para próxima etapa"""
-    if request.method == 'POST':
-        try:
-            from .workflow import avancar_op
-            op = get_object_or_404(OrdemProducao, id=op_id, empresa=get_current_empresa())
-            
-            if avancar_op(op_id, request.user):
-                messages.success(request, f'OP {op.numero_op} avançou para: {op.get_status_display()}')
-            else:
-                messages.warning(request, f'OP {op.numero_op} não pode avançar automaticamente')
-                
-        except Exception as e:
-            messages.error(request, f'Erro ao avançar OP: {str(e)}')
+    """Avançar status da OP usando workflow"""
+    op = get_object_or_404(OrdemProducao, id=op_id, empresa=get_current_empresa())
+    
+    from .workflow import WorkflowOP
+    workflow = WorkflowOP(op)
+    proximos_status = workflow.obter_proximos_status(op.status)
+    
+    if proximos_status and len(proximos_status) > 0:
+        novo_status = proximos_status[0]
+        op.status = novo_status
+        op.save()
+        
+        messages.success(request, f'Status da OP {op.numero_op} alterado para {op.get_status_display()}')
+    else:
+        messages.warning(request, f'Não é possível avançar o status da OP {op.numero_op}')
     
     return redirect('producao:ops_listar')
+
+
+@login_required
+def op_excluir(request, op_id):
+    """Excluir uma OP"""
+    op = get_object_or_404(OrdemProducao, id=op_id, empresa=get_current_empresa())
+    
+    if request.method == 'POST':
+        numero_op = op.numero_op
+        try:
+            with transaction.atomic():
+                # Excluir registros relacionados primeiro
+                op.itens_grade.all().delete()
+                op.materias_primas.all().delete()
+                op.processos.all().delete()
+                
+                # Excluir controles de etapa se existirem
+                if hasattr(op, 'controles_etapa'):
+                    op.controles_etapa.all().delete()
+                
+                # Excluir histórico se existir
+                if hasattr(op, 'historicos'):
+                    op.historicos.all().delete()
+                
+                # Excluir a OP
+                op.delete()
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'OP {numero_op} excluída com sucesso!'
+                    })
+                else:
+                    messages.success(request, f'OP {numero_op} excluída com sucesso!')
+                    return redirect('producao:ops_listar')
+                    
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao excluir OP: {str(e)}'
+                }, status=400)
+            else:
+                messages.error(request, f'Erro ao excluir OP: {str(e)}')
+                return redirect('producao:ops_listar')
+    
+    # Se for GET, retornar erro
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': False,
+            'message': 'Método não permitido'
+        }, status=405)
+    else:
+        messages.error(request, 'Método não permitido')
+        return redirect('producao:ops_listar')
+
+
+@login_required
+def ops_listar_teste(request):
+    """Versão simplificada para testar exclusão"""
+    empresa = get_current_empresa()
+    ops = OrdemProducao.objects.filter(empresa=empresa).select_related('cliente', 'produto')[:10]
+    
+    context = {
+        'ops': ops,
+        'empresa': empresa,
+    }
+    return render(request, 'producao/ops_listar_simples.html', context)

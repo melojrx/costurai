@@ -1,4 +1,4 @@
-# Makefile para CosturaAI SaaS
+# Makefile para CosturAI SaaS
 
 .PHONY: help dev prod build up down logs shell migrate static test clean backup restore
 

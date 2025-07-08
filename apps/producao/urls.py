@@ -19,9 +19,11 @@ urlpatterns = [
     
     # Ordens de Produção - Views tradicionais
     path('ops/', views.ops_listar, name='ops_listar'),
+    path('ops/teste/', views.ops_listar_teste, name='ops_listar_teste'),
     path('ops/novo/', views.op_form, name='op_novo'),
     path('ops/<int:op_id>/', views.op_detalhes, name='op_detalhes'),
     path('ops/<int:op_id>/editar/', views.op_form, name='op_editar'),
+    path('ops/<int:op_id>/excluir/', views.op_excluir, name='op_excluir'),
     path('ops/<int:op_id>/avancar/', views.avancar_status_op, name='avancar_status_op'),
     path('ops/<int:op_id>/pdf/', views.op_pdf, name='op_pdf'),
     path('ops/<int:op_id>/materias/', views.materias_op, name='materias_op'),
