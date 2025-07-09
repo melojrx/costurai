@@ -1,10 +1,10 @@
 {% extends 'base/dashboard_base.html' %}
+{% load currency_filters %}
 
-{% block title %}{{ form_title }} - {{ empresa.nome }} - Costurai.com.br{% endblock %}
+{% block title %}{{ form_title|default:"Produto" }} - {{ empresa.nome }} - Costurai.com.br{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Estilos específicos para o formulário de produtos */
     .form-card {
         background: white;
         border-radius: var(--border-radius);
@@ -50,10 +50,6 @@
         grid-template-columns: 1fr 1fr 1fr;
     }
     
-    .form-grid.cols-4 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
     .form-group {
         display: flex;
         flex-direction: column;
@@ -90,6 +86,11 @@
         outline: none;
     }
     
+    .form-control:read-only {
+        background: var(--gray-50);
+        color: var(--gray-600);
+    }
+    
     .form-control.error {
         border-color: var(--danger);
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
@@ -116,7 +117,72 @@
         border: 1px solid #fecaca;
     }
     
-    /* Image Upload */
+    /* Input Groups */
+    .input-group {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+    }
+    
+    .input-group .form-control {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .btn-add-item {
+        background: var(--primary-blue-light);
+        color: white;
+        border: 1px solid var(--primary-blue-light);
+        border-left: none;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: var(--border-radius-sm);
+        border-bottom-right-radius: var(--border-radius-sm);
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+    }
+    
+    .btn-add-item:hover {
+        background: var(--primary-blue-dark);
+        border-color: var(--primary-blue-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-generate-code {
+        background: var(--success);
+        color: white;
+        border: 1px solid var(--success);
+        border-left: none;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: var(--border-radius-sm);
+        border-bottom-right-radius: var(--border-radius-sm);
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+    }
+    
+    .btn-generate-code:hover {
+        background: #059669;
+        border-color: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .codigo-automatico {
+        background: var(--accent-blue) !important;
+        border-color: var(--primary-blue-light) !important;
+    }
+    
     .image-upload-area {
         border: 2px dashed var(--gray-300);
         border-radius: var(--border-radius-sm);
@@ -153,262 +219,6 @@
         border: 1px solid var(--gray-200);
     }
     
-    /* Matérias-Primas Section */
-    .materias-primas-section {
-        background: var(--gray-50);
-        border-radius: var(--border-radius-sm);
-        padding: 20px;
-        margin-top: 20px;
-    }
-    
-    .materia-prima-item {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--border-radius-sm);
-        padding: 16px;
-        margin-bottom: 12px;
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr auto;
-        gap: 16px;
-        align-items: end;
-    }
-    
-    .materia-prima-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .btn-add-materia {
-        background: var(--success);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-add-materia:hover {
-        background: #059669;
-        transform: translateY(-1px);
-    }
-    
-    .btn-remove-materia {
-        background: var(--danger);
-        color: white;
-        border: none;
-        padding: 6px 8px;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-remove-materia:hover {
-        background: #dc2626;
-    }
-    
-    /* Tamanhos Section - Layout Horizontal */
-    .tamanhos-section {
-        background: var(--gray-50);
-        border-radius: var(--border-radius-sm);
-        padding: 20px;
-        margin-top: 20px;
-    }
-    
-    .tamanhos-grid-horizontal {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        align-items: flex-end;
-    }
-    
-    .tamanho-item-horizontal {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 80px;
-    }
-    
-    .tamanho-label {
-        font-weight: 600;
-        color: var(--gray-700);
-        margin-bottom: 8px;
-        font-size: 0.875rem;
-        text-align: center;
-    }
-    
-    .tamanho-input {
-        width: 70px;
-        padding: 8px;
-        border: 1px solid var(--gray-300);
-        border-radius: var(--border-radius-sm);
-        text-align: center;
-        font-size: 0.875rem;
-        background: white;
-    }
-    
-    .tamanho-input:focus {
-        border-color: var(--primary-blue-light);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    }
-    
-    .quantidade-resumo {
-        border-top: 1px solid var(--gray-200);
-        padding-top: 20px;
-    }
-    
-    /* Departamento Header */
-    .departamento-header {
-        background: var(--primary-blue-light);
-        color: white;
-        padding: 12px 20px;
-        border-radius: var(--border-radius-sm);
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 600;
-    }
-    
-    .departamento-header i {
-        font-size: 1.1rem;
-    }
-    
-    /* Tabela de Matérias-Primas */
-    .materias-primas-table {
-        overflow-x: auto;
-        border-radius: var(--border-radius-sm);
-        border: 1px solid var(--gray-200);
-    }
-    
-    .materias-primas-table table {
-        margin: 0;
-        width: 100%;
-        background: white;
-    }
-    
-    .materias-primas-table thead {
-        background: var(--gray-100);
-    }
-    
-    .materias-primas-table th {
-        padding: 12px;
-        font-weight: 600;
-        color: var(--gray-700);
-        border-bottom: 2px solid var(--gray-200);
-        font-size: 0.875rem;
-        text-align: center;
-    }
-    
-    .materias-primas-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--gray-200);
-        vertical-align: middle;
-    }
-    
-    .materias-primas-table tbody tr:hover {
-        background: var(--gray-50);
-    }
-    
-    .materia-input {
-        width: 100%;
-        padding: 6px 8px;
-        border: 1px solid var(--gray-300);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.8125rem;
-        background: white;
-    }
-    
-    .materia-input:focus {
-        border-color: var(--primary-blue-light);
-        outline: none;
-    }
-    
-    .materia-select {
-        width: 100%;
-        padding: 6px 8px;
-        border: 1px solid var(--gray-300);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.8125rem;
-        background: white;
-    }
-    
-    .btn-add-materia-table {
-        background: var(--primary-blue-light);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-add-materia-table:hover {
-        background: var(--primary-blue-dark);
-        transform: translateY(-1px);
-    }
-    
-    .btn-remove-materia-table {
-        background: #ef4444;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-remove-materia-table:hover {
-        background: #dc2626;
-    }
-    
-    /* Remove estilos antigos */
-    .tamanhos-grid,
-    .tamanho-item,
-    .tamanho-checkbox,
-    .tamanho-header,
-    .tamanho-info,
-    .tamanho-codigo,
-    .tamanho-descricao,
-    .tamanho-tipo,
-    .tamanho-precos,
-    .preco-input {
-        display: none !important;
-    }
-    
-    /* Price Summary */
-    .price-summary {
-        background: var(--accent-blue);
-        border: 1px solid var(--primary-blue-light);
-        border-radius: var(--border-radius-sm);
-        padding: 20px;
-        margin-top: 20px;
-    }
-    
-    .price-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .price-item:last-child {
-        border-bottom: none;
-        font-weight: 600;
-        font-size: 1.125rem;
-        color: var(--primary-blue-dark);
-    }
-    
-    /* Form Actions */
     .form-actions {
         background: var(--gray-50);
         padding: 24px 28px;
@@ -418,17 +228,493 @@
         justify-content: flex-end;
     }
     
-    /* Responsive */
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+    }
+    
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--gray-400);
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+    
+    .modal-close:hover {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+    
+    .modal-body {
+        padding: 24px;
+    }
+    
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+    
+    .modal-form .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .modal-form .form-control {
+        width: 100%;
+    }
+    
+    /* Grade Feedback Styles */
+    .grade-feedback {
+        background: var(--accent-blue);
+        border: 1px solid var(--primary-blue-light);
+        border-radius: var(--border-radius-sm);
+        padding: 20px;
+        margin-top: 16px;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .feedback-header {
+        margin-bottom: 16px;
+    }
+    
+    .feedback-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary-blue-dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .feedback-title i {
+        color: var(--primary-blue-light);
+    }
+    
+    .feedback-description {
+        color: var(--gray-700);
+        font-size: 0.875rem;
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+    
+    .feedback-examples {
+        margin-bottom: 16px;
+    }
+    
+    .examples-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+    }
+    
+    .examples-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .example-tag {
+        background: var(--primary-blue-light);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .example-tag.numeros {
+        background: #059669; /* Verde para números */
+    }
+    
+    .example-tag.letras {
+        background: #dc2626; /* Vermelho para letras */
+    }
+    
+    .example-tag.idade {
+        background: #7c3aed; /* Roxo para idade */
+    }
+    
+    .example-tag.personalizado {
+        background: var(--gray-500); /* Cinza para personalizado */
+    }
+    
+    .feedback-custom {
+        background: var(--warning-light);
+        border: 1px solid var(--warning);
+        border-radius: var(--border-radius-sm);
+        padding: 12px;
+    }
+    
+    .custom-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+    }
+    
+    .custom-info i {
+        color: var(--warning);
+    }
+    
+    /* Matérias-Primas Styles */
+    .form-help-section {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        margin-bottom: 24px;
+        padding: 12px 16px;
+        background: var(--gray-50);
+        border-radius: var(--border-radius-sm);
+        border-left: 4px solid var(--primary-blue-light);
+    }
+    
+    .linha-materia-prima {
+        margin-bottom: 20px;
+    }
+    
+    .linha-materia-prima.template {
+        display: none !important;
+    }
+    
+    .materia-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--border-radius-sm);
+        padding: 20px;
+        transition: all 0.2s ease;
+    }
+    
+    .materia-card:hover {
+        border-color: var(--primary-blue-light);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    
+    .materia-header {
+        display: grid;
+        grid-template-columns: 1fr 200px 60px;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 16px;
+    }
+    
+    .materia-select-group,
+    .quantidade-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .materia-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+    
+    .quantidade-input {
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius-sm);
+        padding: 12px 14px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .quantidade-input:focus {
+        border-color: var(--primary-blue-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .acoes-group {
+        display: flex;
+        justify-content: center;
+        align-items: end;
+    }
+    
+    .btn-remove-materia {
+        background: var(--danger);
+        color: white;
+        border: 1px solid var(--danger);
+        border-radius: var(--border-radius-sm);
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        height: 44px;
+    }
+    
+    .btn-remove-materia:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+        transform: translateY(-1px);
+    }
+    
+    /* Feedback Visual */
+    .materia-feedback {
+        background: var(--accent-blue);
+        border: 1px solid var(--primary-blue-light);
+        border-radius: var(--border-radius-sm);
+        padding: 16px;
+        margin-top: 16px;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .feedback-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+    }
+    
+    .info-item i {
+        color: var(--primary-blue-light);
+        width: 16px;
+        text-align: center;
+    }
+    
+    .info-label {
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    
+    .info-value {
+        color: var(--gray-900);
+        font-weight: 600;
+    }
+    
+    .estoque-status {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+    
+    .status-badge.status-normal {
+        background: var(--success-light);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+    
+    .status-badge.status-baixo {
+        background: var(--warning-light);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+    }
+    
+    .status-badge.status-zerado {
+        background: var(--danger-light);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+    
+    .status-badge.status-alto {
+        background: var(--info-light);
+        color: var(--info);
+        border: 1px solid var(--info);
+    }
+    
+    /* Botão Adicionar */
+    .add-materia-section {
+        margin: 24px 0;
+        text-align: center;
+    }
+    
+    .btn-add-materia {
+        background: var(--primary-blue-light);
+        color: white;
+        border: 2px dashed var(--primary-blue-light);
+        border-radius: var(--border-radius-sm);
+        padding: 16px 24px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-add-materia:hover {
+        background: var(--primary-blue-dark);
+        border-color: var(--primary-blue-dark);
+        transform: translateY(-1px);
+    }
+    
+    /* Resumo de Custos */
+    .resumo-custos {
+        background: linear-gradient(135deg, var(--success-light), var(--accent-blue));
+        border: 1px solid var(--success);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        margin-top: 24px;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .resumo-header {
+        margin-bottom: 16px;
+    }
+    
+    .resumo-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--success);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .resumo-content {
+        margin-bottom: 16px;
+    }
+    
+    .custo-linha,
+    .margem-linha {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .custo-linha:last-child,
+    .margem-linha:last-child {
+        border-bottom: none;
+    }
+    
+    .custo-label,
+    .margem-label {
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        font-weight: 500;
+    }
+    
+    .custo-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--success);
+    }
+    
+    .margem-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .resumo-footer {
+        padding-top: 12px;
+        border-top: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .resumo-help {
+        color: var(--gray-600);
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .resumo-help i {
+        color: var(--success);
+    }
+    
     @media (max-width: 768px) {
         .form-grid.cols-2,
-        .form-grid.cols-3,
-        .form-grid.cols-4 {
+        .form-grid.cols-3 {
             grid-template-columns: 1fr;
-        }
-        
-        .materia-prima-item {
-            grid-template-columns: 1fr;
-            gap: 12px;
         }
         
         .form-actions {
@@ -438,6 +724,23 @@
         .form-card-body {
             padding: 20px;
         }
+        
+        .examples-list {
+            justify-content: center;
+        }
+        
+        .materia-header {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .feedback-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .estoque-status {
+            justify-content: flex-start;
+        }
     }
 </style>
 {% endblock %}
@@ -446,8 +749,14 @@
 <!-- Page Header -->
 <div class="page-header">
     <div class="page-header-content">
-        <h1 class="page-title">{{ form_title }}</h1>
-        <p class="page-subtitle">Preencha as informações do produto e configure suas matérias-primas</p>
+        <h1 class="page-title">
+            {% if object %}
+                Editar Produto: {{ object.codigo }}
+            {% else %}
+                Novo Produto
+            {% endif %}
+        </h1>
+        <p class="page-subtitle">Configure as informações do produto</p>
     </div>
     <div class="page-actions">
         <a href="{% url 'cadastros:produtos_listar' %}" class="btn-modern btn-modern-outline">
@@ -469,46 +778,66 @@
             </h3>
         </div>
         <div class="form-card-body">
-            <div class="form-grid cols-3">
+            <div class="form-grid cols-2">
                 <div class="form-group">
                     <label class="form-label required">Código</label>
-                    <input type="text" name="codigo" class="form-control" 
-                           value="{{ form.codigo.value|default:'' }}" 
-                           placeholder="Ex: CALC001" required>
+                    <div class="input-group">
+                        <input type="text" name="codigo" id="codigo_input" class="form-control" 
+                               value="{{ form.codigo.value|default:'' }}" 
+                               placeholder="Será gerado automaticamente" required>
+                        <button type="button" class="btn-generate-code" onclick="gerarCodigoAutomatico()" title="Gerar código automático">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                    <div class="form-help">Código único do produto. Deixe vazio para gerar automaticamente.</div>
                     {% if form.codigo.errors %}
                         <div class="error-message">{{ form.codigo.errors.0 }}</div>
                     {% endif %}
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label required">Referência</label>
-                    <input type="text" name="referencia" class="form-control" 
-                           value="{{ form.referencia.value|default:'' }}" 
-                           placeholder="Ex: Calça Jeans Slim" required>
-                    {% if form.referencia.errors %}
-                        <div class="error-message">{{ form.referencia.errors.0 }}</div>
+                    <label class="form-label">Tipo de Produto</label>
+                    <div class="input-group">
+                        {{ form.tipo_produto }}
+                        <button type="button" class="btn-add-item" onclick="openTipoProdutoModal()" title="Adicionar novo tipo">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    {% if form.tipo_produto.errors %}
+                        <div class="error-message">{{ form.tipo_produto.errors.0 }}</div>
                     {% endif %}
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label required">Tipo de Produto</label>
-                    <select name="produto" class="form-control" required>
-                        <option value="">Selecione o tipo</option>
-                        {% for value, label in form.produto.field.choices %}
-                            <option value="{{ value }}" {% if form.produto.value == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    {% if form.produto.errors %}
-                        <div class="error-message">{{ form.produto.errors.0 }}</div>
+                    <label class="form-label">Categoria</label>
+                    <div class="input-group">
+                        {{ form.categoria }}
+                        <button type="button" class="btn-add-item" onclick="openCategoriaModal()" title="Adicionar nova categoria">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    {% if form.categoria.errors %}
+                        <div class="error-message">{{ form.categoria.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">NCM</label>
+                    <div class="input-group">
+                        {{ form.ncm }}
+                        <button type="button" class="btn-add-item" onclick="openNCMModal()" title="Adicionar novo NCM">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="form-help">Classificação fiscal do produto</div>
+                    {% if form.ncm.errors %}
+                        <div class="error-message">{{ form.ncm.errors.0 }}</div>
                     {% endif %}
                 </div>
                 
                 <div class="form-group full-width">
-                    <label class="form-label">Descrição</label>
-                    <textarea name="descricao" class="form-control" 
-                              placeholder="Descrição detalhada do produto">{{ form.descricao.value|default:'' }}</textarea>
+                    <label class="form-label required">Descrição</label>
+                    {{ form.descricao }}
                     {% if form.descricao.errors %}
                         <div class="error-message">{{ form.descricao.errors.0 }}</div>
                     {% endif %}
@@ -517,48 +846,44 @@
         </div>
     </div>
 
-    <!-- Características -->
+    <!-- Sistema de Grades -->
     <div class="form-card">
         <div class="form-card-header">
             <h3 class="form-card-title">
-                <i class="fas fa-palette"></i>
-                Características
+                <i class="fas fa-ruler-combined"></i>
+                Sistema de Grades
             </h3>
         </div>
         <div class="form-card-body">
-            <div class="form-grid cols-3">
-                <div class="form-group">
-                    <label class="form-label">Código da Cor</label>
-                    <input type="text" name="codigo_cor" class="form-control" 
-                           value="{{ form.codigo_cor.value|default:'' }}" 
-                           placeholder="Ex: AZU001">
-                    {% if form.codigo_cor.errors %}
-                        <div class="error-message">{{ form.codigo_cor.errors.0 }}</div>
-                    {% endif %}
+            <div class="form-group">
+                <label class="form-label">Tipo de Grade</label>
+                {{ form.tipo_grade }}
+                <div class="form-help">Define como serão os tamanhos deste produto (PP/P/M/G, 36/38/40, 2/4/6 anos, etc.)</div>
+                {% if form.tipo_grade.errors %}
+                    <div class="error-message">{{ form.tipo_grade.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Feedback Visual do Tipo de Grade -->
+            <div id="grade-feedback" class="grade-feedback" style="display: none;">
+                <div class="feedback-header">
+                    <h4 class="feedback-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="feedback-title-text">Tamanhos Disponíveis</span>
+                    </h4>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Nome da Cor</label>
-                    <input type="text" name="cor" class="form-control" 
-                           value="{{ form.cor.value|default:'' }}" 
-                           placeholder="Ex: Azul Marinho">
-                    {% if form.cor.errors %}
-                        <div class="error-message">{{ form.cor.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Unidade</label>
-                    <select name="unidade" class="form-control">
-                        {% for value, label in form.unidade.field.choices %}
-                            <option value="{{ value }}" {% if form.unidade.value == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    {% if form.unidade.errors %}
-                        <div class="error-message">{{ form.unidade.errors.0 }}</div>
-                    {% endif %}
+                <div class="feedback-content">
+                    <div id="feedback-description" class="feedback-description"></div>
+                    <div id="feedback-examples" class="feedback-examples">
+                        <div class="examples-label">Exemplos de tamanhos:</div>
+                        <div id="examples-list" class="examples-list"></div>
+                    </div>
+                    <div id="feedback-custom" class="feedback-custom" style="display: none;">
+                        <div class="custom-info">
+                            <i class="fas fa-cog"></i>
+                            <span>Para tipos personalizados, configure os tamanhos específicos no módulo de Estoque → Tamanhos</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -576,9 +901,7 @@
             <div class="form-grid cols-2">
                 <div class="form-group">
                     <label class="form-label">Preço de Custo</label>
-                    <input type="number" name="preco_custo" class="form-control" step="0.01" min="0"
-                           value="{{ form.preco_custo.value|default:'' }}" 
-                           placeholder="0,00" id="precoCusto">
+                    {{ form.preco_custo }}
                     <div class="form-help">Custo para produzir o produto</div>
                     {% if form.preco_custo.errors %}
                         <div class="error-message">{{ form.preco_custo.errors.0 }}</div>
@@ -587,206 +910,283 @@
                 
                 <div class="form-group">
                     <label class="form-label">Preço de Venda</label>
-                    <input type="number" name="preco_venda" class="form-control" step="0.01" min="0"
-                           value="{{ form.preco_venda.value|default:'' }}" 
-                           placeholder="0,00" id="precoVenda">
+                    {{ form.preco_venda }}
                     <div class="form-help">Preço de venda do produto</div>
                     {% if form.preco_venda.errors %}
                         <div class="error-message">{{ form.preco_venda.errors.0 }}</div>
                     {% endif %}
                 </div>
             </div>
-            
-            <!-- Resumo de Preços -->
-            <div class="price-summary" id="priceSummary" style="display: none;">
-                <div class="price-item">
-                    <span>Custo Base:</span>
-                    <span id="custoBase">R$ 0,00</span>
-                </div>
-                <div class="price-item">
-                    <span>Custo Matérias-Primas:</span>
-                    <span id="custoMaterias">R$ 0,00</span>
-                </div>
-                <div class="price-item">
-                    <span>Custo Total:</span>
-                    <span id="custoTotal">R$ 0,00</span>
-                </div>
-                <div class="price-item">
-                    <span>Margem de Lucro:</span>
-                    <span id="margemLucro">0%</span>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Consumo de Linhas -->
+    <!-- Matérias-Primas -->
     <div class="form-card">
-        <div class="form-card-header">
-            <h3 class="form-card-title">
-                <i class="fas fa-tape"></i>
-                Consumo de Linhas
-            </h3>
-        </div>
-        <div class="form-card-body">
-            <div class="form-grid cols-3">
-                <div class="form-group">
-                    <label class="form-label">Linha Externa (metros)</label>
-                    <input type="number" name="consumo_linha_externa" class="form-control" step="0.01" min="0"
-                           value="{{ form.consumo_linha_externa.value|default:'' }}" 
-                           placeholder="0,00">
-                    {% if form.consumo_linha_externa.errors %}
-                        <div class="error-message">{{ form.consumo_linha_externa.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Linha Interna (metros)</label>
-                    <input type="number" name="consumo_linha_interna" class="form-control" step="0.01" min="0"
-                           value="{{ form.consumo_linha_interna.value|default:'' }}" 
-                           placeholder="0,00">
-                    {% if form.consumo_linha_interna.errors %}
-                        <div class="error-message">{{ form.consumo_linha_interna.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Fio (metros)</label>
-                    <input type="number" name="consumo_fio" class="form-control" step="0.01" min="0"
-                           value="{{ form.consumo_fio.value|default:'' }}" 
-                           placeholder="0,00">
-                    {% if form.consumo_fio.errors %}
-                        <div class="error-message">{{ form.consumo_fio.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Matérias-Primas (NOVA SEÇÃO) -->
-    <div class="form-card" style="display: none;">
         <div class="form-card-header">
             <h3 class="form-card-title">
                 <i class="fas fa-industry"></i>
-                Matérias-Primas (Opcional)
+                Ficha Técnica - Matérias-Primas
             </h3>
         </div>
         <div class="form-card-body">
-            <p class="text-sm text-gray-600 mb-4">
-                Configure as matérias-primas utilizadas neste produto. Isso ajudará no cálculo do custo total.
+            <p class="form-help-section">
+                Configure as matérias-primas utilizadas neste produto para cálculo automático do custo.
             </p>
             
-            <div class="materias-primas-section">
-                <div id="materiasPrimasContainer">
-                    <!-- Matérias-primas serão adicionadas aqui via JavaScript -->
-                </div>
+            <!-- Container das Matérias-Primas -->
+            <div id="materias-primas-container">
+                {{ materias_primas.management_form }}
                 
-                <button type="button" class="btn-add-materia" onclick="addMateriaPrima()">
-                    <i class="fas fa-plus"></i>
-                    Adicionar Matéria-Prima
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tamanhos Disponíveis (NOVA SEÇÃO) -->
-    <div class="form-card">
-        <div class="form-card-header">
-            <h3 class="form-card-title">
-                <i class="fas fa-ruler-combined"></i>
-                Quantidades por Tamanho
-            </h3>
-        </div>
-        <div class="form-card-body">
-            <p class="text-sm text-gray-600 mb-4">
-                Configure as quantidades disponíveis para cada tamanho do produto.
-            </p>
-            
-            <div class="tamanhos-section">
-                <div class="tamanhos-grid-horizontal" id="tamanhosGridHorizontal">
-                    <!-- Tamanhos serão carregados aqui via JavaScript -->
-                </div>
-                
-                <div class="quantidade-resumo mt-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Quantidade Total</label>
-                                <input type="number" id="quantidadeTotal" class="form-control" readonly placeholder="0">
+                <!-- Linha Template (oculta) -->
+                <div id="linha-template" class="linha-materia-prima template" style="display: none;">
+                    <div class="materia-card">
+                        <div class="materia-header">
+                            <div class="materia-select-group">
+                                <label class="materia-label">Matéria-Prima</label>
+                                <div class="input-group">
+                                    <select class="form-control materia-select" name="__prefix__-materia_prima" required>
+                                        <option value="">Selecione uma matéria-prima...</option>
+                                        {% for materia in form.fields.materia_prima.queryset %}
+                                            <option value="{{ materia.id }}">{{ materia.codigo }} - {{ materia.descricao }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <a href="{% url 'estoque:materia_prima_create' %}" target="_blank" class="btn-add-item" title="Cadastrar nova matéria-prima" style="text-decoration: none;">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="quantidade-group">
+                                <label class="materia-label">Quantidade</label>
+                                <input type="number" class="form-control quantidade-input" name="__prefix__-quantidade" 
+                                       step="0.001" min="0" placeholder="0,000" required>
+                            </div>
+                            
+                            <div class="acoes-group">
+                                <button type="button" class="btn-remove-materia" onclick="removerLinhaMateria(this)" title="Remover matéria-prima">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Valor Total (R$)</label>
-                                <input type="text" id="valorTotal" class="form-control" readonly placeholder="R$ 0,00">
+                        
+                        <!-- Feedback Visual da Matéria-Prima -->
+                        <div class="materia-feedback" style="display: none;">
+                            <div class="feedback-info">
+                                <div class="info-item">
+                                    <i class="fas fa-cube"></i>
+                                    <span class="info-label">Unidade:</span>
+                                    <span class="info-value unidade-value">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    <span class="info-label">Última compra:</span>
+                                    <span class="info-value preco-value">R$ 0,00</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-calculator"></i>
+                                    <span class="info-label">Custo total:</span>
+                                    <span class="info-value custo-total-value">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div class="estoque-status">
+                                <span class="status-badge status-normal">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span class="status-text">Estoque Normal</span>
+                                </span>
                             </div>
                         </div>
+                        
+                        <!-- Hidden fields for formset -->
+                        <input type="hidden" name="__prefix__-id" value="">
+                        <input type="hidden" name="__prefix__-produto" value="">
+                        <input type="hidden" name="__prefix__-DELETE" value="">
                     </div>
                 </div>
                 
-                <div class="tamanhos-actions mt-3">
-                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="zerarTodosTamanhos()">
-                        <i class="fas fa-eraser"></i>
-                        Zerar Todos
-                    </button>
-                    <button type="button" class="btn-modern btn-modern-secondary btn-modern-sm" onclick="gerenciarTamanhos()">
-                        <i class="fas fa-cog"></i>
-                        Gerenciar Tamanhos
-                    </button>
+                <!-- Linhas Existentes -->
+                <div id="linhas-existentes">
+                    {% for form_item in materias_primas %}
+                        <div class="linha-materia-prima" data-form-index="{{ forloop.counter0 }}">
+                            <div class="materia-card">
+                                <div class="materia-header">
+                                    <div class="materia-select-group">
+                                        <label class="materia-label">Matéria-Prima</label>
+                                        <div class="input-group">
+                                            {{ form_item.materia_prima }}
+                                            <a href="{% url 'estoque:materia_prima_create' %}" target="_blank" class="btn-add-item" title="Cadastrar nova matéria-prima" style="text-decoration: none;">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="quantidade-group">
+                                        <label class="materia-label">Quantidade</label>
+                                        {{ form_item.quantidade }}
+                                    </div>
+                                    
+                                    <div class="acoes-group">
+                                        {% if form_item.instance.pk %}
+                                            {{ form_item.DELETE }}
+                                            <label for="{{ form_item.DELETE.id_for_label }}" class="btn-remove-materia" title="Remover matéria-prima">
+                                                <i class="fas fa-trash"></i>
+                                            </label>
+                                        {% else %}
+                                            <button type="button" class="btn-remove-materia" onclick="removerLinhaMateria(this)" title="Remover matéria-prima">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Feedback Visual -->
+                                <div class="materia-feedback" style="display: none;">
+                                    <div class="feedback-info">
+                                        <div class="info-item">
+                                            <i class="fas fa-cube"></i>
+                                            <span class="info-label">Unidade:</span>
+                                            <span class="info-value unidade-value">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="info-label">Última compra:</span>
+                                            <span class="info-value preco-value">R$ 0,00</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <i class="fas fa-calculator"></i>
+                                            <span class="info-label">Custo total:</span>
+                                            <span class="info-value custo-total-value">R$ 0,00</span>
+                                        </div>
+                                    </div>
+                                    <div class="estoque-status">
+                                        <span class="status-badge status-normal">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span class="status-text">Estoque Normal</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields -->
+                                {{ form_item.id }}
+                                {{ form_item.produto }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Botão Adicionar -->
+            <div class="add-materia-section">
+                <button type="button" class="btn-add-materia" onclick="adicionarLinhaMateria()">
+                    <i class="fas fa-plus"></i>
+                    Adicionar Matéria-Prima
+                </button>
+            </div>
+            
+            <!-- Resumo de Custos -->
+            <div id="resumo-custos" class="resumo-custos" style="display: none;">
+                <div class="resumo-header">
+                    <h4 class="resumo-title">
+                        <i class="fas fa-calculator"></i>
+                        Resumo de Custos
+                    </h4>
+                </div>
+                <div class="resumo-content">
+                    <div class="custo-linha">
+                        <span class="custo-label">Custo Total de Matérias-Primas:</span>
+                        <span class="custo-value" id="custo-total-display">R$ 0,00</span>
+                    </div>
+                    <div class="margem-linha">
+                        <span class="margem-label">Margem 40% (sugerida):</span>
+                        <span class="margem-value" id="margem-40-display">R$ 0,00</span>
+                    </div>
+                    <div class="margem-linha">
+                        <span class="margem-label">Margem 50% (sugerida):</span>
+                        <span class="margem-value" id="margem-50-display">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="resumo-footer">
+                    <small class="resumo-help">
+                        <i class="fas fa-info-circle"></i>
+                        Os valores de margem são sugestões. O preço de venda final deve ser definido por você.
+                    </small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Necessidade de Matéria Prima (Ficha Técnica) -->
-    <div class="form-card">
-        <div class="form-card-header">
-            <h3 class="form-card-title">
-                <i class="fas fa-cogs"></i>
-                Ficha Técnica (Matérias-Primas)
-            </h3>
-        </div>
-        <div class="form-card-body">
-            
-            <div class="materias-primas-table">
-                {{ materias_primas.management_form }}
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th width="50%">Matéria-Prima</th>
-                            <th width="30%">Quantidade Necessária</th>
-                            <th width="10%">Excluir?</th>
-                        </tr>
-                    </thead>
-                    <tbody id="materias-primas-formset">
-                        {% for form_item in materias_primas %}
-                            <tr class="materia-prima-row">
-                                <td>{{ form_item.id }}{{ form_item.produto }} {{ form_item.materia_prima }}</td>
-                                <td>{{ form_item.quantidade }}</td>
-                                <td class="text-center">{% if form_item.instance.pk %}{{ form_item.DELETE }}{% endif %}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+
+    <!-- Modal para Nova Categoria -->
+    <div id="categoriaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nova Categoria</h3>
+                <button type="button" class="modal-close" onclick="closeCategoriaModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            
-            <div class="mt-3">
-                <button type="button" class="btn-add-materia-table" id="add-materia-prima-row">
-                    <i class="fas fa-plus"></i>
-                    Adicionar Matéria-Prima
+            <div class="modal-body">
+                <form id="categoriaForm" class="modal-form">
+                    <div class="form-group">
+                        <label class="form-label required">Nome da Categoria</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Ex: Roupas Casuais" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="2" placeholder="Descrição da categoria (opcional)"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modern btn-modern-outline" onclick="closeCategoriaModal()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-modern btn-modern-primary" onclick="salvarCategoria()">
+                    <i class="fas fa-save"></i>
+                    Salvar Categoria
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Formulário vazio para ser usado como template no JavaScript -->
-    <div id="empty-form" style="display: none;">
-        <tr class="materia-prima-row">
-            <td>{{ materias_primas.empty_form.id }}{{ materias_primas.empty_form.produto }} {{ materias_primas.empty_form.materia_prima }}</td>
-            <td>{{ materias_primas.empty_form.quantidade }}</td>
-            <td class="text-center"></td>
-        </tr>
+    <!-- Modal para Novo NCM -->
+    <div id="ncmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo NCM</h3>
+                <button type="button" class="modal-close" onclick="closeNCMModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="ncmForm" class="modal-form">
+                    <div class="form-group">
+                        <label class="form-label required">Código NCM</label>
+                        <input type="text" name="codigo" class="form-control" placeholder="Ex: 6203.42.00" required>
+                        <div class="form-help">Código NCM de 8 dígitos</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="2" placeholder="Descrição do produto conforme NCM" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alíquota IPI (%)</label>
+                        <input type="number" name="aliquota_ipi" class="form-control" min="0" max="100" step="0.01" value="0" placeholder="0.00">
+                        <div class="form-help">Alíquota de IPI em porcentagem</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modern btn-modern-outline" onclick="closeNCMModal()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-modern btn-modern-primary" onclick="salvarNCM()">
+                    <i class="fas fa-save"></i>
+                    Salvar NCM
+                </button>
+            </div>
+        </div>
     </div>
-
 
     <!-- Imagem -->
     <div class="form-card">
@@ -808,7 +1208,7 @@
                     <p class="text-sm text-gray-500">PNG, JPG até 5MB</p>
                 {% endif %}
             </div>
-            <input type="file" name="imagem" id="id_imagem" accept="image/*" style="display: none;" onchange="previewImage(this)">
+            {{ form.imagem }}
             {% if form.imagem.errors %}
                 <div class="error-message">{{ form.imagem.errors.0 }}</div>
             {% endif %}
@@ -826,16 +1226,18 @@
         <div class="form-card-body">
             <div class="form-group">
                 <label class="form-label">
-                    <input type="checkbox" name="ativo" {% if form.ativo.value %}checked{% endif %} style="margin-right: 8px;">
+                    {{ form.ativo }}
                     Produto ativo
                 </label>
                 <div class="form-help">Produtos inativos não aparecerão nas listagens</div>
+                {% if form.ativo.errors %}
+                    <div class="error-message">{{ form.ativo.errors.0 }}</div>
+                {% endif %}
             </div>
             
             <div class="form-group">
                 <label class="form-label">Observações</label>
-                <textarea name="observacoes" class="form-control" rows="3"
-                          placeholder="Observações adicionais sobre o produto">{{ form.observacoes.value|default:'' }}</textarea>
+                {{ form.observacoes }}
                 {% if form.observacoes.errors %}
                     <div class="error-message">{{ form.observacoes.errors.0 }}</div>
                 {% endif %}
@@ -851,344 +1253,1400 @@
         </a>
         <button type="submit" class="btn-modern btn-modern-primary">
             <i class="fas fa-save"></i>
-            Salvar Produto
+            {% if object %}Atualizar{% else %}Salvar{% endif %} Produto
         </button>
     </div>
 </form>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let materiasPrimasCount = 0;
-
-// Preview de imagem
-function previewImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const uploadArea = input.parentElement;
-            uploadArea.innerHTML = `<img src="${e.target.result}" alt="Preview" class="image-preview" id="imagePreview">`;
-            uploadArea.classList.add('has-image');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// Adicionar matéria-prima
-function addMateriaPrima() {
-    materiasPrimasCount++;
-    const container = document.getElementById('materiasPrimasContainer');
+// === CÓDIGO SIMPLIFICADO PARA DEBUG ===
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando...');
     
-    const materiaItem = document.createElement('div');
-    materiaItem.className = 'materia-prima-item';
-    materiaItem.innerHTML = `
-        <div class="form-group">
-            <label class="form-label">Matéria-Prima</label>
-            <select name="materia_prima_${materiasPrimasCount}" class="form-control">
-                <option value="">Selecione uma matéria-prima</option>
-                <!-- Opções serão carregadas via AJAX -->
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Quantidade</label>
-            <input type="number" name="quantidade_${materiasPrimasCount}" class="form-control materia-quantidade" 
-                   step="0.0001" min="0" placeholder="0,0000" onchange="calculateCosts()">
-        </div>
-        <div class="form-group">
-            <label class="form-label">Custo Unit.</label>
-            <input type="text" class="form-control materia-custo" readonly placeholder="R$ 0,00">
-        </div>
-        <div class="form-group">
-            <button type="button" class="btn-remove-materia" onclick="removeMateriaPrima(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
+    // Inicializar todas as funcionalidades
+    inicializarGrades();
+    inicializarMateriasPrimas();
+});
+
+function inicializarGrades() {
+    const tipoGradeSelect = document.querySelector('select[name="tipo_grade"]');
     
-    container.appendChild(materiaItem);
-    loadMateriasPrimas(materiaItem.querySelector('select'));
-}
-
-// Remover matéria-prima
-function removeMateriaPrima(button) {
-    button.closest('.materia-prima-item').remove();
-    calculateCosts();
-}
-
-// Carregar matérias-primas via AJAX
-async function loadMateriasPrimas(selectElement) {
-    try {
-        const url = "{% url 'estoque:api_materias_primas' %}";
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error('Erro ao buscar matérias-primas.');
+    if (tipoGradeSelect) {
+        // Mostrar feedback inicial se já tem valor
+        if (tipoGradeSelect.value) {
+            mostrarFeedbackGrade(tipoGradeSelect.value);
         }
-
-        const data = await response.json();
-        const materiasPrimas = data.materias_primas;
-
-        selectElement.innerHTML = '<option value="">Selecione uma matéria-prima</option>'; // Limpa opções antigas
-
-        materiasPrimas.forEach(materia => {
-            const option = document.createElement('option');
-            option.value = materia.id;
-            // Usamos o custo médio ponderado, que é o custo real do item em estoque
-            const custo = parseFloat(materia.custo_medio_ponderado || 0).toFixed(4);
-            option.textContent = `${materia.descricao} (Custo: R$ ${custo})`;
-            option.dataset.preco = materia.custo_medio_ponderado || 0;
-            selectElement.appendChild(option);
-        });
         
-        selectElement.addEventListener('change', function() {
-            const custoInput = this.closest('.materia-prima-item').querySelector('.materia-custo');
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.dataset.preco) {
-                const custoFormatado = parseFloat(selectedOption.dataset.preco).toFixed(4);
-                custoInput.value = `R$ ${custoFormatado}`;
-            } else {
-                custoInput.value = 'R$ 0,0000';
-            }
-            calculateCosts();
+        // Event listener para mudanças
+        tipoGradeSelect.addEventListener('change', function() {
+            mostrarFeedbackGrade(this.value);
         });
-
-    } catch (error) {
-        console.error("Erro ao carregar matérias-primas:", error);
-        // Opcional: mostrar um erro para o usuário na interface
     }
 }
 
-// Calcular custos
-function calculateCosts() {
-    const precoCusto = parseFloat(document.getElementById('precoCusto').value) || 0;
-    const precoVenda = parseFloat(document.getElementById('precoVenda').value) || 0;
+function inicializarMateriasPrimas() {
+    console.log('Inicializando matérias-primas...');
     
-    let custoMaterias = 0;
-    document.querySelectorAll('.materia-prima-item').forEach(item => {
-        const select = item.querySelector('select');
-        const quantidade = parseFloat(item.querySelector('.materia-quantidade').value) || 0;
-        const selectedOption = select.options[select.selectedIndex];
+    // Encontrar todas as linhas de matéria-prima
+    const linhas = document.querySelectorAll('.linha-materia-prima:not(.template)');
+    console.log('Linhas encontradas:', linhas.length);
+    
+    linhas.forEach((linha, index) => {
+        console.log('Configurando linha', index);
         
-        if (selectedOption && selectedOption.dataset.preco) {
-            const precoUnitario = parseFloat(selectedOption.dataset.preco);
-            custoMaterias += quantidade * precoUnitario;
+        const materiaSelect = linha.querySelector('select[name*="materia_prima"]');
+        const quantidadeInput = linha.querySelector('input[name*="quantidade"]');
+        
+        console.log('Elementos na linha', index, ':', {
+            materiaSelect: !!materiaSelect,
+            quantidadeInput: !!quantidadeInput
+        });
+        
+        if (materiaSelect) {
+            materiaSelect.addEventListener('change', function() {
+                console.log('Matéria-prima selecionada:', this.value);
+                buscarDadosMateriaPrima(this.value, linha);
+            });
+            
+            // Se já tem valor, buscar dados
+            if (materiaSelect.value) {
+                console.log('Buscando dados iniciais para:', materiaSelect.value);
+                buscarDadosMateriaPrima(materiaSelect.value, linha);
+            }
+        }
+        
+        if (quantidadeInput) {
+            quantidadeInput.addEventListener('input', function() {
+                console.log('Quantidade alterada:', this.value);
+                calcularCustoLinha(linha);
+            });
+            
+            quantidadeInput.addEventListener('change', function() {
+                console.log('Quantidade alterada (change):', this.value);
+                calcularCustoLinha(linha);
+            });
+        }
+    });
+}
+
+async function buscarDadosMateriaPrima(materiaPrimaId, linha) {
+    if (!materiaPrimaId) return;
+    
+    console.log('Buscando dados para matéria-prima:', materiaPrimaId);
+    
+    const feedbackDiv = linha.querySelector('.materia-feedback');
+    if (!feedbackDiv) {
+        console.log('Feedback div não encontrado');
+        return;
+    }
+    
+    // Mostrar loading
+    feedbackDiv.style.display = 'block';
+    feedbackDiv.innerHTML = '<div class="info-item"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    
+    try {
+        const url = `{% url "cadastros:api_materia_prima_dados" 0 %}`.replace('0', materiaPrimaId);
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Dados recebidos:', data);
+            
+            if (data.success) {
+                const materia = data.materia_prima;
+                
+                // Armazenar dados na linha
+                linha.dataset.materiaPrimaData = JSON.stringify(materia);
+                
+                // Atualizar feedback visual
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-info">
+                        <div class="info-item">
+                            <i class="fas fa-cube"></i>
+                            <span class="info-label">Unidade:</span>
+                            <span class="info-value">${materia.unidade_display}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span class="info-label">Última compra:</span>
+                            <span class="info-value">R$ ${materia.custo_ultima_compra.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calculator"></i>
+                            <span class="info-label">Custo total:</span>
+                            <span class="info-value custo-total-value">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <div class="estoque-status">
+                        <span class="status-badge status-${materia.status_estoque}">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="status-text">${materia.status_estoque_display}</span>
+                        </span>
+                    </div>
+                `;
+                
+                // Calcular custo se já tem quantidade
+                calcularCustoLinha(linha);
+                
+            } else {
+                feedbackDiv.innerHTML = `<div class="info-item"><i class="fas fa-exclamation-triangle"></i> Erro: ${data.error}</div>`;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+        feedbackDiv.innerHTML = '<div class="info-item"><i class="fas fa-exclamation-circle"></i> Erro de conexão</div>';
+    }
+}
+
+function calcularCustoLinha(linha) {
+    console.log('Calculando custo da linha...');
+    
+    const quantidadeInput = linha.querySelector('input[name*="quantidade"]');
+    const custoTotalElement = linha.querySelector('.custo-total-value');
+    const materiaPrimaData = linha.dataset.materiaPrimaData;
+    
+    if (!quantidadeInput || !custoTotalElement || !materiaPrimaData) {
+        console.log('Elementos insuficientes para cálculo');
+        return;
+    }
+    
+    try {
+        const materia = JSON.parse(materiaPrimaData);
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const custoUnitario = materia.custo_ultima_compra || 0;
+        const custoTotal = quantidade * custoUnitario;
+        
+        console.log('Cálculo:', { quantidade, custoUnitario, custoTotal });
+        
+        custoTotalElement.textContent = `R$ ${custoTotal.toFixed(2).replace('.', ',')}`;
+        
+        // Calcular custo total de todas as linhas
+        calcularCustoTotalGeral();
+        
+    } catch (error) {
+        console.error('Erro no cálculo:', error);
+    }
+}
+
+function calcularCustoTotalGeral() {
+    console.log('Calculando custo total geral...');
+    
+    const linhas = document.querySelectorAll('.linha-materia-prima:not(.template)');
+    let custoTotal = 0;
+    
+    linhas.forEach(linha => {
+        const custoTotalElement = linha.querySelector('.custo-total-value');
+        if (custoTotalElement && custoTotalElement.textContent) {
+            const valor = custoTotalElement.textContent.replace('R$ ', '').replace(',', '.');
+            const custoLinha = parseFloat(valor) || 0;
+            custoTotal += custoLinha;
         }
     });
     
-    const custoTotal = precoCusto + custoMaterias;
-    const margemLucro = precoVenda > 0 ? ((precoVenda - custoTotal) / precoVenda * 100) : 0;
+    console.log('Custo total calculado:', custoTotal);
     
-    // Atualizar resumo
-    document.getElementById('custoBase').textContent = `R$ ${precoCusto.toFixed(2)}`;
-    document.getElementById('custoMaterias').textContent = `R$ ${custoMaterias.toFixed(2)}`;
-    document.getElementById('custoTotal').textContent = `R$ ${custoTotal.toFixed(2)}`;
-    document.getElementById('margemLucro').textContent = `${margemLucro.toFixed(1)}%`;
+    // Atualizar resumo se existe
+    const resumoDiv = document.getElementById('resumo-custos');
+    const custoTotalDisplay = document.getElementById('custo-total-display');
     
-    // Mostrar/ocultar resumo
-    const summary = document.getElementById('priceSummary');
-    if (precoCusto > 0 || precoVenda > 0 || custoMaterias > 0) {
-        summary.style.display = 'block';
+    if (custoTotal > 0) {
+        if (resumoDiv) resumoDiv.style.display = 'block';
+        if (custoTotalDisplay) {
+            custoTotalDisplay.textContent = `R$ ${custoTotal.toFixed(2).replace('.', ',')}`;
+        }
+        
+        // Atualizar campo preço de custo
+        const precoCustoInput = document.querySelector('input[name="preco_custo"]');
+        if (precoCustoInput) {
+            precoCustoInput.value = custoTotal.toFixed(2);
+        }
+        
+        // Calcular margens
+        const margem40 = custoTotal / 0.6;
+        const margem50 = custoTotal / 0.5;
+        
+        const margem40Display = document.getElementById('margem-40-display');
+        const margem50Display = document.getElementById('margem-50-display');
+        
+        if (margem40Display) {
+            margem40Display.textContent = `R$ ${margem40.toFixed(2).replace('.', ',')}`;
+        }
+        if (margem50Display) {
+            margem50Display.textContent = `R$ ${margem50.toFixed(2).replace('.', ',')}`;
+        }
     } else {
-        summary.style.display = 'none';
+        if (resumoDiv) resumoDiv.style.display = 'none';
     }
 }
 
-// Event listeners para cálculo automático
-document.addEventListener('DOMContentLoaded', function() {
-    carregarTamanhos();
+// Gerar código automático
+async function gerarCodigoAutomatico() {
+    const codigoInput = document.getElementById('codigo_input');
+    const button = document.querySelector('.btn-generate-code');
     
-    // Event listeners para cálculo automático
-    const precoCustoEl = document.getElementById('precoCusto');
-    const precoVendaEl = document.getElementById('precoVenda');
+    // Mostrar loading
+    const originalIcon = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
     
-    if (precoCustoEl) {
-        precoCustoEl.addEventListener('input', calculateCosts);
-        precoCustoEl.addEventListener('input', calcularTotais);
-    }
-    
-    if (precoVendaEl) {
-        precoVendaEl.addEventListener('input', calculateCosts);
-        precoVendaEl.addEventListener('input', calcularTotais);
-    }
-    
-    // Inicializar cálculos
-    calculateCosts();
-    calcularTotais();
-    
-    // Adicionar uma linha de matéria-prima como exemplo
-    adicionarMateriaPrima();
-
-    // Lógica para adicionar dinamicamente formulários no formset
-    const addRowBtn = document.getElementById('add-materia-prima-row');
-    const formsetContainer = document.getElementById('materias-primas-formset');
-    const totalFormsInput = document.getElementById('id_materias_primas-TOTAL_FORMS');
-    const emptyFormHtml = document.getElementById('empty-form').innerHTML;
-
-    if (addRowBtn) {
-        addRowBtn.addEventListener('click', function() {
-            let formNum = parseInt(totalFormsInput.value);
-            // Substitui o prefixo no template do formulário vazio
-            let newForm = emptyFormHtml.replace(/__prefix__/g, formNum);
-            formsetContainer.insertAdjacentHTML('beforeend', newForm);
-            // Incrementa o contador de formulários totais
-            totalFormsInput.value = formNum + 1;
+    try {
+        const response = await fetch('{% url "cadastros:gerar_codigo_produto" %}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         });
+        
+        if (response.ok) {
+            const data = await response.json();
+            codigoInput.value = data.codigo;
+            codigoInput.classList.add('codigo-automatico');
+            
+            // Mostrar notificação
+            showNotification(`Código ${data.codigo} gerado automaticamente`, 'success');
+        } else {
+            throw new Error('Erro ao gerar código');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao gerar código automático', 'error');
+    } finally {
+        // Restaurar botão
+        button.innerHTML = originalIcon;
+        button.disabled = false;
+    }
+}
+
+// Preview de imagem
+const imagemInput = document.getElementById('id_imagem');
+if (imagemInput) {
+    imagemInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const uploadArea = document.querySelector('.image-upload-area');
+                uploadArea.innerHTML = `<img src="${event.target.result}" alt="Preview" class="image-preview" id="imagePreview">`;
+                uploadArea.classList.add('has-image');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    console.log(`Notificação ${type}: ${message}`);
+    // Implementação simples - pode ser melhorada
+    alert(message);
+}
+
+// Placeholder para outras funções
+function mostrarFeedbackGrade(tipoGradeId) {
+    console.log('Feedback grade:', tipoGradeId);
+    // Implementação do feedback de grade já existe
+}
+
+function openCategoriaModal() { console.log('Abrir modal categoria'); }
+function closeCategoriaModal() { console.log('Fechar modal categoria'); }
+function openNCMModal() { console.log('Abrir modal NCM'); }
+function closeNCMModal() { console.log('Fechar modal NCM'); }
+function openTipoProdutoModal() { console.log('Abrir modal tipo produto'); }
+// === MODAL MATERIA PRIMA ===
+function abrirModalMateriaPrima() {
+    console.log('Abrindo modal de matéria-prima...');
+    
+    // Carregar categorias no select
+    carregarCategoriasMateriasPrimas();
+    
+    // Mostrar modal
+    const modal = document.getElementById('materiaPrimaModal');
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Focar no campo descrição
+    setTimeout(() => {
+        const descricaoInput = document.querySelector('#materiaPrimaModal input[name="descricao"]');
+        if (descricaoInput) descricaoInput.focus();
+    }, 100);
+}
+
+function fecharModalMateriaPrima() {
+    const modal = document.getElementById('materiaPrimaModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = 'auto';
+    
+    // Limpar formulário
+    document.getElementById('materiaPrimaForm').reset();
+}
+
+async function carregarCategoriasMateriasPrimas() {
+    console.log('Carregando categorias de matérias-primas...');
+    
+    const categoriaSelect = document.querySelector('#materiaPrimaModal select[name="categoria_id"]');
+    if (!categoriaSelect) return;
+    
+    // Limpar select
+    categoriaSelect.innerHTML = '<option value="">Selecione uma categoria...</option>';
+    
+    // Adicionar opções básicas
+    const categoriasDefault = [
+        { id: '1', nome: 'Tecidos' },
+        { id: '2', nome: 'Aviamentos' },
+        { id: '3', nome: 'Linhas' },
+        { id: '4', nome: 'Botões' },
+        { id: '5', nome: 'Zíperes' }
+    ];
+    
+    categoriasDefault.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.nome;
+        categoriaSelect.appendChild(option);
+    });
+}
+
+async function gerarCodigoMateriaPrima() {
+    console.log('Gerando código de matéria-prima...');
+    
+    const codigoInput = document.querySelector('#materiaPrimaModal input[name="codigo"]');
+    if (!codigoInput) return;
+    
+    try {
+        const response = await fetch('{% url "estoque:gerar_codigo_materia_prima" %}', {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            codigoInput.value = data.codigo;
+            codigoInput.classList.add('codigo-automatico');
+            console.log('Código gerado:', data.codigo);
+        } else {
+            throw new Error('Erro ao gerar código');
+        }
+    } catch (error) {
+        console.error('Erro ao gerar código:', error);
+        
+        // Fallback: gerar código local
+        const codigoFallback = gerarCodigoMateriaPrimaLocal();
+        codigoInput.value = codigoFallback;
+        codigoInput.classList.add('codigo-automatico');
+        console.log('Código gerado localmente:', codigoFallback);
+    }
+}
+
+function gerarCodigoMateriaPrimaLocal() {
+    const now = new Date();
+    const timestamp = now.getTime().toString().slice(-6);
+    return `MP${timestamp}`;
+}
+
+async function salvarMateriaPrima() {
+    console.log('Salvando matéria-prima...');
+    
+    const form = document.getElementById('materiaPrimaForm');
+    const formData = new FormData(form);
+    
+    // Gerar código se estiver vazio
+    const codigoInput = form.querySelector('input[name="codigo"]');
+    if (!codigoInput.value.trim()) {
+        await gerarCodigoMateriaPrima();
+        formData.set('codigo', codigoInput.value);
+    }
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    // Mostrar loading
+    const saveButton = document.querySelector('#materiaPrimaModal .btn-modern-primary');
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    saveButton.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "cadastros:criar_materia_prima_rapida" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Matéria-prima criada:', data);
+            
+            if (data.success) {
+                // Adicionar nova matéria-prima a todos os selects
+                const materiaSelects = document.querySelectorAll('select[name*="materia_prima"]');
+                materiaSelects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = data.materia_prima.id;
+                    option.textContent = `${data.materia_prima.codigo} - ${data.materia_prima.descricao}`;
+                    select.appendChild(option);
+                });
+                
+                // Fechar modal
+                fecharModalMateriaPrima();
+                
+                // Mostrar notificação
+                showNotification('Matéria-prima criada com sucesso!', 'success');
+                
+            } else {
+                showNotification(data.error || 'Erro ao criar matéria-prima', 'error');
+            }
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar matéria-prima', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar matéria-prima:', error);
+        showNotification('Erro ao criar matéria-prima', 'error');
+    } finally {
+        // Restaurar botão
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+    }
+}
+// Gerar código automático
+async function gerarCodigoAutomatico() {
+    const codigoInput = document.getElementById('codigo_input');
+    const button = document.querySelector('.btn-generate-code');
+    
+    // Mostrar loading
+    const originalIcon = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "cadastros:gerar_codigo_produto" %}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            codigoInput.value = data.codigo;
+            codigoInput.classList.add('codigo-automatico');
+            
+            // Mostrar notificação
+            showNotification(`Código ${data.codigo} gerado automaticamente`, 'success');
+        } else {
+            throw new Error('Erro ao gerar código');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao gerar código automático', 'error');
+    } finally {
+        // Restaurar botão
+        button.innerHTML = originalIcon;
+        button.disabled = false;
+    }
+}
+
+// Preview de imagem
+document.getElementById('id_imagem').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const uploadArea = document.querySelector('.image-upload-area');
+            uploadArea.innerHTML = `<img src="${event.target.result}" alt="Preview" class="image-preview" id="imagePreview">`;
+            uploadArea.classList.add('has-image');
+        };
+        reader.readAsDataURL(e.target.files[0]);
     }
 });
 
-// Carrega tamanhos disponíveis no formato horizontal
-function carregarTamanhos() {
-    // Simular dados - em produção fazer chamada AJAX
-    const tamanhos = [
-        { id: 1, codigo: 'PP', descricao: 'Extra Pequeno' },
-        { id: 2, codigo: 'P', descricao: 'Pequeno' },
-        { id: 3, codigo: 'M', descricao: 'Médio' },
-        { id: 4, codigo: 'G', descricao: 'Grande' },
-        { id: 5, codigo: 'GG', descricao: 'Extra Grande' },
-        { id: 6, codigo: 'XGG', descricao: 'Extra Extra Grande' }
-    ];
+// === MODAL CATEGORIA ===
+function openCategoriaModal() {
+    document.getElementById('categoriaModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCategoriaModal() {
+    document.getElementById('categoriaModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('categoriaForm').reset();
+}
+
+async function salvarCategoria() {
+    const form = document.getElementById('categoriaForm');
+    const formData = new FormData(form);
     
-    const grid = document.getElementById('tamanhosGridHorizontal');
-    grid.innerHTML = '';
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
     
-    tamanhos.forEach(tamanho => {
-        const item = document.createElement('div');
-        item.className = 'tamanho-item-horizontal';
+    try {
+        const response = await fetch('{% url "cadastros:criar_categoria_produto" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
         
-        item.innerHTML = `
-            <div class="tamanho-label">${tamanho.codigo}</div>
-            <input type="number" 
-                   class="tamanho-input" 
-                   name="quantidade_${tamanho.codigo.toLowerCase()}"
-                   placeholder="0"
-                   min="0"
-                   onchange="calcularTotais()"
-                   data-tamanho="${tamanho.codigo}">
-        `;
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Adicionar nova categoria ao select
+            const categoriaSelect = document.querySelector('select[name="categoria"]');
+            const option = document.createElement('option');
+            option.value = data.id;
+            option.textContent = data.nome;
+            option.selected = true;
+            categoriaSelect.appendChild(option);
+            
+            // Fechar modal
+            closeCategoriaModal();
+            
+            // Mostrar mensagem de sucesso
+            showNotification('Categoria criada com sucesso!', 'success');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar categoria', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar categoria', 'error');
+    }
+}
+
+// === MODAL NCM ===
+function openNCMModal() {
+    document.getElementById('ncmModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeNCMModal() {
+    document.getElementById('ncmModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('ncmForm').reset();
+}
+
+async function salvarNCM() {
+    const form = document.getElementById('ncmForm');
+    const formData = new FormData(form);
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+        const response = await fetch('{% url "cadastros:criar_ncm" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
         
-        grid.appendChild(item);
-    });
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Adicionar novo NCM ao select
+            const ncmSelect = document.querySelector('select[name="ncm"]');
+            const option = document.createElement('option');
+            option.value = data.id;
+            option.textContent = data.display;
+            option.selected = true;
+            ncmSelect.appendChild(option);
+            
+            // Fechar modal
+            closeNCMModal();
+            
+            // Mostrar mensagem de sucesso
+            showNotification('NCM criado com sucesso!', 'success');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar NCM', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar NCM', 'error');
+    }
 }
 
-// Zera todos os tamanhos
-function zerarTodosTamanhos() {
-    const inputs = document.querySelectorAll('.tamanho-input');
-    inputs.forEach(input => {
-        input.value = '';
-    });
-    calcularTotais();
-}
-
-// Calcula totais de quantidade e valor
-function calcularTotais() {
-    const inputs = document.querySelectorAll('.tamanho-input');
-    let quantidadeTotal = 0;
-    
-    inputs.forEach(input => {
-        const valor = parseInt(input.value) || 0;
-        quantidadeTotal += valor;
-    });
-    
-    // Atualizar campos de resumo
-    document.getElementById('quantidadeTotal').value = quantidadeTotal;
-    
-    // Calcular valor total (quantidade × preço de venda)
-    const precoVenda = parseFloat(document.getElementById('precoVenda').value) || 0;
-    const valorTotal = quantidadeTotal * precoVenda;
-    
-    document.getElementById('valorTotal').value = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-    
-    // Recalcular necessidades de matérias-primas
-    calcularTodasNecessidades();
-}
-
-// Adicionar linha de matéria-prima na tabela
-function adicionarMateriaPrima() {
-    materiasPrimasCount++;
-    const tbody = document.getElementById('materiasPrimasTableBody');
-    
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>
-            <input type="text" 
-                   class="materia-input" 
-                   name="materia_codigo_${materiasPrimasCount}"
-                   placeholder="Ex: 1010000">
-        </td>
-        <td>
-            <input type="text" 
-                   class="materia-input" 
-                   name="materia_descricao_${materiasPrimasCount}"
-                   placeholder="Ex: Velcro 20mm">
-        </td>
-        <td>
-            <select class="materia-select" name="materia_unidade_${materiasPrimasCount}">
-                <option value="PEÇA">PEÇA</option>
-                <option value="METRO">METRO</option>
-                <option value="KG">KG</option>
-                <option value="UNIDADE">UNIDADE</option>
-            </select>
-        </td>
-        <td>
-            <input type="number" 
-                   class="materia-input" 
-                   name="materia_consumo_${materiasPrimasCount}"
-                   placeholder="0,00"
-                   step="0.01"
-                   onchange="calcularNecessidadeMateria(this)">
-        </td>
-        <td>
-            <input type="number" 
-                   class="materia-input necessidade-field" 
-                   name="materia_necessidade_${materiasPrimasCount}"
-                   placeholder="0"
-                   readonly>
-        </td>
-        <td style="text-align: center;">
-            <button type="button" 
-                    class="btn-remove-materia-table" 
-                    onclick="removerMateriaPrima(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
+// === NOTIFICAÇÕES ===
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="closeNotification(this)">
+            <i class="fas fa-times"></i>
+        </button>
     `;
     
-    tbody.appendChild(row);
-}
-
-// Remover linha de matéria-prima
-function removerMateriaPrima(button) {
-    const row = button.closest('tr');
-    row.remove();
-    calcularTodasNecessidades();
-}
-
-// Calcular necessidade de uma matéria-prima específica
-function calcularNecessidadeMateria(input) {
-    const row = input.closest('tr');
-    const consumoInput = row.querySelector('input[name*="consumo"]');
-    const necessidadeInput = row.querySelector('input[name*="necessidade"]');
+    // Adicionar estilos inline se não existirem
+    if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1100;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 300px;
+                animation: slideInRight 0.3s ease;
+            }
+            .notification-success { border-left: 4px solid #10b981; }
+            .notification-error { border-left: 4px solid #ef4444; }
+            .notification-info { border-left: 4px solid #3b82f6; }
+            .notification-content { display: flex; align-items: center; gap: 8px; flex: 1; }
+            .notification-close { background: none; border: none; cursor: pointer; padding: 4px; }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
     
-    const consumoUnitario = parseFloat(consumoInput.value) || 0;
-    const quantidadeTotal = parseInt(document.getElementById('quantidadeTotal').value) || 0;
+    // Adicionar ao DOM
+    document.body.appendChild(notification);
     
-    const necessidade = consumoUnitario * quantidadeTotal;
-    necessidadeInput.value = necessidade.toFixed(2);
-}
-
-// Recalcular todas as necessidades quando a quantidade total mudar
-function calcularTodasNecessidades() {
-    const consumoInputs = document.querySelectorAll('input[name*="consumo"]');
-    consumoInputs.forEach(input => {
-        if (input.value) {
-            calcularNecessidadeMateria(input);
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
         }
+    }, 5000);
+}
+
+function closeNotification(button) {
+    const notification = button.closest('.notification');
+    if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+    }
+}
+
+// Gerenciar formset de matérias-primas
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-materia-prima-row');
+    const formsetContainer = document.getElementById('materias-primas-formset');
+    const emptyForm = document.getElementById('empty-form');
+    const totalForms = document.getElementById('id_produtomateriaprima_set-TOTAL_FORMS');
+    
+    let formCount = parseInt(totalForms.value);
+    
+    addButton.addEventListener('click', function() {
+        const newForm = emptyForm.innerHTML.replace(/__prefix__/g, formCount);
+        const newRow = document.createElement('div');
+        newRow.innerHTML = newForm;
+        formsetContainer.appendChild(newRow.firstElementChild);
+        
+        formCount++;
+        totalForms.value = formCount;
+        
+        // Adicionar evento de remoção
+        const removeBtn = newRow.querySelector('.remove-materia-row');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                newRow.firstElementChild.remove();
+                formCount--;
+                totalForms.value = formCount;
+            });
+        }
+    });
+    
+    // Eventos de remoção para linhas existentes
+    document.querySelectorAll('.remove-materia-row').forEach(btn => {
+        btn.addEventListener('click', function() {
+            btn.closest('tr').remove();
+            formCount--;
+            totalForms.value = formCount;
+        });
+    });
+});
+
+// Gerar código automaticamente se campo estiver vazio
+document.addEventListener('DOMContentLoaded', function() {
+    const codigoField = document.getElementById('codigo_input');
+    if (!codigoField.value) {
+        gerarCodigoAutomatico();
+    }
+    
+    // Detectar se usuário está digitando manualmente
+    codigoField.addEventListener('input', function() {
+        // Remover classe de código automático quando usuário digita
+        this.classList.remove('codigo-automatico');
+    });
+    
+    codigoField.addEventListener('focus', function() {
+        // Se campo está vazio ao focar, gerar código
+        if (!this.value.trim()) {
+            gerarCodigoAutomatico();
+        }
+    });
+});
+
+// === COMPOSIÇÃO DE MATÉRIAS-PRIMAS ===
+let contadorLinhas = 0;
+
+function inicializarComposicaoMateriasPrimas() {
+    // Contar linhas existentes
+    const linhasExistentes = document.querySelectorAll('.linha-materia-prima:not(.template)');
+    contadorLinhas = linhasExistentes.length;
+    
+    // Adicionar event listeners às linhas existentes
+    linhasExistentes.forEach((linha, index) => {
+        configurarEventListenersLinha(linha, index);
+    });
+    
+    // Calcular custo inicial se há linhas
+    if (contadorLinhas > 0) {
+        calcularCustoTotal();
+    }
+    
+    // Atualizar campo TOTAL_FORMS
+    atualizarTotalForms();
+}
+
+function configurarEventListenersLinha(linha, index) {
+    const materiaSelect = linha.querySelector('.materia-select');
+    const quantidadeInput = linha.querySelector('.quantidade-input');
+    
+    if (materiaSelect) {
+        materiaSelect.addEventListener('change', function() {
+            mostrarFeedbackMateriaPrima(this, linha);
+            calcularCustoTotal();
+        });
+        
+        // Se já tem valor, mostrar feedback
+        if (materiaSelect.value) {
+            mostrarFeedbackMateriaPrima(materiaSelect, linha);
+        }
+    }
+    
+    if (quantidadeInput) {
+        quantidadeInput.addEventListener('input', function() {
+            atualizarCustoLinha(linha);
+            calcularCustoTotal();
+        });
+    }
+}
+
+function adicionarLinhaMateria() {
+    const container = document.getElementById('linhas-existentes');
+    const template = document.getElementById('linha-template');
+    
+    // Clonar template
+    const novaLinha = template.cloneNode(true);
+    novaLinha.id = '';
+    novaLinha.classList.remove('template');
+    novaLinha.style.display = 'block';
+    novaLinha.setAttribute('data-form-index', contadorLinhas);
+    
+    // Atualizar nomes dos campos
+    const inputs = novaLinha.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        if (input.name) {
+            input.name = input.name.replace('__prefix__', contadorLinhas);
+        }
+        if (input.id) {
+            input.id = input.id.replace('__prefix__', contadorLinhas);
+        }
+    });
+    
+    // Adicionar ao container
+    container.appendChild(novaLinha);
+    
+    // Configurar event listeners
+    configurarEventListenersLinha(novaLinha, contadorLinhas);
+    
+    // Incrementar contador
+    contadorLinhas++;
+    
+    // Atualizar total forms
+    atualizarTotalForms();
+    
+    // Focar no select da nova linha
+    const materiaSelect = novaLinha.querySelector('.materia-select');
+    if (materiaSelect) {
+        materiaSelect.focus();
+    }
+}
+
+function removerLinhaMateria(button) {
+    const linha = button.closest('.linha-materia-prima');
+    
+    if (linha) {
+        // Verificar se é uma linha existente (com ID)
+        const deleteInput = linha.querySelector('input[name$="-DELETE"]');
+        if (deleteInput) {
+            // Marcar para exclusão
+            deleteInput.value = 'on';
+            linha.style.display = 'none';
+        } else {
+            // Remover linha nova
+            linha.remove();
+        }
+        
+        // Recalcular custo
+        calcularCustoTotal();
+        
+        // Atualizar total forms
+        atualizarTotalForms();
+    }
+}
+
+function atualizarTotalForms() {
+    const totalFormsInput = document.querySelector('input[name$="TOTAL_FORMS"]');
+    if (totalFormsInput) {
+        const linhasVisiveis = document.querySelectorAll('.linha-materia-prima:not(.template)').length;
+        totalFormsInput.value = Math.max(linhasVisiveis, contadorLinhas);
+    }
+}
+
+async function mostrarFeedbackMateriaPrima(select, linha) {
+    const materiaPrimaId = select.value;
+    const feedbackDiv = linha.querySelector('.materia-feedback');
+    
+    if (!materiaPrimaId) {
+        feedbackDiv.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar loading
+    feedbackDiv.style.display = 'block';
+    feedbackDiv.innerHTML = `
+        <div class="feedback-info">
+            <div class="info-item">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="info-label">Carregando dados...</span>
+            </div>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`{% url "cadastros:api_materia_prima_dados" 0 %}`.replace('0', materiaPrimaId), {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                const materia = data.materia_prima;
+                
+                // Atualizar feedback visual
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-info">
+                        <div class="info-item">
+                            <i class="fas fa-cube"></i>
+                            <span class="info-label">Unidade:</span>
+                            <span class="info-value unidade-value">${materia.unidade_display}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span class="info-label">Última compra:</span>
+                            <span class="info-value preco-value">R$ ${materia.custo_ultima_compra.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calculator"></i>
+                            <span class="info-label">Custo total:</span>
+                            <span class="info-value custo-total-value">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <div class="estoque-status">
+                        <span class="status-badge status-${materia.status_estoque}">
+                            <i class="fas fa-${getStatusIcon(materia.status_estoque)}"></i>
+                            <span class="status-text">${materia.status_estoque_display}</span>
+                        </span>
+                    </div>
+                `;
+                
+                // Armazenar dados da matéria-prima na linha
+                linha.dataset.materiaPrimaData = JSON.stringify(materia);
+                
+                // Atualizar custo da linha
+                atualizarCustoLinha(linha);
+                
+            } else {
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-info">
+                        <div class="info-item">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span class="info-label">Erro:</span>
+                            <span class="info-value">${data.error}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            throw new Error('Erro na requisição');
+        }
+    } catch (error) {
+        console.error('Erro ao buscar dados da matéria-prima:', error);
+        feedbackDiv.innerHTML = `
+            <div class="feedback-info">
+                <div class="info-item">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span class="info-label">Erro de conexão</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function getStatusIcon(status) {
+    const icons = {
+        'normal': 'check-circle',
+        'baixo': 'exclamation-triangle',
+        'zerado': 'times-circle',
+        'alto': 'info-circle'
+    };
+    return icons[status] || 'question-circle';
+}
+
+function atualizarCustoLinha(linha) {
+    const quantidadeInput = linha.querySelector('.quantidade-input');
+    const custoTotalElement = linha.querySelector('.custo-total-value');
+    const materiaPrimaData = linha.dataset.materiaPrimaData;
+    
+    if (!quantidadeInput || !custoTotalElement || !materiaPrimaData) {
+        return;
+    }
+    
+    try {
+        const materia = JSON.parse(materiaPrimaData);
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const custoUnitario = materia.custo_ultima_compra || 0;
+        const custoTotal = quantidade * custoUnitario;
+        
+        custoTotalElement.textContent = `R$ ${custoTotal.toFixed(2).replace('.', ',')}`;
+        
+        // Armazenar custo calculado
+        linha.dataset.custoCalculado = custoTotal.toString();
+        
+    } catch (error) {
+        console.error('Erro ao calcular custo da linha:', error);
+        custoTotalElement.textContent = 'R$ 0,00';
+    }
+}
+
+async function calcularCustoTotal() {
+    const linhas = document.querySelectorAll('.linha-materia-prima:not(.template)');
+    const materiasPrimas = [];
+    
+    // Coletar dados das linhas
+    linhas.forEach(linha => {
+        if (linha.style.display === 'none') return; // Linha removida
+        
+        const materiaSelect = linha.querySelector('.materia-select');
+        const quantidadeInput = linha.querySelector('.quantidade-input');
+        
+        if (materiaSelect && quantidadeInput && materiaSelect.value && quantidadeInput.value) {
+            materiasPrimas.push({
+                materia_prima_id: materiaSelect.value,
+                quantidade: parseFloat(quantidadeInput.value) || 0
+            });
+        }
+    });
+    
+    // Se não há matérias-primas, ocultar resumo
+    if (materiasPrimas.length === 0) {
+        document.getElementById('resumo-custos').style.display = 'none';
+        return;
+    }
+    
+    try {
+        const response = await fetch('{% url "cadastros:api_calcular_custo_produto" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                materias_primas: materiasPrimas
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                // Atualizar resumo de custos
+                document.getElementById('custo-total-display').textContent = 
+                    `R$ ${data.custo_total.toFixed(2).replace('.', ',')}`;
+                document.getElementById('margem-40-display').textContent = 
+                    `R$ ${data.margem_sugerida_40.toFixed(2).replace('.', ',')}`;
+                document.getElementById('margem-50-display').textContent = 
+                    `R$ ${data.margem_sugerida_50.toFixed(2).replace('.', ',')}`;
+                
+                // Mostrar resumo
+                document.getElementById('resumo-custos').style.display = 'block';
+                
+                // Atualizar campo de preço de custo do produto
+                const precoCustoInput = document.querySelector('input[name="preco_custo"]');
+                if (precoCustoInput && data.custo_total > 0) {
+                    precoCustoInput.value = data.custo_total.toFixed(2);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao calcular custo total:', error);
+    }
+}
+
+// === MODAL MATÉRIA-PRIMA ===
+function abrirModalMateriaPrima() {
+    document.getElementById('materiaPrimaModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Carregar categorias
+    carregarCategoriasMateriaPrima();
+}
+
+function fecharModalMateriaPrima() {
+    document.getElementById('materiaPrimaModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('materiaPrimaForm').reset();
+}
+
+async function carregarCategoriasMateriaPrima() {
+    try {
+        // Por enquanto, vamos usar um placeholder
+        // Implementar busca de categorias se necessário
+        const categoriaSelect = document.querySelector('#materiaPrimaModal select[name="categoria_id"]');
+        categoriaSelect.innerHTML = '<option value="">Selecione uma categoria...</option>';
+        
+    } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+    }
+}
+
+async function salvarMateriaPrima() {
+    const form = document.getElementById('materiaPrimaForm');
+    const formData = new FormData(form);
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+        const response = await fetch('{% url "cadastros:criar_materia_prima_rapida" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                // Adicionar nova matéria-prima aos selects
+                const selects = document.querySelectorAll('.materia-select');
+                selects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = data.materia_prima.id;
+                    option.textContent = data.materia_prima.display;
+                    select.appendChild(option);
+                });
+                
+                // Fechar modal
+                fecharModalMateriaPrima();
+                
+                // Mostrar notificação
+                showNotification('Matéria-prima criada com sucesso!', 'success');
+                
+                // Se há uma linha sem matéria-prima selecionada, selecionar a nova
+                const linhaVazia = document.querySelector('.materia-select[value=""]');
+                if (linhaVazia) {
+                    linhaVazia.value = data.materia_prima.id;
+                    linhaVazia.dispatchEvent(new Event('change'));
+                }
+            } else {
+                showNotification(data.error || 'Erro ao criar matéria-prima', 'error');
+            }
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar matéria-prima', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar matéria-prima', 'error');
+    }
+}
+
+// Fechar modais clicando fora
+window.addEventListener('click', function(event) {
+    const categoriaModal = document.getElementById('categoriaModal');
+    const ncmModal = document.getElementById('ncmModal');
+    const materiaPrimaModal = document.getElementById('materiaPrimaModal');
+    
+    if (event.target === categoriaModal) {
+        closeCategoriaModal();
+    }
+    
+    if (event.target === ncmModal) {
+        closeNCMModal();
+    }
+    
+    if (event.target === materiaPrimaModal) {
+        fecharModalMateriaPrima();
+    }
+});
+
+// Fechar modais com ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCategoriaModal();
+        closeNCMModal();
+        fecharModalMateriaPrima();
+    }
+});
+
+// Placeholder para modal de tipo de produto (não implementado ainda)
+function openTipoProdutoModal() {
+    showNotification('Funcionalidade em desenvolvimento', 'info');
+}
+
+// === FEEDBACK VISUAL DE GRADES ===
+function mostrarFeedbackGrade(tipoGradeId) {
+    const feedbackContainer = document.getElementById('grade-feedback');
+    const titleText = document.getElementById('feedback-title-text');
+    const description = document.getElementById('feedback-description');
+    const examplesList = document.getElementById('examples-list');
+    const customSection = document.getElementById('feedback-custom');
+    
+    if (!tipoGradeId) {
+        feedbackContainer.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar loading
+    feedbackContainer.style.display = 'block';
+    titleText.textContent = 'Carregando...';
+    description.textContent = 'Buscando informações do tipo de grade...';
+    examplesList.innerHTML = '';
+    customSection.style.display = 'none';
+    
+    // Buscar dados da grade
+    fetch(`{% url "cadastros:buscar_valores_grade" %}?tipo_grade_id=${tipoGradeId}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Atualizar título
+            titleText.textContent = `Tamanhos: ${data.tipo_grade.nome}`;
+            
+            // Atualizar descrição
+            let descricaoTexto = data.tipo_grade.descricao || '';
+            if (data.tipo_grade.tipo === 'NUMEROS') {
+                descricaoTexto = 'Este produto usará numeração padrão (tamanhos numéricos). Ideal para calças, sapatos e roupas com medidas específicas.';
+            } else if (data.tipo_grade.tipo === 'LETRAS') {
+                descricaoTexto = 'Este produto usará grades por letras (PP, P, M, G, etc.). Ideal para roupas casuais e moda em geral.';
+            } else if (data.tipo_grade.tipo === 'IDADE') {
+                descricaoTexto = 'Este produto usará grades por idade (2, 4, 6 anos, etc.). Ideal para roupas infantis.';
+            } else if (data.tipo_grade.tipo === 'PERSONALIZADO') {
+                descricaoTexto = 'Este produto usará grades personalizadas conforme configurado no sistema.';
+            }
+            description.textContent = descricaoTexto;
+            
+            // Atualizar exemplos
+            examplesList.innerHTML = '';
+            const tipoClass = data.tipo_grade.tipo.toLowerCase();
+            
+            if (data.exemplos && data.exemplos.length > 0) {
+                data.exemplos.forEach(exemplo => {
+                    const tag = document.createElement('span');
+                    tag.className = `example-tag ${tipoClass}`;
+                    tag.textContent = exemplo;
+                    examplesList.appendChild(tag);
+                });
+            }
+            
+            // Mostrar seção personalizada se necessário
+            if (data.tipo_grade.tipo === 'PERSONALIZADO') {
+                customSection.style.display = 'block';
+            } else {
+                customSection.style.display = 'none';
+            }
+            
+            // Adicionar informação sobre valores cadastrados
+            if (data.tem_valores) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'mt-2 text-sm text-success';
+                infoDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.valores.length} tamanho(s) já configurado(s) para este tipo de grade.`;
+                description.appendChild(infoDiv);
+            }
+            
+        } else {
+            // Erro ao buscar dados
+            titleText.textContent = 'Erro ao carregar';
+            description.textContent = data.error || 'Não foi possível carregar as informações da grade.';
+            examplesList.innerHTML = '';
+            customSection.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao buscar valores de grade:', error);
+        titleText.textContent = 'Erro de conexão';
+        description.textContent = 'Não foi possível conectar ao servidor. Tente novamente.';
+        examplesList.innerHTML = '';
+        customSection.style.display = 'none';
     });
 }
 
-// Gerenciar tamanhos (abre modal ou nova página)
-function gerenciarTamanhos() {
-    alert('Funcionalidade de gerenciamento de tamanhos será implementada em breve.');
+// Event listener para mudança no select de tipo de grade
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoGradeSelect = document.querySelector('select[name="tipo_grade"]');
+    
+    if (tipoGradeSelect) {
+        // Mostrar feedback inicial se já tem valor
+        if (tipoGradeSelect.value) {
+            mostrarFeedbackGrade(tipoGradeSelect.value);
+        }
+        
+        // Event listener para mudanças
+        tipoGradeSelect.addEventListener('change', function() {
+            mostrarFeedbackGrade(this.value);
+        });
+    }
+    
+    // Inicializar composição de matérias-primas
+    inicializarComposicaoMateriasPrimas();
+});
+
+// === MODAL MATERIA PRIMA ===
+function abrirModalMateriaPrima() {
+    document.getElementById('materiaPrimaModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Carregar categorias
+    carregarCategoriasMateriaPrima();
 }
+
+function fecharModalMateriaPrima() {
+    document.getElementById('materiaPrimaModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('materiaPrimaForm').reset();
+}
+
+async function carregarCategoriasMateriaPrima() {
+    try {
+        // Por enquanto, vamos usar um placeholder
+        // Implementar busca de categorias se necessário
+        const categoriaSelect = document.querySelector('#materiaPrimaModal select[name="categoria_id"]');
+        categoriaSelect.innerHTML = '<option value="">Selecione uma categoria...</option>';
+        
+    } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+    }
+}
+
+async function salvarMateriaPrima() {
+    const form = document.getElementById('materiaPrimaForm');
+    const formData = new FormData(form);
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+        const response = await fetch('{% url "cadastros:criar_materia_prima_rapida" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                // Adicionar nova matéria-prima aos selects
+                const selects = document.querySelectorAll('.materia-select');
+                selects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = data.materia_prima.id;
+                    option.textContent = data.materia_prima.display;
+                    select.appendChild(option);
+                });
+                
+                // Fechar modal
+                fecharModalMateriaPrima();
+                
+                // Mostrar notificação
+                showNotification('Matéria-prima criada com sucesso!', 'success');
+                
+                // Se há uma linha sem matéria-prima selecionada, selecionar a nova
+                const linhaVazia = document.querySelector('.materia-select[value=""]');
+                if (linhaVazia) {
+                    linhaVazia.value = data.materia_prima.id;
+                    linhaVazia.dispatchEvent(new Event('change'));
+                }
+            } else {
+                showNotification(data.error || 'Erro ao criar matéria-prima', 'error');
+            }
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar matéria-prima', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar matéria-prima', 'error');
+    }
+}
+
+// Fechar modais clicando fora
+window.addEventListener('click', function(event) {
+    const categoriaModal = document.getElementById('categoriaModal');
+    const ncmModal = document.getElementById('ncmModal');
+    const materiaPrimaModal = document.getElementById('materiaPrimaModal');
+    
+    if (event.target === categoriaModal) {
+        closeCategoriaModal();
+    }
+    
+    if (event.target === ncmModal) {
+        closeNCMModal();
+    }
+    
+    if (event.target === materiaPrimaModal) {
+        fecharModalMateriaPrima();
+    }
+});
+
+// Fechar modais com ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCategoriaModal();
+        closeNCMModal();
+        fecharModalMateriaPrima();
+    }
+});
 </script>
 {% endblock %} 

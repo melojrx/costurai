@@ -30,7 +30,6 @@ def home_temporaria(request):
     """View temporária para testar o sistema - manter compatibilidade"""
     return redirect('home')
 
-
 def dashboard_redirect(request):
     """Redireciona para dashboard da empresa ou seleção de empresa"""
     if not request.user.is_authenticated:

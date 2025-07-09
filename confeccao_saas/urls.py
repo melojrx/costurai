@@ -19,7 +19,7 @@ urlpatterns = [
     
     # Home/Landing
     path('', home_view, name='home'),
-    path('home/', home_temporaria, name='home_temporaria'),
+    path('home/', home_view, name='home'),
     
     # Dashboard redirect
     path('dashboard/', dashboard_redirect, name='dashboard'),

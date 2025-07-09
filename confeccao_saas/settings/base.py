@@ -47,20 +47,20 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    # Middleware do Debug Toolbar (deve vir o mais cedo possível, mas depois do Security)
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    
-    # Nossos middlewares customizados
-    'apps.core.middleware.TenantMiddleware',
-    'apps.core.middleware.TenantQueryMiddleware',
-    
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    
+    # Debug Toolbar (deve vir depois dos middlewares do Django)
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    
+    # Nossos middlewares customizados (por último)
+    'apps.core.middleware.TenantMiddleware',
+    'apps.core.middleware.TenantQueryMiddleware',
 ]
 
 ROOT_URLCONF = "confeccao_saas.urls"

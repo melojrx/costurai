@@ -15,6 +15,25 @@ DEBUG = True
 # Hosts permitidos
 ALLOWED_HOSTS = ['*']
 
+# Configurações específicas para resolver CSRF no Django Admin
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost',
+    'http://127.0.0.1',
+]
+
+# Configurações CSRF para desenvolvimento
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_AGE = 31449600  # 1 ano
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_PATH = '/'
+CSRF_COOKIE_SECURE = False  # False para desenvolvimento
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
+CSRF_USE_SESSIONS = False
+
 # Database SQLite
 DATABASES = {
     'default': {

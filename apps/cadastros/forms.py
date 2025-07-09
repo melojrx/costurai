@@ -35,29 +35,58 @@ class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
         fields = [
-            'codigo', 'referencia', 'produto', 'descricao',
-            'consumo_linha_externa', 'consumo_linha_interna', 'consumo_fio',
-            'codigo_cor', 'cor', 'unidade',
+            'codigo', 'tipo_produto', 'categoria', 'descricao',
+            'ncm', 'tipo_grade',
             'preco_custo', 'preco_venda',
             'imagem', 'observacoes', 'ativo'
         ]
         widgets = {
-            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código do produto'}),
-            'referencia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Referência'}),
-            'produto': forms.Select(attrs={'class': 'form-control'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição do produto'}),
-            'consumo_linha_externa': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0,00'}),
-            'consumo_linha_interna': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0,00'}),
-            'consumo_fio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0,00'}),
-            'codigo_cor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código da cor'}),
-            'cor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da cor'}),
-            'unidade': forms.Select(attrs={'class': 'form-control'}),
-            'preco_custo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0,00'}),
-            'preco_venda': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0,00'}),
-            'imagem': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observações'}),
+            'codigo': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Código do produto (ex: PR001)',
+                'readonly': True  # Será preenchido automaticamente
+            }),
+            'tipo_produto': forms.Select(attrs={'class': 'form-control'}),
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'descricao': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Descrição detalhada do produto'
+            }),
+            'ncm': forms.Select(attrs={'class': 'form-control'}),
+            'tipo_grade': forms.Select(attrs={'class': 'form-control'}),
+            'preco_custo': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'step': '0.01', 
+                'placeholder': '0,00'
+            }),
+            'preco_venda': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'step': '0.01', 
+                'placeholder': '0,00'
+            }),
+            'imagem': forms.FileInput(attrs={
+                'class': 'form-control', 
+                'accept': 'image/*'
+            }),
+            'observacoes': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Observações'
+            }),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        empresa = kwargs.pop('empresa', None)
+        super().__init__(*args, **kwargs)
+        
+        if empresa:
+            # Filtrar opções por empresa
+            self.fields['tipo_produto'].queryset = self.fields['tipo_produto'].queryset.filter(empresa=empresa, ativo=True)
+            self.fields['categoria'].queryset = self.fields['categoria'].queryset.filter(empresa=empresa, ativo=True)
+            self.fields['ncm'].queryset = self.fields['ncm'].queryset.filter(empresa=empresa, ativo=True)
+            self.fields['tipo_grade'].queryset = self.fields['tipo_grade'].queryset.filter(empresa=empresa, ativo=True)
 
 
 class FornecedorForm(forms.ModelForm):

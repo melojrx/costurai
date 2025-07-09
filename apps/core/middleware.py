@@ -33,10 +33,23 @@ class TenantMiddleware(MiddlewareMixin):
             '/static/',
             '/media/',
             '/favicon.ico',
+            '/__debug__/',  # Django Debug Toolbar
+            '/health/',     # Health check
         ]
         
         # Verificar se a URL atual precisa de empresa
         if any(request.path.startswith(url) for url in bypass_urls):
+            return None
+        
+        # URLs exatas que também devem ser excluídas
+        bypass_exact_urls = [
+            '/',  # Homepage
+            '/login/',
+            '/logout/',
+            '/register/',
+        ]
+        
+        if request.path in bypass_exact_urls:
             return None
         
         # Se usuário não estiver logado, permitir acesso às páginas públicas

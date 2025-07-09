@@ -1,11 +1,11 @@
 {% extends 'base/dashboard_base.html' %}
 {% load static %}
+{% load currency_filters %}
 
 {% block title %}Produtos - {{ empresa.nome }} - Costurai.com.br{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Estilos específicos para a listagem de produtos */
     .search-card {
         background: white;
         border-radius: var(--border-radius);
@@ -113,14 +113,14 @@
         letter-spacing: 0.025em;
     }
     
-    .tipo-calca { background: #dbeafe; color: #1d4ed8; }
-    .tipo-shorts { background: #dcfce7; color: #16a34a; }
-    .tipo-saia { background: #fef3c7; color: #d97706; }
-    .tipo-vestido { background: #e0e7ff; color: #6366f1; }
-    .tipo-blusa { background: #fce7f3; color: #be185d; }
-    .tipo-camisa { background: #ecfccb; color: #65a30d; }
-    .tipo-jaqueta { background: #f3e8ff; color: #7c3aed; }
-    .tipo-outros { background: #f3f4f6; color: #6b7280; }
+    .categoria-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        background: var(--accent-blue);
+        color: var(--primary-blue-light);
+    }
     
     .status-badge {
         padding: 4px 12px;
@@ -231,6 +231,15 @@
         color: var(--success);
     }
     
+    .ncm-code {
+        background: var(--gray-100);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.6875rem;
+        font-family: monospace;
+        color: var(--gray-600);
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .search-form {
@@ -264,40 +273,10 @@
             padding: 4px 8px;
         }
     }
-
-    /* Variáveis CSS */
-    :root {
-        --primary: #3b82f6;
-        --primary-dark: #2563eb;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-
-    /* CSRF Token hidden input */
-    #csrf-token {
-        display: none;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- CSRF Token for JavaScript -->
-<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" id="csrf-token">
-
 <!-- Page Header -->
 <div class="page-header">
     <div class="page-header-content">
@@ -321,7 +300,7 @@
             </div>
         </div>
         <div class="stat-label">Total de Produtos</div>
-        <div class="stat-value">{{ total_produtos|default:"0" }}</div>
+        <div class="stat-value">{{ produtos|length }}</div>
         <div class="stat-change neutral">
             <i class="fas fa-database"></i>
             Cadastrados
@@ -335,7 +314,7 @@
             </div>
         </div>
         <div class="stat-label">Produtos Ativos</div>
-        <div class="stat-value">{{ produtos_ativos|default:"0" }}</div>
+        <div class="stat-value">{{ produtos|length }}</div>
         <div class="stat-change positive">
             <i class="fas fa-arrow-up"></i>
             Disponíveis
@@ -349,7 +328,7 @@
             </div>
         </div>
         <div class="stat-label">Tipos Diferentes</div>
-        <div class="stat-value">{{ tipos_produtos|default:"0" }}</div>
+        <div class="stat-value">{{ produtos|length }}</div>
         <div class="stat-change neutral">
             <i class="fas fa-layer-group"></i>
             Categorias
@@ -376,24 +355,22 @@
     <form method="GET" class="search-form">
         <div class="form-modern">
             <label class="form-label">Buscar Produto</label>
-            <input type="text" class="form-control" name="search" value="{{ search }}" 
-                   placeholder="Código, referência, descrição, cor...">
+            <input type="text" class="form-control" name="search" value="{{ request.GET.search }}" 
+                   placeholder="Código, descrição...">
         </div>
         <div class="form-modern">
             <label class="form-label">Tipo</label>
             <select class="form-control" name="tipo">
                 <option value="">Todos os tipos</option>
-                {% for value, label in tipo_choices %}
-                    <option value="{{ value }}" {% if tipo_filter == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
+                <!-- Tipos serão carregados dinamicamente -->
             </select>
         </div>
         <div class="form-modern">
             <label class="form-label">Status</label>
             <select class="form-control" name="status">
                 <option value="">Todos</option>
-                <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativos</option>
-                <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativos</option>
+                <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativos</option>
+                <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Inativos</option>
             </select>
         </div>
         <div class="search-actions">
@@ -417,10 +394,9 @@
             <tr>
                 <th>Imagem</th>
                 <th>Produto</th>
-                <th>Tipo</th>
-                <th>Cor</th>
+                <th>Tipo/Categoria</th>
                 <th>Preços</th>
-                <th>Unidade</th>
+                <th>NCM</th>
                 <th>Status</th>
                 <th width="180">Ações</th>
             </tr>
@@ -440,37 +416,39 @@
                 <td>
                     <div class="product-info">
                         <div class="product-name">{{ produto.codigo }}</div>
-                        <div class="product-subtitle">{{ produto.referencia }}</div>
-                        {% if produto.descricao != 'Produto sem descrição' %}
                         <div class="product-subtitle">{{ produto.descricao|truncatechars:50 }}</div>
+                        {% if produto.tipo_grade %}
+                            <div class="product-subtitle">
+                                <i class="fas fa-ruler-combined"></i>
+                                {{ produto.tipo_grade.nome }}
+                            </div>
                         {% endif %}
                     </div>
                 </td>
                 <td>
-                    <span class="tipo-badge tipo-{{ produto.produto|lower }}">
-                        {{ produto.get_produto_display }}
-                    </span>
-                </td>
-                <td>
-                    <div class="product-info">
-                        <div class="product-name">{{ produto.cor }}</div>
-                        {% if produto.codigo_cor != '00000' %}
-                        <div class="product-subtitle">Cód: {{ produto.codigo_cor }}</div>
-                        {% endif %}
-                    </div>
+                    {% if produto.tipo_produto %}
+                        <div class="tipo-badge" style="background-color: {{ produto.tipo_produto.cor_hex }}20; color: {{ produto.tipo_produto.cor_hex }};">
+                            {{ produto.tipo_produto.nome }}
+                        </div>
+                    {% endif %}
+                    {% if produto.categoria %}
+                        <div class="categoria-badge mt-1">
+                            {{ produto.categoria.nome }}
+                        </div>
+                    {% endif %}
                 </td>
                 <td>
                     <div class="price-info">
                         {% if produto.preco_custo %}
                         <div>
                             <span class="price-label">Custo</span>
-                            <div class="price-value price-cost">R$ {{ produto.preco_custo|floatformat:2 }}</div>
+                            <div class="price-value price-cost">{{ produto.preco_custo|currency_brl }}</div>
                         </div>
                         {% endif %}
                         {% if produto.preco_venda %}
                         <div>
                             <span class="price-label">Venda</span>
-                            <div class="price-value price-sale">R$ {{ produto.preco_venda|floatformat:2 }}</div>
+                            <div class="price-value price-sale">{{ produto.preco_venda|currency_brl }}</div>
                         </div>
                         {% endif %}
                         {% if not produto.preco_custo and not produto.preco_venda %}
@@ -479,9 +457,12 @@
                     </div>
                 </td>
                 <td>
-                    <code style="background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">
-                        {{ produto.get_unidade_display }}
-                    </code>
+                    {% if produto.ncm %}
+                        <div class="ncm-code">{{ produto.ncm.codigo }}</div>
+                        <div class="product-subtitle">{{ produto.ncm.descricao|truncatechars:30 }}</div>
+                    {% else %}
+                        <span style="color: var(--gray-400);">Não informado</span>
+                    {% endif %}
                 </td>
                 <td>
                     <span class="status-badge status-{{ produto.ativo|yesno:'ativo,inativo' }}">
@@ -497,7 +478,7 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <button type="button" class="btn-action btn-delete" title="Excluir" 
-                                onclick="confirmDelete('{{ produto.nome }}', '{% url 'cadastros:produto_excluir' produto.id %}')">
+                                onclick="confirmDelete('{{ produto.codigo }}', '{% url 'cadastros:produto_deletar' produto.id %}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -508,9 +489,9 @@
     </table>
     {% else %}
     <div class="empty-state">
-        <i class="fas fa-boxes"></i>
+        <i class="fas fa-box-open"></i>
         <h3>Nenhum produto encontrado</h3>
-        <p>{% if search %}Não encontramos produtos com os termos "{{ search }}".{% else %}Você ainda não possui produtos cadastrados.{% endif %}</p>
+        <p>Não há produtos cadastrados ou que correspondam aos filtros aplicados.</p>
         <a href="{% url 'cadastros:produto_novo' %}" class="btn-modern btn-modern-primary">
             <i class="fas fa-plus"></i>
             Cadastrar Primeiro Produto
@@ -519,463 +500,59 @@
     {% endif %}
 </div>
 
-<!-- Pagination -->
+<!-- Paginação -->
 {% if is_paginated %}
-<div class="d-flex justify-content-center mt-4">
-    <nav aria-label="Navegação de páginas">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-            {% endif %}
-            
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-            
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-{% endif %}
-
-<!-- Modal de Confirmação de Deleção -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <!-- Header com gradiente vermelho -->
-            <div class="modal-header border-0" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
-                <div class="d-flex align-items-center">
-                    <div class="modal-icon-container me-3">
-                        <i class="fas fa-exclamation-triangle fa-2x" style="animation: pulse 2s infinite;"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title mb-0" id="deleteConfirmModalLabel">Confirmar Exclusão</h5>
-                        <small style="opacity: 0.9;">Esta ação não pode ser desfeita</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <!-- Body -->
-            <div class="modal-body p-4">
-                <div class="text-center mb-4" id="deleteAlertContainer">
-                    <div class="alert alert-danger border-0" style="background: #fef2f2;">
-                        <div class="d-flex align-items-center justify-content-center mb-3">
-                            <div class="danger-icon-bg">
-                                <i class="fas fa-trash-alt fa-2x text-danger"></i>
-                            </div>
-                        </div>
-                        <h6 class="text-danger mb-2">Você está prestes a excluir um produto</h6>
-                        <p class="text-muted mb-0 small">Esta ação removerá permanentemente o produto do sistema</p>
-                    </div>
-                </div>
-                
-                <!-- Alert para produto que não pode ser excluído -->
-                <div class="text-center mb-4" id="cannotDeleteAlertContainer" style="display: none;">
-                    <div class="alert alert-warning border-0" style="background: #fffbeb;">
-                        <div class="d-flex align-items-center justify-content-center mb-3">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                            </div>
-                        </div>
-                        <h6 class="text-warning mb-2">Produto não pode ser excluído</h6>
-                        <p class="text-muted mb-0 small" id="cannotDeleteReason">Este produto está sendo usado em ordens de produção</p>
-                    </div>
-                </div>
-                
-                <div class="product-delete-info">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="product-icon">
-                                <i class="fas fa-box text-primary fa-2x"></i>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <h6 class="mb-1 text-dark">Produto selecionado:</h6>
-                            <p class="mb-0 fw-bold text-primary" id="productNameToDelete"></p>
-                            <small class="text-muted">Código: <span id="productCodeToDelete"></span></small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4" id="deleteWarningContainer">
-                    <div class="alert alert-warning border-0" style="background: #fffbeb;">
-                        <div class="d-flex">
-                            <i class="fas fa-info-circle text-warning me-2 mt-1"></i>
-                            <div>
-                                <small class="text-warning fw-bold">Importante:</small>
-                                <ul class="small text-muted mb-0 mt-1">
-                                    <li>Todas as informações do produto serão perdidas</li>
-                                    <li>Histórico de vendas será mantido para auditoria</li>
-                                    <li>Esta ação não afeta produtos já vendidos</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Sugestão de desativação -->
-                <div class="mt-4" id="deactivateWarningContainer" style="display: none;">
-                    <div class="alert alert-info border-0" style="background: #eff6ff;">
-                        <div class="d-flex">
-                            <i class="fas fa-lightbulb text-info me-2 mt-1"></i>
-                            <div>
-                                <small class="text-info fw-bold">Sugestão:</small>
-                                <p class="small text-muted mb-2 mt-1">
-                                    Como este produto está sendo usado, recomendamos <strong>desativá-lo</strong> ao invés de excluí-lo. 
-                                    Produtos desativados não aparecem em novas vendas, mas mantêm o histórico intacto.
-                                </p>
-                                <ul class="small text-muted mb-0">
-                                    <li>Produto ficará oculto nas listagens</li>
-                                    <li>Ordens de produção existentes não serão afetadas</li>
-                                    <li>Pode ser reativado a qualquer momento</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                    <i class="fas fa-trash-alt me-1"></i>
-                    <span class="btn-text">Sim, Excluir Produto</span>
-                </button>
-            </div>
-        </div>
+<div class="pagination-container">
+    <div class="pagination-info">
+        Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} produtos
+    </div>
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="pagination-link">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="pagination-link">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        {% endif %}
+        
+        <span class="pagination-current">
+            {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="pagination-link">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="pagination-link">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        {% endif %}
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
-<style>
-/* Estilos adicionais para o modal */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-.danger-icon-bg {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #fee2e2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.product-delete-info {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 20px;
-}
-
-.product-icon {
-    width: 50px;
-    height: 50px;
-    background: #dbeafe;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    border: none;
-    transition: all 0.3s ease;
-}
-
-.btn-danger:hover {
-    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
-}
-
-.modal-content {
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.modal-header {
-    border-radius: 12px 12px 0 0;
-}
-
-/* Loading state for delete button */
-.btn-danger.loading .btn-text {
-    display: none;
-}
-
-.btn-danger.loading::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
-    border-top: 2px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-</style>
-
 <script>
-let currentDeleteUrl = '';
-let currentProductId = '';
-
-function confirmDelete(productName, deleteUrl) {
-    // Extrair o ID do produto da URL
-    const urlParts = deleteUrl.split('/');
-    const productId = urlParts[urlParts.length - 3]; // Pega o ID antes de /deletar/
-    
-    currentDeleteUrl = deleteUrl;
-    currentProductId = productId;
-    
-    // Preencher informações do produto
-    document.getElementById('productNameToDelete').textContent = productName;
-    document.getElementById('productCodeToDelete').textContent = productId;
-    
-    // Verificar se o produto pode ser excluído
-    checkIfProductCanBeDeleted(productId);
-    
-    // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    modal.show();
-}
-
-function checkIfProductCanBeDeleted(productId) {
-    // Mostrar loading
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    const btnText = deleteBtn.querySelector('.btn-text');
-    const originalText = btnText.textContent;
-    
-    btnText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verificando...';
-    deleteBtn.disabled = true;
-    
-    fetch(`/cadastros/api/produtos/${productId}/pode-excluir/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.pode_excluir) {
-                // Produto pode ser excluído - mostrar interface normal
-                showCanDeleteInterface();
-            } else {
-                // Produto não pode ser excluído - mostrar interface de desativação
-                showCannotDeleteInterface(data.motivo, data.ops_count);
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao verificar produto:', error);
-            // Em caso de erro, assumir que pode excluir
-            showCanDeleteInterface();
-        })
-        .finally(() => {
-            // Restaurar botão
-            btnText.textContent = originalText;
-            deleteBtn.disabled = false;
-        });
-}
-
-function showCanDeleteInterface() {
-    // Mostrar alerta de exclusão normal
-    document.getElementById('deleteAlertContainer').style.display = 'block';
-    document.getElementById('cannotDeleteAlertContainer').style.display = 'none';
-    document.getElementById('deleteWarningContainer').style.display = 'block';
-    document.getElementById('deactivateWarningContainer').style.display = 'none';
-    
-    // Configurar botão para excluir
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    deleteBtn.className = 'btn btn-danger';
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i><span class="btn-text">Sim, Excluir Produto</span>';
-    deleteBtn.onclick = function() {
-        performDelete();
-    };
-}
-
-function showCannotDeleteInterface(motivo, opsCount) {
-    // Mostrar alerta de não pode excluir
-    document.getElementById('deleteAlertContainer').style.display = 'none';
-    document.getElementById('cannotDeleteAlertContainer').style.display = 'block';
-    document.getElementById('deleteWarningContainer').style.display = 'none';
-    document.getElementById('deactivateWarningContainer').style.display = 'block';
-    
-    // Atualizar motivo
-    document.getElementById('cannotDeleteReason').textContent = `${motivo} (${opsCount} ordem${opsCount !== 1 ? 's' : ''} encontrada${opsCount !== 1 ? 's' : ''})`;
-    
-    // Configurar botão para desativar
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    deleteBtn.className = 'btn btn-warning';
-    deleteBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i><span class="btn-text">Desativar Produto</span>';
-    deleteBtn.onclick = function() {
-        performDeactivate();
-    };
-}
-
-function performDelete() {
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    const btnText = deleteBtn.querySelector('.btn-text');
-    
-    // Mostrar loading
-    btnText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Excluindo...';
-    deleteBtn.disabled = true;
-    
-    // Criar form e submeter
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = currentDeleteUrl;
-    
-    // Adicionar CSRF token
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-    if (csrfToken) {
+function confirmDelete(produtoNome, deleteUrl) {
+    if (confirm(`Tem certeza que deseja excluir o produto "${produtoNome}"?`)) {
+        // Criar form temporário para enviar POST
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = deleteUrl;
+        
+        // Adicionar CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken.value;
+        csrfInput.value = csrfToken;
         form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
-    
-    document.body.appendChild(form);
-    form.submit();
-}
-
-function performDeactivate() {
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    const btnText = deleteBtn.querySelector('.btn-text');
-    
-    // Mostrar loading
-    btnText.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Desativando...';
-    deleteBtn.disabled = true;
-    
-    fetch(`/cadastros/api/produtos/${currentProductId}/desativar/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Fechar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
-            modal.hide();
-            
-            // Mostrar mensagem de sucesso
-            showSuccessMessage(data.message);
-            
-            // Recarregar página após um delay
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showErrorMessage(data.error || 'Erro ao desativar produto');
-        }
-    })
-    .catch(error => {
-        console.error('Erro ao desativar produto:', error);
-        showErrorMessage('Erro ao desativar produto');
-    })
-    .finally(() => {
-        // Restaurar botão
-        btnText.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Desativar Produto';
-        deleteBtn.disabled = false;
-    });
-}
-
-function showSuccessMessage(message) {
-    // Criar toast de sucesso
-    const toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-white bg-success border-0';
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.zIndex = '9999';
-    
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="fas fa-check-circle me-2"></i>
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
-    // Remover elemento após hide
-    toast.addEventListener('hidden.bs.toast', () => {
-        document.body.removeChild(toast);
-    });
-}
-
-function showErrorMessage(message) {
-    // Criar toast de erro
-    const toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-white bg-danger border-0';
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.zIndex = '9999';
-    
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
-    // Remover elemento após hide
-    toast.addEventListener('hidden.bs.toast', () => {
-        document.body.removeChild(toast);
-    });
 }
 </script>
 {% endblock %} 

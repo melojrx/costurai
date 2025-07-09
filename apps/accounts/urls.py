@@ -4,7 +4,7 @@ from . import views
 app_name = 'accounts'
 
 urlpatterns = [
-    # Autenticação
+    # Autenticação customizada (deve vir ANTES das URLs padrão)
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('registro/', views.registro_view, name='registro'),  # Redirect para escolha
@@ -31,9 +31,9 @@ urlpatterns = [
     path('ajax/aplicar-cupom-trial/', views.aplicar_cupom_trial_view, name='aplicar_cupom_trial'),
     path('ajax/historico-assinatura/', views.historico_assinatura_view, name='historico_assinatura'),
     
-    # Adicionando as URLs de autenticação padrão do Django
-    path('', include('django.contrib.auth.urls')),
-    
     # Convites (para implementar futuramente)
     # path('convite/<str:token>/', views.aceitar_convite_view, name='aceitar_convite'),
+    
+    # URLs de autenticação padrão do Django (devem vir POR ÚLTIMO para não sobrescrever as customizadas)
+    path('', include('django.contrib.auth.urls')),
 ] 
