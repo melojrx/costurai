@@ -737,50 +737,56 @@
         </div>
     </div>
 
-    <!-- Necessidade de Matéria Prima (NOVA SEÇÃO) -->
+    <!-- Necessidade de Matéria Prima (Ficha Técnica) -->
     <div class="form-card">
         <div class="form-card-header">
             <h3 class="form-card-title">
-                <i class="fas fa-industry"></i>
-                Necessidade de Matéria Prima
+                <i class="fas fa-cogs"></i>
+                Ficha Técnica (Matérias-Primas)
             </h3>
         </div>
         <div class="form-card-body">
             
-            <!-- Departamento Header -->
-            <div class="departamento-header">
-                <i class="fas fa-tag"></i>
-                <span>Departamento: AVIAMENTOS</span>
-            </div>
-            
-            <!-- Tabela de Matérias-Primas -->
             <div class="materias-primas-table">
+                {{ materias_primas.management_form }}
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th width="15%">Código</th>
-                            <th width="25%">Descrição</th>
-                            <th width="15%">Unidade</th>
-                            <th width="15%">Consumo Unit.</th>
-                            <th width="15%">Qtd. Necessária</th>
-                            <th width="10%">Ações</th>
+                            <th width="50%">Matéria-Prima</th>
+                            <th width="30%">Quantidade Necessária</th>
+                            <th width="10%">Excluir?</th>
                         </tr>
                     </thead>
-                    <tbody id="materiasPrimasTableBody">
-                        <!-- Matérias-primas serão adicionadas aqui -->
+                    <tbody id="materias-primas-formset">
+                        {% for form_item in materias_primas %}
+                            <tr class="materia-prima-row">
+                                <td>{{ form_item.id }}{{ form_item.produto }} {{ form_item.materia_prima }}</td>
+                                <td>{{ form_item.quantidade }}</td>
+                                <td class="text-center">{% if form_item.instance.pk %}{{ form_item.DELETE }}{% endif %}</td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
             
-            <!-- Botão Adicionar -->
             <div class="mt-3">
-                <button type="button" class="btn-add-materia-table" onclick="adicionarMateriaPrima()">
+                <button type="button" class="btn-add-materia-table" id="add-materia-prima-row">
                     <i class="fas fa-plus"></i>
-                    Adicionar Item de Matéria Prima
+                    Adicionar Matéria-Prima
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- Formulário vazio para ser usado como template no JavaScript -->
+    <div id="empty-form" style="display: none;">
+        <tr class="materia-prima-row">
+            <td>{{ materias_primas.empty_form.id }}{{ materias_primas.empty_form.produto }} {{ materias_primas.empty_form.materia_prima }}</td>
+            <td>{{ materias_primas.empty_form.quantidade }}</td>
+            <td class="text-center"></td>
+        </tr>
+    </div>
+
 
     <!-- Imagem -->
     <div class="form-card">
@@ -910,33 +916,46 @@ function removeMateriaPrima(button) {
 }
 
 // Carregar matérias-primas via AJAX
-function loadMateriasPrimas(selectElement) {
-    // Simulação - em produção, fazer chamada AJAX
-    const materiasPrimas = [
-        {id: 1, nome: 'Tecido Jeans - Azul', preco: 25.50},
-        {id: 2, nome: 'Linha de Costura - Azul', preco: 8.90},
-        {id: 3, nome: 'Botão Jeans', preco: 0.75},
-        {id: 4, nome: 'Zíper 15cm', preco: 3.20}
-    ];
-    
-    materiasPrimas.forEach(materia => {
-        const option = document.createElement('option');
-        option.value = materia.id;
-        option.textContent = `${materia.nome} - R$ ${materia.preco.toFixed(2)}`;
-        option.dataset.preco = materia.preco;
-        selectElement.appendChild(option);
-    });
-    
-    selectElement.addEventListener('change', function() {
-        const custoInput = this.closest('.materia-prima-item').querySelector('.materia-custo');
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.dataset.preco) {
-            custoInput.value = `R$ ${parseFloat(selectedOption.dataset.preco).toFixed(2)}`;
-        } else {
-            custoInput.value = 'R$ 0,00';
+async function loadMateriasPrimas(selectElement) {
+    try {
+        const url = "{% url 'estoque:api_materias_primas' %}";
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error('Erro ao buscar matérias-primas.');
         }
-        calculateCosts();
-    });
+
+        const data = await response.json();
+        const materiasPrimas = data.materias_primas;
+
+        selectElement.innerHTML = '<option value="">Selecione uma matéria-prima</option>'; // Limpa opções antigas
+
+        materiasPrimas.forEach(materia => {
+            const option = document.createElement('option');
+            option.value = materia.id;
+            // Usamos o custo médio ponderado, que é o custo real do item em estoque
+            const custo = parseFloat(materia.custo_medio_ponderado || 0).toFixed(4);
+            option.textContent = `${materia.descricao} (Custo: R$ ${custo})`;
+            option.dataset.preco = materia.custo_medio_ponderado || 0;
+            selectElement.appendChild(option);
+        });
+        
+        selectElement.addEventListener('change', function() {
+            const custoInput = this.closest('.materia-prima-item').querySelector('.materia-custo');
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.dataset.preco) {
+                const custoFormatado = parseFloat(selectedOption.dataset.preco).toFixed(4);
+                custoInput.value = `R$ ${custoFormatado}`;
+            } else {
+                custoInput.value = 'R$ 0,0000';
+            }
+            calculateCosts();
+        });
+
+    } catch (error) {
+        console.error("Erro ao carregar matérias-primas:", error);
+        // Opcional: mostrar um erro para o usuário na interface
+    }
 }
 
 // Calcular custos
@@ -998,6 +1017,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Adicionar uma linha de matéria-prima como exemplo
     adicionarMateriaPrima();
+
+    // Lógica para adicionar dinamicamente formulários no formset
+    const addRowBtn = document.getElementById('add-materia-prima-row');
+    const formsetContainer = document.getElementById('materias-primas-formset');
+    const totalFormsInput = document.getElementById('id_materias_primas-TOTAL_FORMS');
+    const emptyFormHtml = document.getElementById('empty-form').innerHTML;
+
+    if (addRowBtn) {
+        addRowBtn.addEventListener('click', function() {
+            let formNum = parseInt(totalFormsInput.value);
+            // Substitui o prefixo no template do formulário vazio
+            let newForm = emptyFormHtml.replace(/__prefix__/g, formNum);
+            formsetContainer.insertAdjacentHTML('beforeend', newForm);
+            // Incrementa o contador de formulários totais
+            totalFormsInput.value = formNum + 1;
+        });
+    }
 });
 
 // Carrega tamanhos disponíveis no formato horizontal

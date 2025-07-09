@@ -1,0 +1,540 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo|default:"Registrar Ajuste de Estoque" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box">
+                <div class="row">
+                    <div class="col">
+                        <h4 class="page-title">{{ titulo|default:"Registrar Ajuste de Estoque" }}</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'empresas:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:dashboard' %}">Estoque</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:movimentacao_list' %}">Movimentações</a></li>
+                            <li class="breadcrumb-item active">Registrar Ajuste</li>
+                        </ol>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-cog text-info me-2"></i>
+                        Novo Ajuste de Estoque
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Use este formulário para registrar ajustes de estoque (positivos ou negativos).
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="ajuste-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.materia_prima.id_for_label }}" class="form-label">
+                                        <i class="fas fa-box me-1"></i>
+                                        Matéria-Prima <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.materia_prima }}
+                                    {% if form.materia_prima.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.materia_prima.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-balance-scale me-1"></i>
+                                        Tipo de Ajuste <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="btn-group w-100" role="group" aria-label="Tipo de ajuste">
+                                        <input type="radio" class="btn-check" name="tipo_ajuste" id="ajuste_positivo" value="positivo" checked>
+                                        <label class="btn btn-outline-success" for="ajuste_positivo">
+                                            <i class="fas fa-plus me-1"></i>Positivo (Entrada)
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipo_ajuste" id="ajuste_negativo" value="negativo">
+                                        <label class="btn btn-outline-danger" for="ajuste_negativo">
+                                            <i class="fas fa-minus me-1"></i>Negativo (Saída)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.quantidade.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hashtag me-1"></i>
+                                        Quantidade <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="sinal-quantidade">+</span>
+                                        {{ form.quantidade }}
+                                        <span class="input-group-text" id="unidade-display">UN</span>
+                                    </div>
+                                    {% if form.quantidade.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.quantidade.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text" id="info-quantidade">
+                                        Digite sempre um valor positivo. O sinal será aplicado automaticamente.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.custo_unitario.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        Custo Unitário
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        {{ form.custo_unitario }}
+                                    </div>
+                                    {% if form.custo_unitario.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.custo_unitario.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Opcional - será usado o custo médio se não informado
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero_documento.id_for_label }}" class="form-label">
+                                        <i class="fas fa-file-invoice me-1"></i>
+                                        Número do Documento
+                                    </label>
+                                    {{ form.numero_documento }}
+                                    {% if form.numero_documento.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.numero_documento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Ex: Relatório de Inventário, Auditoria, etc.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.motivo_ajuste.id_for_label }}" class="form-label">
+                                        <i class="fas fa-clipboard-list me-1"></i>
+                                        Motivo do Ajuste <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.motivo_ajuste }}
+                                    {% if form.motivo_ajuste.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.motivo_ajuste.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Descreva o motivo do ajuste (obrigatório)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>
+                                        Observações
+                                    </label>
+                                    {{ form.observacoes }}
+                                    {% if form.observacoes.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.observacoes.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alerta de Estoque Insuficiente (apenas para ajustes negativos) -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-warning" id="alerta-estoque" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atenção!</strong> <span id="mensagem-estoque"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo do Ajuste -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="resumo-ajuste" style="display: none;">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Resumo do Ajuste</h6>
+                                    <div id="resumo-conteudo"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-light">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-info" id="btn-registrar">
+                                        <i class="fas fa-save me-2"></i>Registrar Ajuste
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar com informações -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-balance-scale me-2"></i>
+                        <strong>Ajuste de Estoque:</strong> Permite corrigir divergências entre o estoque físico e o sistema.
+                    </div>
+                    
+                    <h6>Tipos de Ajuste:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-plus text-success me-2"></i><strong>Positivo:</strong> Aumenta o estoque</li>
+                        <li><i class="fas fa-minus text-danger me-2"></i><strong>Negativo:</strong> Diminui o estoque</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Motivos Comuns:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-search text-primary me-2"></i>Inventário físico</li>
+                        <li><i class="fas fa-bug text-warning me-2"></i>Correção de erro</li>
+                        <li><i class="fas fa-exclamation-triangle text-danger me-2"></i>Perda/Avaria</li>
+                        <li><i class="fas fa-gift text-success me-2"></i>Encontrado</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Campos Obrigatórios:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Matéria-Prima</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Tipo de Ajuste</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Quantidade</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Motivo</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Estoque Atual -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse me-2"></i>
+                        Estoque Atual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="estoque-atual" class="text-center">
+                        <p class="text-muted">Selecione uma matéria-prima para ver o estoque atual</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comparação Antes/Depois -->
+            <div class="card mt-3" id="card-comparacao" style="display: none;">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Comparação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-muted mb-1">Antes</h6>
+                                <h4 class="text-primary mb-0" id="estoque-antes">0</h4>
+                                <small class="text-muted" id="unidade-antes">UN</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Depois</h6>
+                            <h4 class="mb-0" id="estoque-depois">0</h4>
+                            <small class="text-muted" id="unidade-depois">UN</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const materiaPrimaSelect = document.getElementById('{{ form.materia_prima.id_for_label }}');
+    const quantidadeInput = document.getElementById('{{ form.quantidade.id_for_label }}');
+    const custoInput = document.getElementById('{{ form.custo_unitario.id_for_label }}');
+    const motivoInput = document.getElementById('{{ form.motivo_ajuste.id_for_label }}');
+    const tipoAjusteRadios = document.querySelectorAll('input[name="tipo_ajuste"]');
+    const unidadeDisplay = document.getElementById('unidade-display');
+    const sinalQuantidade = document.getElementById('sinal-quantidade');
+    const estoqueAtual = document.getElementById('estoque-atual');
+    const alertaEstoque = document.getElementById('alerta-estoque');
+    const mensagemEstoque = document.getElementById('mensagem-estoque');
+    const resumoAjuste = document.getElementById('resumo-ajuste');
+    const resumoConteudo = document.getElementById('resumo-conteudo');
+    const btnRegistrar = document.getElementById('btn-registrar');
+    const cardComparacao = document.getElementById('card-comparacao');
+    const estoqueAntes = document.getElementById('estoque-antes');
+    const estoqueDepois = document.getElementById('estoque-depois');
+    const unidadeAntes = document.getElementById('unidade-antes');
+    const unidadeDepois = document.getElementById('unidade-depois');
+    
+    // Dados das matérias-primas
+    const materiasPrimas = {};
+    
+    // Atualizar sinal quando tipo de ajuste mudar
+    tipoAjusteRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const isPositivo = this.value === 'positivo';
+            sinalQuantidade.textContent = isPositivo ? '+' : '-';
+            sinalQuantidade.className = `input-group-text ${isPositivo ? 'text-success' : 'text-danger'}`;
+            
+            validarQuantidade();
+            atualizarResumo();
+        });
+    });
+    
+    // Atualizar informações quando matéria-prima mudar
+    materiaPrimaSelect.addEventListener('change', function() {
+        const materiaPrimaId = this.value;
+        if (materiaPrimaId) {
+            // Buscar informações da matéria-prima via AJAX
+            fetch(`/estoque/api/materia-prima/${materiaPrimaId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    unidadeDisplay.textContent = data.unidade || 'UN';
+                    unidadeAntes.textContent = data.unidade || 'UN';
+                    unidadeDepois.textContent = data.unidade || 'UN';
+                    
+                    // Atualizar estoque atual
+                    const estoqueQtd = parseFloat(data.quantidade_em_estoque) || 0;
+                    const statusColor = estoqueQtd <= 0 ? 'text-danger' : 
+                                      estoqueQtd < data.estoque_minimo ? 'text-warning' : 'text-success';
+                    
+                    estoqueAtual.innerHTML = `
+                        <div class="text-center">
+                            <h4 class="${statusColor}">${estoqueQtd}</h4>
+                            <p class="text-muted mb-0">${data.unidade || 'UN'} em estoque</p>
+                            <small class="text-muted">Custo médio: R$ ${data.custo_medio_ponderado || '0,00'}</small>
+                        </div>
+                    `;
+                    
+                    estoqueAntes.textContent = estoqueQtd;
+                    
+                    // Preencher custo médio se não informado
+                    if (!custoInput.value) {
+                        custoInput.value = parseFloat(data.custo_medio_ponderado) || 0;
+                    }
+                    
+                    materiasPrimas[materiaPrimaId] = data;
+                    validarQuantidade();
+                    atualizarResumo();
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar dados da matéria-prima:', error);
+                    unidadeDisplay.textContent = 'UN';
+                    estoqueAtual.innerHTML = '<p class="text-muted">Erro ao carregar dados</p>';
+                });
+        } else {
+            unidadeDisplay.textContent = 'UN';
+            estoqueAtual.innerHTML = '<p class="text-muted">Selecione uma matéria-prima</p>';
+            alertaEstoque.style.display = 'none';
+            resumoAjuste.style.display = 'none';
+            cardComparacao.style.display = 'none';
+        }
+    });
+    
+    // Validar quantidade quando mudar
+    quantidadeInput.addEventListener('input', function() {
+        validarQuantidade();
+        atualizarResumo();
+    });
+    
+    // Atualizar resumo quando custo mudar
+    custoInput.addEventListener('input', atualizarResumo);
+    
+    function validarQuantidade() {
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const tipoAjuste = document.querySelector('input[name="tipo_ajuste"]:checked').value;
+        
+        if (materiaPrimaId && quantidade > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            if (materiaPrima && tipoAjuste === 'negativo') {
+                const estoqueDisponivel = parseFloat(materiaPrima.quantidade_em_estoque) || 0;
+                
+                if (quantidade > estoqueDisponivel) {
+                    // Ajuste negativo maior que estoque disponível
+                    alertaEstoque.style.display = 'block';
+                    mensagemEstoque.textContent = `Ajuste negativo de ${quantidade} resultará em estoque negativo (atual: ${estoqueDisponivel} ${materiaPrima.unidade}).`;
+                    quantidadeInput.classList.add('is-invalid');
+                    btnRegistrar.disabled = true;
+                } else {
+                    // Ajuste válido
+                    alertaEstoque.style.display = 'none';
+                    quantidadeInput.classList.remove('is-invalid');
+                    btnRegistrar.disabled = false;
+                }
+            } else {
+                // Ajuste positivo ou sem matéria-prima
+                alertaEstoque.style.display = 'none';
+                quantidadeInput.classList.remove('is-invalid');
+                btnRegistrar.disabled = false;
+            }
+        } else {
+            alertaEstoque.style.display = 'none';
+            quantidadeInput.classList.remove('is-invalid');
+            btnRegistrar.disabled = false;
+        }
+    }
+    
+    function atualizarResumo() {
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const custo = parseFloat(custoInput.value) || 0;
+        const tipoAjuste = document.querySelector('input[name="tipo_ajuste"]:checked').value;
+        
+        if (materiaPrimaId && quantidade > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            if (materiaPrima) {
+                const custoUnitario = custo || parseFloat(materiaPrima.custo_medio_ponderado) || 0;
+                const quantidadeReal = tipoAjuste === 'positivo' ? quantidade : -quantidade;
+                const valorTotal = Math.abs(quantidadeReal) * custoUnitario;
+                const estoqueAtualQtd = parseFloat(materiaPrima.quantidade_em_estoque) || 0;
+                const novoEstoque = estoqueAtualQtd + quantidadeReal;
+                
+                // Atualizar comparação
+                estoqueDepois.textContent = novoEstoque.toFixed(3);
+                estoqueDepois.className = `mb-0 ${novoEstoque < 0 ? 'text-danger' : 'text-success'}`;
+                cardComparacao.style.display = 'block';
+                
+                resumoConteudo.innerHTML = `
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Tipo:</strong> ${tipoAjuste === 'positivo' ? 'Positivo (+)' : 'Negativo (-)'}
+                        </div>
+                        <div class="col-6">
+                            <strong>Quantidade:</strong> ${quantidadeReal > 0 ? '+' : ''}${quantidadeReal} ${materiaPrima.unidade}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <strong>Custo Unitário:</strong> R$ ${custoUnitario.toFixed(2)}
+                        </div>
+                        <div class="col-6">
+                            <strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <strong>Estoque Atual:</strong> ${estoqueAtualQtd} ${materiaPrima.unidade}
+                        </div>
+                        <div class="col-6">
+                            <strong>Novo Estoque:</strong> <span class="${novoEstoque < 0 ? 'text-danger' : 'text-success'}">${novoEstoque.toFixed(3)} ${materiaPrima.unidade}</span>
+                        </div>
+                    </div>
+                `;
+                resumoAjuste.style.display = 'block';
+            }
+        } else {
+            resumoAjuste.style.display = 'none';
+            cardComparacao.style.display = 'none';
+        }
+    }
+    
+    // Formatação de moeda no campo de custo
+    custoInput.addEventListener('blur', function() {
+        const value = parseFloat(this.value) || 0;
+        this.value = value.toFixed(4);
+    });
+    
+    // Validação do formulário
+    document.getElementById('ajuste-form').addEventListener('submit', function(e) {
+        let valid = true;
+        
+        // Validar campos obrigatórios
+        const requiredFields = [materiaPrimaSelect, quantidadeInput, motivoInput];
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                valid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validar quantidade positiva
+        if (parseFloat(quantidadeInput.value) <= 0) {
+            quantidadeInput.classList.add('is-invalid');
+            valid = false;
+        }
+        
+        // Converter quantidade para negativa se necessário
+        const tipoAjuste = document.querySelector('input[name="tipo_ajuste"]:checked').value;
+        if (tipoAjuste === 'negativo') {
+            quantidadeInput.value = -Math.abs(parseFloat(quantidadeInput.value));
+        } else {
+            quantidadeInput.value = Math.abs(parseFloat(quantidadeInput.value));
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios.');
+        }
+    });
+});
+</script>
+{% endblock %} 

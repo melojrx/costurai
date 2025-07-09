@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    OrdemProducao, GradeProducao, Departamento, MateriaPrima, 
+    OrdemProducao, GradeProducao, Departamento,
     ConsumoMateriaPrima, ProcessoProducao, CapacidadeProducao, 
     RelatorioFaturamento, StatusOP
 )
@@ -59,28 +59,6 @@ class DepartamentoSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class MateriaPrimaSerializer(serializers.ModelSerializer):
-    """Serializer para matérias primas"""
-    fornecedor_nome = serializers.CharField(source='fornecedor.nome', read_only=True)
-    status_estoque = serializers.ReadOnlyField()
-    
-    class Meta:
-        model = MateriaPrima
-        fields = [
-            'id', 'codigo', 'nome', 'descricao', 'unidade_medida',
-            'preco_unitario', 'estoque_atual', 'estoque_minimo',
-            'fornecedor', 'fornecedor_nome', 'ativo', 'status_estoque',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['created_at', 'updated_at']
-    
-    def create(self, validated_data):
-        request = self.context.get('request')
-        if request and hasattr(request, 'empresa_atual'):
-            validated_data['empresa'] = request.empresa_atual
-        return super().create(validated_data)
-
-
 class GradeProducaoSerializer(serializers.ModelSerializer):
     """Serializer para grade de produção"""
     porcentagem_concluida = serializers.ReadOnlyField()
@@ -92,6 +70,29 @@ class GradeProducaoSerializer(serializers.ModelSerializer):
             'porcentagem_concluida', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+
+# Temporariamente comentado - será movido para o app estoque
+# class MateriaPrimaSerializer(serializers.ModelSerializer):
+#     """Serializer para matérias primas"""
+#     fornecedor_nome = serializers.CharField(source='fornecedor.nome', read_only=True)
+#     status_estoque = serializers.ReadOnlyField()
+#     
+#     class Meta:
+#         model = MateriaPrima
+#         fields = [
+#             'id', 'codigo', 'nome', 'descricao', 'unidade_medida',
+#             'preco_unitario', 'estoque_atual', 'estoque_minimo',
+#             'fornecedor', 'fornecedor_nome', 'ativo', 'status_estoque',
+#             'created_at', 'updated_at'
+#         ]
+#         read_only_fields = ['created_at', 'updated_at']
+#     
+#     def create(self, validated_data):
+#         request = self.context.get('request')
+#         if request and hasattr(request, 'empresa_atual'):
+#             validated_data['empresa'] = request.empresa_atual
+#         return super().create(validated_data)
 
 
 class ConsumoMateriaPrimaSerializer(serializers.ModelSerializer):

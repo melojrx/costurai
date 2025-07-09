@@ -305,7 +305,7 @@
         <p class="page-subtitle">Gerencie o catálogo de produtos da sua confecção</p>
     </div>
     <div class="page-actions">
-        <a href="{% url 'cadastros:produto_criar' %}" class="btn-modern btn-modern-primary">
+        <a href="{% url 'cadastros:produto_novo' %}" class="btn-modern btn-modern-primary">
             <i class="fas fa-plus"></i>
             Novo Produto
         </a>
@@ -497,7 +497,7 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <button type="button" class="btn-action btn-delete" title="Excluir" 
-                                onclick="confirmDelete('{{ produto.nome }}', '{% url 'cadastros:produto_deletar' produto.id %}')">
+                                onclick="confirmDelete('{{ produto.nome }}', '{% url 'cadastros:produto_excluir' produto.id %}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -511,7 +511,7 @@
         <i class="fas fa-boxes"></i>
         <h3>Nenhum produto encontrado</h3>
         <p>{% if search %}Não encontramos produtos com os termos "{{ search }}".{% else %}Você ainda não possui produtos cadastrados.{% endif %}</p>
-        <a href="{% url 'cadastros:produto_criar' %}" class="btn-modern btn-modern-primary">
+        <a href="{% url 'cadastros:produto_novo' %}" class="btn-modern btn-modern-primary">
             <i class="fas fa-plus"></i>
             Cadastrar Primeiro Produto
         </a>

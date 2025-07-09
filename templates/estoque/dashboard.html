@@ -1,0 +1,873 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}Dashboard - Estoque{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === VARIÁVEIS CSS === */
+    :root {
+        --dashboard-bg: #f8fafc;
+        --card-bg: #ffffff;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --card-border: 1px solid #e5e7eb;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
+        --border-radius: 12px;
+        --border-radius-sm: 8px;
+        --spacing-xs: 8px;
+        --spacing-sm: 12px;
+        --spacing-md: 16px;
+        --spacing-lg: 24px;
+        --spacing-xl: 32px;
+    }
+
+    /* === LAYOUT GERAL === */
+    .dashboard-container {
+        background: var(--dashboard-bg);
+        min-height: 100vh;
+        padding: var(--spacing-lg);
+    }
+
+    .dashboard-header {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        padding: var(--spacing-lg) var(--spacing-xl);
+        margin-bottom: var(--spacing-lg);
+        border: var(--card-border);
+    }
+
+    .dashboard-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 var(--spacing-xs) 0;
+    }
+
+    .dashboard-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* === CARDS MODERNOS === */
+    .modern-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        border: var(--card-border);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--card-shadow-hover);
+        transform: translateY(-2px);
+    }
+
+    .modern-card-header {
+        padding: var(--spacing-lg) var(--spacing-xl);
+        border-bottom: 1px solid #f3f4f6;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    }
+
+    .modern-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .modern-card-body {
+        padding: var(--spacing-xl);
+    }
+
+    .modern-card-body.no-padding {
+        padding: 0;
+    }
+
+    /* === CARDS DE ESTATÍSTICAS === */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: var(--border-radius);
+        color: white;
+        padding: var(--spacing-xl);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        transform: scale(1.2);
+    }
+
+    .stat-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card.success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-icon {
+        position: absolute;
+        top: var(--spacing-lg);
+        right: var(--spacing-lg);
+        font-size: 2rem;
+        opacity: 0.3;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: var(--spacing-sm);
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        margin-bottom: var(--spacing-xs);
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        opacity: 0.8;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* === SEÇÃO DE STATUS === */
+    .status-indicators {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .status-indicator {
+        text-align: center;
+        padding: var(--spacing-lg);
+        background: #f9fafb;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #f3f4f6;
+    }
+
+    .status-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .status-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .status-value.normal { color: #059669; }
+    .status-value.warning { color: #d97706; }
+    .status-value.danger { color: #dc2626; }
+    .status-value.info { color: #0284c7; }
+
+    /* === GRÁFICO === */
+    .chart-container {
+        position: relative;
+        height: 280px;
+        margin-top: var(--spacing-lg);
+    }
+
+    /* === MOVIMENTAÇÕES === */
+    .movimentacao-item {
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .movimentacao-item:hover {
+        background: #f9fafb;
+    }
+
+    .movimentacao-item:last-child {
+        border-bottom: none;
+    }
+
+    .movimentacao-entrada {
+        border-left: 4px solid #10b981;
+    }
+
+    .movimentacao-saida {
+        border-left: 4px solid #ef4444;
+    }
+
+    .movimentacao-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: var(--spacing-md);
+        font-size: 1.125rem;
+    }
+
+    .movimentacao-icon.entrada {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .movimentacao-icon.saida {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .movimentacao-content {
+        flex: 1;
+    }
+
+    .movimentacao-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .movimentacao-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .movimentacao-meta {
+        text-align: right;
+    }
+
+    .movimentacao-value {
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .movimentacao-value.entrada { color: #059669; }
+    .movimentacao-value.saida { color: #dc2626; }
+
+    .movimentacao-time {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    /* === TABELA MODERNA === */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .modern-table th {
+        background: #f9fafb;
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 2px solid #e5e7eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .modern-table td {
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .table-item-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .table-item-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    /* === BADGES === */
+    .modern-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .modern-badge.success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .modern-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .modern-badge.danger {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .modern-badge.info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* === LOTES === */
+    .lote-item {
+        padding: var(--spacing-md);
+        background: #f9fafb;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #e5e7eb;
+        margin-bottom: var(--spacing-md);
+        transition: all 0.2s ease;
+    }
+
+    .lote-item:hover {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+    }
+
+    .lote-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .lote-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .lote-info {
+        flex: 1;
+    }
+
+    .lote-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .lote-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .lote-meta {
+        text-align: right;
+    }
+
+    .lote-days {
+        font-weight: 700;
+        color: #d97706;
+        margin-bottom: 2px;
+    }
+
+    .lote-date {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    /* === ESTADOS VAZIOS === */
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* === BOTÕES DE AÇÃO === */
+    .quick-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius-sm);
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        text-decoration: none;
+    }
+
+    .action-btn.primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .action-btn.success {
+        background: #10b981;
+        color: white;
+    }
+
+    .action-btn.warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .action-btn.info {
+        background: #06b6d4;
+        color: white;
+    }
+
+    .action-btn.outline {
+        background: transparent;
+        border: 1px solid #d1d5db;
+        color: var(--text-secondary);
+    }
+
+    .action-btn.outline:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    /* === RESPONSIVIDADE === */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: var(--spacing-md);
+        }
+
+        .dashboard-header {
+            padding: var(--spacing-md) var(--spacing-lg);
+        }
+
+        .modern-card-header,
+        .modern-card-body {
+            padding: var(--spacing-md) var(--spacing-lg);
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .status-indicators {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="dashboard-title">Dashboard - Estoque</h1>
+                <p class="dashboard-subtitle">Visão geral do controle de estoque e matérias-primas</p>
+            </div>
+            <div class="quick-actions">
+                <a href="{% url 'estoque:entrada_create' %}" class="action-btn success">
+                    <i class="fas fa-plus-circle"></i>
+                    Registrar Entrada
+                </a>
+                <a href="{% url 'estoque:saida_create' %}" class="action-btn warning">
+                    <i class="fas fa-minus-circle"></i>
+                    Registrar Saída
+                </a>
+                <a href="{% url 'estoque:materia_prima_create' %}" class="action-btn primary">
+                    <i class="fas fa-plus"></i>
+                    Nova Matéria-Prima
+                </a>
+                <a href="{% url 'estoque:inventario_create' %}" class="action-btn info">
+                    <i class="fas fa-clipboard-list"></i>
+                    Novo Inventário
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <i class="fas fa-box stat-icon"></i>
+            <div class="stat-value">{{ total_materias }}</div>
+            <div class="stat-label">Total de Matérias-Primas</div>
+            <div class="stat-change">
+                <i class="fas fa-check-circle"></i>
+                {{ materias_ativas }} ativas
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <i class="fas fa-dollar-sign stat-icon"></i>
+                            <div class="stat-value">{{ valor_total_estoque|currency_brl }}</div>
+            <div class="stat-label">Valor Total em Estoque</div>
+            <div class="stat-change">
+                <i class="fas fa-calculator"></i>
+                Baseado no custo médio
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <i class="fas fa-exchange-alt stat-icon"></i>
+            <div class="stat-value">{{ total_entradas|add:total_saidas }}</div>
+            <div class="stat-label">Movimentações (30 dias)</div>
+            <div class="stat-change">
+                <i class="fas fa-arrow-up"></i>
+                {{ total_entradas }} entradas / {{ total_saidas }} saídas
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <i class="fas fa-clipboard-list stat-icon"></i>
+            <div class="stat-value">{{ inventarios_pendentes }}</div>
+            <div class="stat-label">Inventários Pendentes</div>
+            <div class="stat-change">
+                <i class="fas fa-calendar"></i>
+                {% if ultimo_inventario %}
+                    Último: {{ ultimo_inventario.data_finalizacao|date:"d/m/Y" }}
+                {% else %}
+                    Nenhum realizado
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Status do Estoque -->
+        <div class="col-lg-6 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h3 class="modern-card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Status do Estoque
+                    </h3>
+                </div>
+                <div class="modern-card-body">
+                    <div class="status-indicators">
+                        <div class="status-indicator">
+                            <div class="status-value normal">{{ status_counts.normal }}</div>
+                            <div class="status-label">Normal</div>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="status-value warning">{{ status_counts.baixo }}</div>
+                            <div class="status-label">Baixo</div>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="status-value danger">{{ status_counts.zerado }}</div>
+                            <div class="status-label">Zerado</div>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="status-value info">{{ status_counts.alto }}</div>
+                            <div class="status-label">Alto</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movimentações Recentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="modern-card-title">
+                            <i class="fas fa-history"></i>
+                            Movimentações Recentes
+                        </h3>
+                        <a href="{% url 'estoque:movimentacao_list' %}" class="action-btn outline">
+                            Ver todas
+                        </a>
+                    </div>
+                </div>
+                <div class="modern-card-body no-padding">
+                    {% for mov in movimentacoes_recentes %}
+                    <div class="movimentacao-item {% if mov.e_entrada %}movimentacao-entrada{% else %}movimentacao-saida{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <div class="movimentacao-icon {% if mov.e_entrada %}entrada{% else %}saida{% endif %}">
+                                {% if mov.e_entrada %}
+                                    <i class="fas fa-arrow-up"></i>
+                                {% else %}
+                                    <i class="fas fa-arrow-down"></i>
+                                {% endif %}
+                            </div>
+                            <div class="movimentacao-content">
+                                <div class="movimentacao-title">{{ mov.materia_prima.descricao|truncatechars:30 }}</div>
+                                <div class="movimentacao-subtitle">{{ mov.get_tipo_movimento_display }}</div>
+                            </div>
+                        </div>
+                        <div class="movimentacao-meta">
+                            <div class="movimentacao-value {% if mov.e_entrada %}entrada{% else %}saida{% endif %}">
+                                {{ mov.quantidade|floatformat:2 }} {{ mov.materia_prima.unidade }}
+                            </div>
+                            <div class="movimentacao-time">{{ mov.data_movimento|date:"d/m H:i" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox empty-state-icon"></i>
+                        <p class="empty-state-text">Nenhuma movimentação recente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Matérias-Primas com Estoque Baixo -->
+        <div class="col-lg-8 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="modern-card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Matérias-Primas com Estoque Baixo
+                        </h3>
+                        <a href="{% url 'estoque:materia_prima_list' %}?status=baixo" class="action-btn outline">
+                            Ver todas
+                        </a>
+                    </div>
+                </div>
+                <div class="modern-card-body">
+                    {% if materias_baixo_estoque %}
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Matéria-Prima</th>
+                                    <th class="text-center">Estoque Atual</th>
+                                    <th class="text-center">Estoque Mínimo</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mp in materias_baixo_estoque %}
+                                <tr>
+                                    <td>
+                                        <div class="table-item-title">{{ mp.descricao }}</div>
+                                        <div class="table-item-subtitle">{{ mp.codigo }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="table-item-title">{{ mp.quantidade_em_estoque|floatformat:2 }}</div>
+                                        <div class="table-item-subtitle">{{ mp.unidade }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="table-item-title">{{ mp.estoque_minimo|floatformat:2 }}</div>
+                                        <div class="table-item-subtitle">{{ mp.unidade }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="modern-badge {% if mp.status_estoque == 'zerado' %}danger{% elif mp.status_estoque == 'baixo' %}warning{% else %}success{% endif %}">
+                                            {{ mp.status_estoque_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'estoque:entrada_create' %}?materia_prima={{ mp.id }}" 
+                                           class="action-btn success" title="Registrar Entrada">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle empty-state-icon"></i>
+                        <p class="empty-state-text">Todas as matérias-primas estão com estoque adequado</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lotes Próximos ao Vencimento -->
+        <div class="col-lg-4 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="modern-card-title">
+                            <i class="fas fa-calendar-times"></i>
+                            Lotes - Vencimento
+                        </h3>
+                        <a href="{% url 'estoque:lote_list' %}" class="action-btn outline">
+                            Ver todos
+                        </a>
+                    </div>
+                </div>
+                <div class="modern-card-body">
+                    {% if lotes_vencimento %}
+                    {% for lote in lotes_vencimento %}
+                    <div class="lote-item">
+                        <div class="lote-content">
+                            <div class="lote-info">
+                                <div class="lote-title">{{ lote.materia_prima.descricao|truncatechars:20 }}</div>
+                                <div class="lote-subtitle">Lote: {{ lote.numero_lote }}</div>
+                            </div>
+                            <div class="lote-meta">
+                                <div class="lote-days">{{ lote.dias_para_vencimento }} dias</div>
+                                <div class="lote-date">{{ lote.data_validade|date:"d/m/Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check empty-state-icon"></i>
+                        <p class="empty-state-text">Nenhum lote próximo ao vencimento</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Status do Estoque
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Normal', 'Baixo', 'Zerado', 'Alto'],
+        datasets: [{
+            data: [
+                {{ status_counts.normal }},
+                {{ status_counts.baixo }},
+                {{ status_counts.zerado }},
+                {{ status_counts.alto }}
+            ],
+            backgroundColor: [
+                '#10b981',
+                '#f59e0b',
+                '#ef4444',
+                '#06b6d4'
+            ],
+            borderWidth: 0,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            }
+        },
+        cutout: '65%'
+    }
+});
+
+// Atualização automática dos dados
+setInterval(function() {
+    fetch('/estoque/api/dashboard-data/')
+        .then(response => response.json())
+        .then(data => {
+            // Atualizar gráfico
+            statusChart.data.datasets[0].data = [
+                data.status_counts.normal,
+                data.status_counts.baixo,
+                data.status_counts.zerado,
+                data.status_counts.alto
+            ];
+            statusChart.update();
+        })
+        .catch(error => console.error('Erro ao atualizar dados:', error));
+}, 300000); // 5 minutos
+</script>
+{% endblock %} 

@@ -1,0 +1,454 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo|default:"Registrar Saída de Estoque" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box">
+                <div class="row">
+                    <div class="col">
+                        <h4 class="page-title">{{ titulo|default:"Registrar Saída de Estoque" }}</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'empresas:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:dashboard' %}">Estoque</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:movimentacao_list' %}">Movimentações</a></li>
+                            <li class="breadcrumb-item active">Registrar Saída</li>
+                        </ol>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-minus-circle text-danger me-2"></i>
+                        Nova Saída de Matéria-Prima
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Use este formulário para registrar saída de matérias-primas do estoque.
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="saida-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.materia_prima.id_for_label }}" class="form-label">
+                                        <i class="fas fa-box me-1"></i>
+                                        Matéria-Prima <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.materia_prima }}
+                                    {% if form.materia_prima.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.materia_prima.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo_movimento.id_for_label }}" class="form-label">
+                                        <i class="fas fa-exchange-alt me-1"></i>
+                                        Tipo de Movimento <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.tipo_movimento }}
+                                    {% if form.tipo_movimento.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.tipo_movimento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.quantidade.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hashtag me-1"></i>
+                                        Quantidade <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.quantidade }}
+                                        <span class="input-group-text" id="unidade-display">UN</span>
+                                    </div>
+                                    {% if form.quantidade.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.quantidade.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text" id="estoque-disponivel">
+                                        Selecione uma matéria-prima para ver o estoque disponível
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.custo_unitario.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        Custo Unitário
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        {{ form.custo_unitario }}
+                                    </div>
+                                    {% if form.custo_unitario.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.custo_unitario.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Opcional - será usado o custo médio se não informado
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero_documento.id_for_label }}" class="form-label">
+                                        <i class="fas fa-file-invoice me-1"></i>
+                                        Número do Documento
+                                    </label>
+                                    {{ form.numero_documento }}
+                                    {% if form.numero_documento.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.numero_documento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Ex: Ordem de Produção, Requisição, etc.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>
+                                        Observações
+                                    </label>
+                                    {{ form.observacoes }}
+                                    {% if form.observacoes.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.observacoes.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alerta de Estoque Insuficiente -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-warning" id="alerta-estoque" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atenção!</strong> <span id="mensagem-estoque"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo do Movimento -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="resumo-movimento" style="display: none;">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Resumo do Movimento</h6>
+                                    <div id="resumo-conteudo"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-light">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-danger" id="btn-registrar">
+                                        <i class="fas fa-save me-2"></i>Registrar Saída
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar com informações -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Esta operação irá reduzir o estoque da matéria-prima selecionada.
+                    </div>
+                    
+                    <h6>Tipos de Saída:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-cogs text-primary me-2"></i>Produção</li>
+                        <li><i class="fas fa-undo text-info me-2"></i>Devolução</li>
+                        <li><i class="fas fa-tools text-warning me-2"></i>Ajuste</li>
+                        <li><i class="fas fa-trash text-danger me-2"></i>Perda</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Campos Obrigatórios:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Matéria-Prima</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Tipo de Movimento</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Quantidade</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Validações:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-shield-alt text-info me-2"></i>Estoque suficiente</li>
+                        <li><i class="fas fa-calculator text-secondary me-2"></i>Quantidade positiva</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Estoque Atual -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse me-2"></i>
+                        Estoque Atual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="estoque-atual" class="text-center">
+                        <p class="text-muted">Selecione uma matéria-prima para ver o estoque atual</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const materiaPrimaSelect = document.getElementById('{{ form.materia_prima.id_for_label }}');
+    const quantidadeInput = document.getElementById('{{ form.quantidade.id_for_label }}');
+    const custoInput = document.getElementById('{{ form.custo_unitario.id_for_label }}');
+    const unidadeDisplay = document.getElementById('unidade-display');
+    const estoqueAtual = document.getElementById('estoque-atual');
+    const estoqueDisponivel = document.getElementById('estoque-disponivel');
+    const alertaEstoque = document.getElementById('alerta-estoque');
+    const mensagemEstoque = document.getElementById('mensagem-estoque');
+    const resumoMovimento = document.getElementById('resumo-movimento');
+    const resumoConteudo = document.getElementById('resumo-conteudo');
+    const btnRegistrar = document.getElementById('btn-registrar');
+    
+    // Dados das matérias-primas
+    const materiasPrimas = {};
+    
+    // Atualizar informações quando matéria-prima mudar
+    materiaPrimaSelect.addEventListener('change', function() {
+        const materiaPrimaId = this.value;
+        if (materiaPrimaId) {
+            // Buscar informações da matéria-prima via AJAX
+            fetch(`/estoque/api/materia-prima/${materiaPrimaId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    unidadeDisplay.textContent = data.unidade || 'UN';
+                    
+                    // Atualizar estoque atual
+                    const estoqueQtd = parseFloat(data.quantidade_em_estoque) || 0;
+                    const statusColor = estoqueQtd <= 0 ? 'text-danger' : 
+                                      estoqueQtd < data.estoque_minimo ? 'text-warning' : 'text-success';
+                    
+                    estoqueAtual.innerHTML = `
+                        <div class="text-center">
+                            <h4 class="${statusColor}">${estoqueQtd}</h4>
+                            <p class="text-muted mb-0">${data.unidade || 'UN'} disponível</p>
+                            <small class="text-muted">Custo médio: R$ ${data.custo_medio_ponderado || '0,00'}</small>
+                        </div>
+                    `;
+                    
+                    // Atualizar texto do estoque disponível
+                    estoqueDisponivel.innerHTML = `
+                        <i class="fas fa-warehouse me-1"></i>
+                        Estoque disponível: <strong>${estoqueQtd} ${data.unidade || 'UN'}</strong>
+                    `;
+                    
+                    // Preencher custo médio se não informado
+                    if (!custoInput.value) {
+                        custoInput.value = parseFloat(data.custo_medio_ponderado) || 0;
+                    }
+                    
+                    materiasPrimas[materiaPrimaId] = data;
+                    validarQuantidade();
+                    atualizarResumo();
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar dados da matéria-prima:', error);
+                    unidadeDisplay.textContent = 'UN';
+                    estoqueAtual.innerHTML = '<p class="text-muted">Erro ao carregar dados</p>';
+                    estoqueDisponivel.textContent = 'Erro ao carregar estoque disponível';
+                });
+        } else {
+            unidadeDisplay.textContent = 'UN';
+            estoqueAtual.innerHTML = '<p class="text-muted">Selecione uma matéria-prima</p>';
+            estoqueDisponivel.textContent = 'Selecione uma matéria-prima para ver o estoque disponível';
+            alertaEstoque.style.display = 'none';
+            resumoMovimento.style.display = 'none';
+        }
+    });
+    
+    // Validar quantidade quando mudar
+    quantidadeInput.addEventListener('input', function() {
+        validarQuantidade();
+        atualizarResumo();
+    });
+    
+    // Atualizar resumo quando custo mudar
+    custoInput.addEventListener('input', atualizarResumo);
+    
+    function validarQuantidade() {
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        
+        if (materiaPrimaId && quantidade > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            if (materiaPrima) {
+                const estoqueDisponivel = parseFloat(materiaPrima.quantidade_em_estoque) || 0;
+                
+                if (quantidade > estoqueDisponivel) {
+                    // Estoque insuficiente
+                    alertaEstoque.style.display = 'block';
+                    mensagemEstoque.textContent = `Quantidade solicitada (${quantidade}) é maior que o estoque disponível (${estoqueDisponivel} ${materiaPrima.unidade}).`;
+                    quantidadeInput.classList.add('is-invalid');
+                    btnRegistrar.disabled = true;
+                } else {
+                    // Estoque suficiente
+                    alertaEstoque.style.display = 'none';
+                    quantidadeInput.classList.remove('is-invalid');
+                    btnRegistrar.disabled = false;
+                }
+            }
+        } else {
+            alertaEstoque.style.display = 'none';
+            quantidadeInput.classList.remove('is-invalid');
+            btnRegistrar.disabled = false;
+        }
+    }
+    
+    function atualizarResumo() {
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const custo = parseFloat(custoInput.value) || 0;
+        
+        if (materiaPrimaId && quantidade > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            if (materiaPrima) {
+                const custoUnitario = custo || parseFloat(materiaPrima.custo_medio_ponderado) || 0;
+                const valorTotal = quantidade * custoUnitario;
+                const estoqueAtualQtd = parseFloat(materiaPrima.quantidade_em_estoque) || 0;
+                const novoEstoque = estoqueAtualQtd - quantidade;
+                
+                resumoConteudo.innerHTML = `
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Quantidade:</strong> ${quantidade} ${materiaPrima.unidade}
+                        </div>
+                        <div class="col-6">
+                            <strong>Custo Unitário:</strong> R$ ${custoUnitario.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}
+                        </div>
+                        <div class="col-6">
+                            <strong>Novo Estoque:</strong> <span class="${novoEstoque < 0 ? 'text-danger' : 'text-success'}">${novoEstoque.toFixed(3)} ${materiaPrima.unidade}</span>
+                        </div>
+                    </div>
+                `;
+                resumoMovimento.style.display = 'block';
+            }
+        } else {
+            resumoMovimento.style.display = 'none';
+        }
+    }
+    
+    // Formatação de moeda no campo de custo
+    custoInput.addEventListener('blur', function() {
+        const value = parseFloat(this.value) || 0;
+        this.value = value.toFixed(4);
+    });
+    
+    // Validação do formulário
+    document.getElementById('saida-form').addEventListener('submit', function(e) {
+        let valid = true;
+        
+        // Validar campos obrigatórios
+        const requiredFields = [materiaPrimaSelect, quantidadeInput];
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                valid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validar quantidade positiva
+        if (parseFloat(quantidadeInput.value) <= 0) {
+            quantidadeInput.classList.add('is-invalid');
+            valid = false;
+        }
+        
+        // Validar estoque suficiente
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        if (materiaPrimaId && quantidade > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            if (materiaPrima) {
+                const estoqueDisponivel = parseFloat(materiaPrima.quantidade_em_estoque) || 0;
+                if (quantidade > estoqueDisponivel) {
+                    valid = false;
+                }
+            }
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+            alert('Por favor, corrija os erros antes de continuar.');
+        }
+    });
+});
+</script>
+{% endblock %} 

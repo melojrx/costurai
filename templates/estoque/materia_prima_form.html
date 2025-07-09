@@ -1,0 +1,1332 @@
+{% extends 'base/dashboard_base.html' %}
+{% load currency_filters %}
+
+{% block title %}{{ form_title }} - {{ empresa.nome }} - Costurai.com.br{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para o formulário de matérias-primas */
+    .form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .form-card-header {
+        padding: 24px 28px 20px;
+        border-bottom: 1px solid var(--gray-200);
+        background: white;
+    }
+    
+    .form-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-card-title i {
+        color: var(--primary-blue-light);
+    }
+    
+    .form-card-body {
+        padding: 28px;
+    }
+    
+    .form-grid {
+        display: grid;
+        gap: 20px;
+    }
+    
+    .form-grid.cols-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .form-grid.cols-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    
+    .form-grid.cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+    
+    .form-label.required:after {
+        content: ' *';
+        color: var(--danger);
+    }
+    
+    .form-control {
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius-sm);
+        padding: 12px 14px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-blue-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .form-control.error {
+        border-color: var(--danger);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .form-help {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        margin-top: 4px;
+    }
+    
+    .error-message {
+        background: var(--danger-light);
+        color: var(--danger);
+        padding: 8px 12px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.8125rem;
+        margin-top: 4px;
+        border: 1px solid #fecaca;
+    }
+    
+    /* Estoque Alert */
+    .estoque-alert {
+        background: var(--warning-light);
+        border: 1px solid var(--warning);
+        border-radius: var(--border-radius-sm);
+        padding: 16px;
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .estoque-alert i {
+        color: var(--warning);
+        font-size: 1.25rem;
+    }
+    
+    .estoque-alert-text {
+        flex: 1;
+    }
+    
+    .estoque-alert-title {
+        font-weight: 600;
+        color: var(--warning);
+        margin-bottom: 4px;
+    }
+    
+    .estoque-alert-desc {
+        font-size: 0.875rem;
+        color: var(--gray-700);
+    }
+    
+    /* Fornecedor Info */
+    .fornecedor-info {
+        background: var(--accent-blue);
+        border: 1px solid var(--primary-blue-light);
+        border-radius: var(--border-radius-sm);
+        padding: 16px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .fornecedor-info i {
+        color: var(--primary-blue-light);
+        font-size: 1.25rem;
+    }
+    
+    .fornecedor-info-text {
+        flex: 1;
+    }
+    
+    .fornecedor-info-title {
+        font-weight: 600;
+        color: var(--primary-blue-dark);
+        margin-bottom: 4px;
+    }
+    
+         .fornecedor-info-desc {
+         font-size: 0.875rem;
+         color: var(--gray-700);
+     }
+     
+     /* Input Groups */
+     .input-group {
+         display: flex;
+         align-items: stretch;
+         gap: 0;
+     }
+     
+     .input-group .form-control {
+         flex: 1;
+         border-top-right-radius: 0;
+         border-bottom-right-radius: 0;
+     }
+     
+     .btn-add-item {
+         background: var(--primary-blue-light);
+         color: white;
+         border: 1px solid var(--primary-blue-light);
+         border-left: none;
+         border-top-left-radius: 0;
+         border-bottom-left-radius: 0;
+         border-top-right-radius: var(--border-radius-sm);
+         border-bottom-right-radius: var(--border-radius-sm);
+         padding: 12px 16px;
+         cursor: pointer;
+         transition: all 0.2s ease;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         min-width: 44px;
+     }
+     
+     .btn-add-item:hover {
+         background: var(--primary-blue-dark);
+         border-color: var(--primary-blue-dark);
+         transform: translateY(-1px);
+     }
+     
+     .btn-add-item:active {
+         transform: translateY(0);
+     }
+     
+     .btn-add-item i {
+         font-size: 0.875rem;
+     }
+     
+     /* Auto Code Button */
+     .btn-auto-codigo {
+         background: var(--success);
+         color: white;
+         border: 1px solid var(--success);
+         border-left: none;
+         border-top-left-radius: 0;
+         border-bottom-left-radius: 0;
+         border-top-right-radius: var(--border-radius-sm);
+         border-bottom-right-radius: var(--border-radius-sm);
+         padding: 12px 16px;
+         cursor: pointer;
+         transition: all 0.2s ease;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         min-width: 44px;
+     }
+     
+     .btn-auto-codigo:hover {
+         background: #059669;
+         border-color: #059669;
+         transform: translateY(-1px);
+     }
+     
+     .btn-auto-codigo:active {
+         transform: translateY(0);
+     }
+     
+     .btn-auto-codigo i {
+         font-size: 0.875rem;
+     }
+     
+     /* Código Automático Indicator */
+     .codigo-automatico {
+         background: var(--accent-blue) !important;
+         border-color: var(--primary-blue-light) !important;
+     }
+     
+     .codigo-automatico:focus {
+         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+     }
+     
+     /* Modal Styles */
+     .modal {
+         display: none;
+         position: fixed;
+         z-index: 1000;
+         left: 0;
+         top: 0;
+         width: 100%;
+         height: 100%;
+         background-color: rgba(0, 0, 0, 0.5);
+         backdrop-filter: blur(2px);
+     }
+     
+     .modal.show {
+         display: flex;
+         align-items: center;
+         justify-content: center;
+     }
+     
+     .modal-content {
+         background: white;
+         border-radius: var(--border-radius);
+         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+         max-width: 500px;
+         width: 90%;
+         max-height: 80vh;
+         overflow-y: auto;
+         animation: modalSlideIn 0.3s ease;
+     }
+     
+     @keyframes modalSlideIn {
+         from {
+             opacity: 0;
+             transform: translateY(-30px) scale(0.95);
+         }
+         to {
+             opacity: 1;
+             transform: translateY(0) scale(1);
+         }
+     }
+     
+     .modal-header {
+         padding: 20px 24px;
+         border-bottom: 1px solid var(--gray-200);
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+     }
+     
+     .modal-title {
+         font-size: 1.125rem;
+         font-weight: 600;
+         color: var(--gray-900);
+         margin: 0;
+     }
+     
+     .modal-close {
+         background: none;
+         border: none;
+         font-size: 1.5rem;
+         color: var(--gray-400);
+         cursor: pointer;
+         padding: 0;
+         width: 32px;
+         height: 32px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         border-radius: 50%;
+         transition: all 0.2s ease;
+     }
+     
+     .modal-close:hover {
+         background: var(--gray-100);
+         color: var(--gray-600);
+     }
+     
+     .modal-body {
+         padding: 24px;
+     }
+     
+     .modal-footer {
+         padding: 16px 24px;
+         border-top: 1px solid var(--gray-200);
+         display: flex;
+         gap: 12px;
+         justify-content: flex-end;
+     }
+     
+     .modal-form .form-group {
+         margin-bottom: 16px;
+     }
+     
+     .modal-form .form-control {
+         width: 100%;
+     }
+     
+     /* CNPJ/CPF Validation Styles */
+     .form-control.valid {
+         border-color: var(--success);
+         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+     }
+     
+     .form-control.invalid {
+         border-color: var(--danger);
+         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+     }
+     
+     .validation-message {
+         font-size: 0.75rem;
+         margin-top: 4px;
+         display: flex;
+         align-items: center;
+         gap: 4px;
+     }
+     
+     .validation-message.valid {
+         color: var(--success);
+     }
+     
+     .validation-message.invalid {
+         color: var(--danger);
+     }
+     
+     .validation-message i {
+         font-size: 0.875rem;
+     }
+     
+     /* Form Actions */
+    .form-actions {
+        background: var(--gray-50);
+        padding: 24px 28px;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid.cols-2,
+        .form-grid.cols-3,
+        .form-grid.cols-4 {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-card-body {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">{{ form_title }}</h1>
+        <p class="page-subtitle">Configure as informações da matéria-prima e controle de estoque</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'estoque:materia_prima_list' %}" class="btn-modern btn-modern-outline">
+            <i class="fas fa-arrow-left"></i>
+            Voltar para Lista
+        </a>
+    </div>
+</div>
+
+<form method="POST" id="materiaPrimaForm">
+    {% csrf_token %}
+    
+    <!-- Dados Básicos -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-info-circle"></i>
+                Dados Básicos
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="form-grid cols-2">
+                <div class="form-group">
+                    <label class="form-label required">Código</label>
+                    <div class="input-group">
+                        <input type="text" name="codigo" id="codigo_input" class="form-control" 
+                               value="{{ form.codigo.value|default:'' }}" 
+                               placeholder="Será gerado automaticamente" required>
+                        <button type="button" class="btn-auto-codigo" onclick="gerarCodigoAutomatico()" title="Gerar código automático">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                    <div class="form-help">Código único de identificação da matéria-prima. Deixe vazio para gerar automaticamente.</div>
+                    {% if form.codigo.errors %}
+                        <div class="error-message">{{ form.codigo.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Descrição</label>
+                    <input type="text" name="descricao" class="form-control" 
+                           value="{{ form.descricao.value|default:'' }}" 
+                           placeholder="Ex: Tecido Algodão 100%" required>
+                    <div class="form-help">Descrição detalhada da matéria-prima</div>
+                    {% if form.descricao.errors %}
+                        <div class="error-message">{{ form.descricao.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-grid cols-3">
+                                 <div class="form-group">
+                     <label class="form-label required">Categoria</label>
+                     <div class="input-group">
+                         {{ form.categoria }}
+                         <button type="button" class="btn-add-item" onclick="openCategoriaModal()" title="Adicionar nova categoria">
+                             <i class="fas fa-plus"></i>
+                         </button>
+                     </div>
+                     {% if form.categoria.errors %}
+                         <div class="error-message">{{ form.categoria.errors.0 }}</div>
+                     {% endif %}
+                 </div>
+                
+                                 <div class="form-group">
+                     <label class="form-label required">Unidade</label>
+                     {{ form.unidade }}
+                     {% if form.unidade.errors %}
+                         <div class="error-message">{{ form.unidade.errors.0 }}</div>
+                     {% endif %}
+                 </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Cor</label>
+                    <input type="text" name="cor" class="form-control" 
+                           value="{{ form.cor.value|default:'' }}" 
+                           placeholder="Ex: Azul Marinho">
+                    {% if form.cor.errors %}
+                        <div class="error-message">{{ form.cor.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controle de Estoque -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-warehouse"></i>
+                Controle de Estoque
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="form-grid cols-3">
+                <div class="form-group">
+                    <label class="form-label">Estoque Atual</label>
+                    <input type="number" name="estoque_atual" class="form-control" step="0.0001" min="0"
+                           value="{{ form.estoque_atual.value|default:0 }}" 
+                           placeholder="0,0000">
+                    <div class="form-help">Quantidade atual em estoque</div>
+                    {% if form.estoque_atual.errors %}
+                        <div class="error-message">{{ form.estoque_atual.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estoque Mínimo</label>
+                    <input type="number" name="estoque_minimo" class="form-control" step="0.0001" min="0"
+                           value="{{ form.estoque_minimo.value|default:0 }}" 
+                           placeholder="0,0000">
+                    <div class="form-help">Quantidade mínima para alerta</div>
+                    {% if form.estoque_minimo.errors %}
+                        <div class="error-message">{{ form.estoque_minimo.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estoque Máximo</label>
+                    <input type="number" name="estoque_maximo" class="form-control" step="0.0001" min="0"
+                           value="{{ form.estoque_maximo.value|default:0 }}" 
+                           placeholder="0,0000">
+                    <div class="form-help">Quantidade máxima recomendada</div>
+                    {% if form.estoque_maximo.errors %}
+                        <div class="error-message">{{ form.estoque_maximo.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Alerta de Estoque -->
+            <div class="estoque-alert" id="estoqueAlert" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="estoque-alert-text">
+                    <div class="estoque-alert-title">Atenção ao Estoque</div>
+                    <div class="estoque-alert-desc" id="estoqueAlertText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preços e Custos -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-dollar-sign"></i>
+                Preços e Custos
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="form-grid cols-2">
+                <div class="form-group">
+                    <label class="form-label">Custo Médio Ponderado</label>
+                    <input type="number" name="custo_medio_ponderado" class="form-control" step="0.0001" min="0"
+                           value="{{ form.custo_medio_ponderado.value|default:0 }}" 
+                           placeholder="0,0000" readonly>
+                    <div class="form-help">Calculado automaticamente com base nas entradas</div>
+                    {% if form.custo_medio_ponderado.errors %}
+                        <div class="error-message">{{ form.custo_medio_ponderado.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Preço Última Compra</label>
+                    <input type="number" name="preco_ultima_compra" class="form-control" step="0.0001" min="0"
+                           value="{{ form.preco_ultima_compra.value|default:0 }}" 
+                           placeholder="0,0000">
+                    <div class="form-help">Preço da última compra realizada</div>
+                    {% if form.preco_ultima_compra.errors %}
+                        <div class="error-message">{{ form.preco_ultima_compra.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fornecedor -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-truck"></i>
+                Fornecedor
+            </h3>
+        </div>
+        <div class="form-card-body">
+                         <div class="form-group">
+                 <label class="form-label">Fornecedor Preferencial</label>
+                 <div class="input-group">
+                     {{ form.fornecedor_preferencial }}
+                     <button type="button" class="btn-add-item" onclick="openFornecedorModal()" title="Adicionar novo fornecedor">
+                         <i class="fas fa-plus"></i>
+                     </button>
+                 </div>
+                 <div class="form-help">Fornecedor preferencial para compras desta matéria-prima</div>
+                 {% if form.fornecedor_preferencial.errors %}
+                     <div class="error-message">{{ form.fornecedor_preferencial.errors.0 }}</div>
+                 {% endif %}
+             </div>
+            
+            <!-- Info do Fornecedor -->
+            <div class="fornecedor-info" id="fornecedorInfo" style="display: none;">
+                <i class="fas fa-info-circle"></i>
+                <div class="fornecedor-info-text">
+                    <div class="fornecedor-info-title">Informações do Fornecedor</div>
+                    <div class="fornecedor-info-desc" id="fornecedorInfoText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3 class="form-card-title">
+                <i class="fas fa-cog"></i>
+                Configurações
+            </h3>
+        </div>
+        <div class="form-card-body">
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="ativo" {% if form.ativo.value %}checked{% endif %} style="margin-right: 8px;">
+                    Matéria-prima ativa
+                </label>
+                <div class="form-help">Matérias-primas inativas não aparecerão nas listagens</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <textarea name="observacoes" class="form-control" rows="3"
+                          placeholder="Observações adicionais sobre a matéria-prima">{{ form.observacoes.value|default:'' }}</textarea>
+                {% if form.observacoes.errors %}
+                    <div class="error-message">{{ form.observacoes.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+        <a href="{% url 'estoque:materia_prima_list' %}" class="btn-modern btn-modern-outline">
+            <i class="fas fa-times"></i>
+            Cancelar
+        </a>
+        <button type="submit" class="btn-modern btn-modern-primary">
+            <i class="fas fa-save"></i>
+            Salvar Matéria-Prima
+        </button>
+    </div>
+</form>
+
+<!-- Modal para Nova Categoria -->
+<div id="categoriaModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Nova Categoria</h3>
+            <button type="button" class="modal-close" onclick="closeCategoriaModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="categoriaForm" class="modal-form">
+                <div class="form-group">
+                    <label class="form-label required">Nome da Categoria</label>
+                    <input type="text" name="nome" class="form-control" placeholder="Ex: Tecidos" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea name="descricao" class="form-control" rows="2" placeholder="Descrição da categoria (opcional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cor</label>
+                    <input type="color" name="cor_hex" class="form-control" value="#3b82f6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="ativo" checked style="margin-right: 8px;">
+                        Categoria ativa
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modern btn-modern-outline" onclick="closeCategoriaModal()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-modern btn-modern-primary" onclick="salvarCategoria()">
+                <i class="fas fa-save"></i>
+                Salvar Categoria
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Novo Fornecedor -->
+<div id="fornecedorModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Novo Fornecedor</h3>
+            <button type="button" class="modal-close" onclick="closeFornecedorModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="fornecedorForm" class="modal-form">
+                <div class="form-group">
+                    <label class="form-label required">Razão Social</label>
+                    <input type="text" name="razao_social" class="form-control" placeholder="Ex: Empresa LTDA" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nome Fantasia</label>
+                    <input type="text" name="nome_fantasia" class="form-control" placeholder="Ex: Empresa">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">CNPJ/CPF</label>
+                    <input type="text" name="cnpj_cpf" id="cnpj_cpf_input" class="form-control" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" required>
+                    <div class="form-help">Digite apenas números - a formatação será aplicada automaticamente</div>
+                    <div id="cnpj_cpf_validation" class="validation-message" style="display: none;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de Fornecedor</label>
+                    <select name="tipo_fornecedor" class="form-control">
+                        <option value="FACCAO">Facção</option>
+                        <option value="MATERIA_PRIMA">Matéria Prima</option>
+                        <option value="AVIAMENTOS">Aviamentos</option>
+                        <option value="SERVICOS">Serviços</option>
+                        <option value="OUTROS">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Telefone</label>
+                    <input type="text" name="telefone" class="form-control" placeholder="(00) 00000-0000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" name="email" class="form-control" placeholder="contato@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Endereço</label>
+                    <textarea name="endereco" class="form-control" rows="2" placeholder="Endereço completo"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contato Principal</label>
+                    <input type="text" name="contato_principal" class="form-control" placeholder="Nome do contato">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modern btn-modern-outline" onclick="closeFornecedorModal()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-modern btn-modern-primary" onclick="salvarFornecedor()">
+                <i class="fas fa-save"></i>
+                Salvar Fornecedor
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar código automático
+    const codigoInput = document.getElementById('codigo_input');
+    if (codigoInput && !codigoInput.value) {
+        gerarCodigoAutomatico();
+    }
+    
+    // Validação de estoque
+    const estoqueAtual = document.querySelector('input[name="estoque_atual"]');
+    const estoqueMinimo = document.querySelector('input[name="estoque_minimo"]');
+    const estoqueMaximo = document.querySelector('input[name="estoque_maximo"]');
+    const estoqueAlert = document.getElementById('estoqueAlert');
+    const estoqueAlertText = document.getElementById('estoqueAlertText');
+    
+    function validarEstoque() {
+        const atual = parseFloat(estoqueAtual.value) || 0;
+        const minimo = parseFloat(estoqueMinimo.value) || 0;
+        const maximo = parseFloat(estoqueMaximo.value) || 0;
+        
+        let alertText = '';
+        let showAlert = false;
+        
+        if (atual < minimo && minimo > 0) {
+            alertText = `Estoque atual (${atual}) está abaixo do mínimo (${minimo})`;
+            showAlert = true;
+        } else if (atual > maximo && maximo > 0) {
+            alertText = `Estoque atual (${atual}) está acima do máximo (${maximo})`;
+            showAlert = true;
+        } else if (maximo > 0 && minimo > maximo) {
+            alertText = `Estoque mínimo (${minimo}) não pode ser maior que o máximo (${maximo})`;
+            showAlert = true;
+        }
+        
+        if (showAlert) {
+            estoqueAlertText.textContent = alertText;
+            estoqueAlert.style.display = 'flex';
+        } else {
+            estoqueAlert.style.display = 'none';
+        }
+    }
+    
+    // Event listeners para validação de estoque
+    if (estoqueAtual) estoqueAtual.addEventListener('input', validarEstoque);
+    if (estoqueMinimo) estoqueMinimo.addEventListener('input', validarEstoque);
+    if (estoqueMaximo) estoqueMaximo.addEventListener('input', validarEstoque);
+    
+    // Informações do fornecedor
+    const fornecedorSelect = document.querySelector('select[name="fornecedor_preferencial"]');
+    const fornecedorInfo = document.getElementById('fornecedorInfo');
+    const fornecedorInfoText = document.getElementById('fornecedorInfoText');
+    
+    if (fornecedorSelect) {
+        fornecedorSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (selectedOption.value) {
+                fornecedorInfoText.textContent = selectedOption.textContent;
+                fornecedorInfo.style.display = 'flex';
+            } else {
+                fornecedorInfo.style.display = 'none';
+            }
+        });
+        
+        // Verificar se já tem fornecedor selecionado
+        if (fornecedorSelect.value) {
+            const selectedOption = fornecedorSelect.options[fornecedorSelect.selectedIndex];
+            fornecedorInfoText.textContent = selectedOption.textContent;
+            fornecedorInfo.style.display = 'flex';
+        }
+    }
+    
+         // Validação inicial
+     validarEstoque();
+});
+
+// === MODAL CATEGORIA ===
+function openCategoriaModal() {
+    document.getElementById('categoriaModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCategoriaModal() {
+    document.getElementById('categoriaModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('categoriaForm').reset();
+}
+
+async function salvarCategoria() {
+    const form = document.getElementById('categoriaForm');
+    const formData = new FormData(form);
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+        const response = await fetch('{% url "estoque:categoria_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Adicionar nova categoria ao select
+            const categoriaSelect = document.querySelector('select[name="categoria"]');
+            const option = document.createElement('option');
+            option.value = data.id;
+            option.textContent = data.nome;
+            option.selected = true;
+            categoriaSelect.appendChild(option);
+            
+            // Fechar modal
+            closeCategoriaModal();
+            
+            // Mostrar mensagem de sucesso
+            showNotification('Categoria criada com sucesso!', 'success');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar categoria', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar categoria', 'error');
+    }
+}
+
+// === MODAL FORNECEDOR ===
+function openFornecedorModal() {
+    document.getElementById('fornecedorModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Aplicar máscara ao campo CNPJ/CPF
+    const cnpjCpfInput = document.getElementById('cnpj_cpf_input');
+    if (cnpjCpfInput) {
+        cnpjCpfInput.addEventListener('input', applyCnpjCpfMask);
+        cnpjCpfInput.addEventListener('keypress', onlyNumbers);
+    }
+}
+
+function closeFornecedorModal() {
+    document.getElementById('fornecedorModal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+    document.getElementById('fornecedorForm').reset();
+    
+    // Limpar validações
+    const cnpjCpfInput = document.getElementById('cnpj_cpf_input');
+    const validationDiv = document.getElementById('cnpj_cpf_validation');
+    
+    if (cnpjCpfInput) {
+        cnpjCpfInput.classList.remove('valid', 'invalid');
+    }
+    
+    if (validationDiv) {
+        validationDiv.style.display = 'none';
+    }
+}
+
+async function salvarFornecedor() {
+    const form = document.getElementById('fornecedorForm');
+    const cnpjCpfInput = document.getElementById('cnpj_cpf_input');
+    
+    // Validar CNPJ/CPF antes de enviar
+    if (cnpjCpfInput.value) {
+        const isValid = validateCnpjCpf(cnpjCpfInput.value);
+        if (!isValid) {
+            showNotification('CNPJ/CPF inválido. Verifique os dados informados.', 'error');
+            cnpjCpfInput.focus();
+            cnpjCpfInput.classList.add('error');
+            return;
+        } else {
+            cnpjCpfInput.classList.remove('error');
+        }
+    }
+    
+    const formData = new FormData(form);
+    
+    // Adicionar CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+        const response = await fetch('{% url "cadastros:fornecedor_novo" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Adicionar novo fornecedor ao select
+            const fornecedorSelect = document.querySelector('select[name="fornecedor_preferencial"]');
+            const option = document.createElement('option');
+            option.value = data.id;
+            option.textContent = data.nome;
+            option.selected = true;
+            fornecedorSelect.appendChild(option);
+            
+            // Fechar modal
+            closeFornecedorModal();
+            
+            // Mostrar mensagem de sucesso
+            showNotification('Fornecedor criado com sucesso!', 'success');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao criar fornecedor', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro ao criar fornecedor', 'error');
+    }
+}
+
+// === NOTIFICAÇÕES ===
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="closeNotification(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Adicionar estilos inline se não existirem
+    if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1100;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 300px;
+                animation: slideInRight 0.3s ease;
+            }
+            .notification-success { border-left: 4px solid #10b981; }
+            .notification-error { border-left: 4px solid #ef4444; }
+            .notification-info { border-left: 4px solid #3b82f6; }
+            .notification-content { display: flex; align-items: center; gap: 8px; flex: 1; }
+            .notification-close { background: none; border: none; cursor: pointer; padding: 4px; }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    // Adicionar ao DOM
+    document.body.appendChild(notification);
+    
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+function closeNotification(button) {
+    const notification = button.closest('.notification');
+    if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+    }
+}
+
+// Fechar modais clicando fora
+window.addEventListener('click', function(event) {
+    const categoriaModal = document.getElementById('categoriaModal');
+    const fornecedorModal = document.getElementById('fornecedorModal');
+    
+    if (event.target === categoriaModal) {
+        closeCategoriaModal();
+    }
+    
+    if (event.target === fornecedorModal) {
+        closeFornecedorModal();
+    }
+});
+
+// Fechar modais com ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCategoriaModal();
+        closeFornecedorModal();
+    }
+});
+
+// === MÁSCARAS E VALIDAÇÕES ===
+function onlyNumbers(event) {
+    // Permitir apenas números e algumas teclas especiais
+    const allowedKeys = [8, 9, 37, 38, 39, 40, 46]; // Backspace, Tab, Setas, Delete
+    const key = event.keyCode || event.which;
+    
+    if (allowedKeys.indexOf(key) !== -1) {
+        return true;
+    }
+    
+    if (key < 48 || key > 57) {
+        event.preventDefault();
+        return false;
+    }
+    
+    return true;
+}
+
+function applyCnpjCpfMask(event) {
+    let value = event.target.value.replace(/\D/g, ''); // Remove tudo que não é número
+    const input = event.target;
+    const validationDiv = document.getElementById('cnpj_cpf_validation');
+    
+    if (value.length <= 11) {
+        // Aplicar máscara de CPF: 000.000.000-00
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+        // Aplicar máscara de CNPJ: 00.000.000/0000-00
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+    }
+    
+    input.value = value;
+    
+    // Validação em tempo real
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (cleanValue.length === 0) {
+        // Campo vazio
+        input.classList.remove('valid', 'invalid');
+        validationDiv.style.display = 'none';
+    } else if (cleanValue.length === 11) {
+        // CPF
+        const isValid = validateCpf(cleanValue);
+        if (isValid) {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+            validationDiv.className = 'validation-message valid';
+            validationDiv.innerHTML = '<i class="fas fa-check-circle"></i> CPF válido';
+            validationDiv.style.display = 'flex';
+        } else {
+            input.classList.remove('valid');
+            input.classList.add('invalid');
+            validationDiv.className = 'validation-message invalid';
+            validationDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> CPF inválido';
+            validationDiv.style.display = 'flex';
+        }
+    } else if (cleanValue.length === 14) {
+        // CNPJ
+        const isValid = validateCnpj(cleanValue);
+        if (isValid) {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+            validationDiv.className = 'validation-message valid';
+            validationDiv.innerHTML = '<i class="fas fa-check-circle"></i> CNPJ válido';
+            validationDiv.style.display = 'flex';
+        } else {
+            input.classList.remove('valid');
+            input.classList.add('invalid');
+            validationDiv.className = 'validation-message invalid';
+            validationDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> CNPJ inválido';
+            validationDiv.style.display = 'flex';
+        }
+    } else {
+        // Incompleto
+        input.classList.remove('valid', 'invalid');
+        validationDiv.className = 'validation-message';
+        validationDiv.innerHTML = '<i class="fas fa-info-circle"></i> Digite ' + (cleanValue.length <= 11 ? 'CPF (11 dígitos)' : 'CNPJ (14 dígitos)');
+        validationDiv.style.display = 'flex';
+        validationDiv.style.color = 'var(--gray-500)';
+    }
+}
+
+function validateCnpjCpf(value) {
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (cleanValue.length === 11) {
+        return validateCpf(cleanValue);
+    } else if (cleanValue.length === 14) {
+        return validateCnpj(cleanValue);
+    }
+    
+    return false;
+}
+
+function validateCpf(cpf) {
+    if (cpf.length !== 11) return false;
+    
+    // Verificar se todos os dígitos são iguais
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    
+    // Validar dígitos verificadores
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += parseInt(cpf[i]) * (10 - i);
+    }
+    let digit1 = 11 - (sum % 11);
+    if (digit1 > 9) digit1 = 0;
+    
+    if (parseInt(cpf[9]) !== digit1) return false;
+    
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+        sum += parseInt(cpf[i]) * (11 - i);
+    }
+    let digit2 = 11 - (sum % 11);
+    if (digit2 > 9) digit2 = 0;
+    
+    return parseInt(cpf[10]) === digit2;
+}
+
+function validateCnpj(cnpj) {
+    if (cnpj.length !== 14) return false;
+    
+    // Verificar se todos os dígitos são iguais
+    if (/^(\d)\1+$/.test(cnpj)) return false;
+    
+    // Validar primeiro dígito verificador
+    let sum = 0;
+    let weight = 2;
+    for (let i = 11; i >= 0; i--) {
+        sum += parseInt(cnpj[i]) * weight;
+        weight = weight === 9 ? 2 : weight + 1;
+    }
+    let digit1 = 11 - (sum % 11);
+    if (digit1 > 9) digit1 = 0;
+    
+    if (parseInt(cnpj[12]) !== digit1) return false;
+    
+    // Validar segundo dígito verificador
+    sum = 0;
+    weight = 2;
+    for (let i = 12; i >= 0; i--) {
+        sum += parseInt(cnpj[i]) * weight;
+        weight = weight === 9 ? 2 : weight + 1;
+    }
+    let digit2 = 11 - (sum % 11);
+    if (digit2 > 9) digit2 = 0;
+    
+         return parseInt(cnpj[13]) === digit2;
+}
+
+// === CÓDIGO AUTOMÁTICO ===
+async function gerarCodigoAutomatico() {
+    const codigoInput = document.getElementById('codigo_input');
+    const button = document.querySelector('.btn-auto-codigo');
+    
+    // Mostrar loading
+    const originalIcon = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "estoque:gerar_codigo_materia_prima" %}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            codigoInput.value = data.codigo;
+            codigoInput.classList.add('codigo-automatico');
+            
+            // Mostrar notificação
+            showNotification(`Código ${data.codigo} gerado automaticamente`, 'success');
+        } else {
+            throw new Error('Erro ao gerar código');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        
+        // Fallback: gerar código localmente
+        const codigoFallback = await gerarCodigoLocal();
+        codigoInput.value = codigoFallback;
+        codigoInput.classList.add('codigo-automatico');
+        
+        showNotification(`Código ${codigoFallback} gerado localmente`, 'info');
+    } finally {
+        // Restaurar botão
+        button.innerHTML = originalIcon;
+        button.disabled = false;
+    }
+}
+
+async function gerarCodigoLocal() {
+    // Gerar código local baseado em timestamp
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const time = now.getTime().toString().slice(-4);
+    
+    return `MP${year}${month}${day}${time}`;
+}
+
+// Detectar se usuário está digitando manualmente
+document.addEventListener('DOMContentLoaded', function() {
+    const codigoInput = document.getElementById('codigo_input');
+    if (codigoInput) {
+        codigoInput.addEventListener('input', function() {
+            // Remover classe de código automático quando usuário digita
+            this.classList.remove('codigo-automatico');
+        });
+        
+        codigoInput.addEventListener('focus', function() {
+            // Se campo está vazio ao focar, gerar código
+            if (!this.value.trim()) {
+                gerarCodigoAutomatico();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

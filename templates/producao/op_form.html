@@ -300,6 +300,47 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
     }
 
+    /* Estilos para os botões de ação do formulário */
+    .form-actions {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border: 2px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-actions .btn-action {
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+    }
+
+    .form-actions .btn-success {
+        background: linear-gradient(135deg, #059669, #047857);
+        border: none;
+        box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.39);
+    }
+
+    .form-actions .btn-success:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.5);
+    }
+
+    .form-actions .btn-outline-secondary {
+        border: 2px solid #6b7280;
+        color: #6b7280;
+    }
+
+    .form-actions .btn-outline-secondary:hover {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+    }
+
     @media (max-width: 768px) {
         .form-header {
             padding: 1.5rem;
@@ -324,6 +365,20 @@
         .summary-card {
             position: static;
             margin-top: 2rem;
+        }
+
+        .form-actions {
+            text-align: center;
+        }
+
+        .form-actions .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-actions .btn-action {
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
     }
 </style>
@@ -387,10 +442,6 @@
         <i class="fas fa-eye me-2"></i>Ver Detalhes
     </a>
     {% endif %}
-    <button type="submit" form="opForm" class="btn btn-success btn-action">
-        <i class="fas fa-save me-2"></i>
-        {% if is_edit %}Atualizar OP{% else %}Criar OP{% endif %}
-    </button>
 </div>
 
 <form method="post" id="opForm" action="">
@@ -597,6 +648,27 @@
                 <div class="summary-item">
                     <span class="summary-label">VALOR TOTAL:</span>
                     <span class="summary-value" id="resumoTotal">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões de Ação do Formulário -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="form-actions">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{% url 'producao:ops_listar' %}" class="btn btn-outline-secondary btn-action">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar e Voltar
+                        </a>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-success btn-action btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}Atualizar Ordem de Produção{% else %}Criar Ordem de Produção{% endif %}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

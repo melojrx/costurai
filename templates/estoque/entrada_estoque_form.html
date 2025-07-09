@@ -1,0 +1,45 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load currency_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registrar Entrada de Estoque{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box">
+                <div class="row">
+                    <div class="col">
+                        <h4 class="page-title">Registrar Entrada de Estoque</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'producao:dashboard' %}">Produção</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'producao:materia_prima_list' %}">Matérias-Primas</a></li>
+                            <li class="breadcrumb-item active">Registrar Entrada</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Nova Entrada de Matéria-Prima</h4>
+                    <p class="text-muted mb-0">Use este formulário para adicionar itens ao seu estoque.</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

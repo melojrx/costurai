@@ -1,0 +1,204 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}{{ materia_prima.descricao }} - Detalhes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">{{ materia_prima.descricao }}</h1>
+            <p class="text-muted">Código: {{ materia_prima.codigo }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'estoque:materia_prima_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <a href="{% url 'estoque:entrada_create' %}?materia_prima={{ materia_prima.pk }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Registrar Entrada
+            </a>
+            <a href="{% url 'estoque:materia_prima_update' materia_prima.pk %}" class="btn btn-info">
+                <i class="fas fa-edit me-2"></i>Editar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Gerais -->
+        <div class="col-lg-4">
+            <!-- Card de Estoque -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse me-2"></i>
+                        Estoque Atual
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-{{ materia_prima.status_estoque_cor }}">
+                        {{ materia_prima.quantidade_em_estoque|floatformat:2 }}
+                    </h2>
+                    <p class="text-muted mb-2">{{ materia_prima.get_unidade_display }}</p>
+                    <span class="badge bg-{{ materia_prima.status_estoque_cor }}">
+                        {{ materia_prima.status_estoque_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Card de Informações -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Código:</strong></div>
+                        <div class="col-6">{{ materia_prima.codigo }}</div>
+                    </div>
+                    {% if materia_prima.codigo_barras %}
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Cód. Barras:</strong></div>
+                        <div class="col-6">{{ materia_prima.codigo_barras }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Categoria:</strong></div>
+                        <div class="col-6">
+                            {% if materia_prima.categoria %}
+                                <span class="badge" style="background-color: {{ materia_prima.categoria.cor_hex }}20; color: {{ materia_prima.categoria.cor_hex }};">
+                                    {{ materia_prima.categoria.nome }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Unidade:</strong></div>
+                        <div class="col-6">{{ materia_prima.get_unidade_display }}</div>
+                    </div>
+                    {% if materia_prima.fornecedor_preferencial %}
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Fornecedor:</strong></div>
+                        <div class="col-6">{{ materia_prima.fornecedor_preferencial.razao_social|truncatechars:20 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card de Custos -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        Custos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Custo Médio:</strong></div>
+                        <div class="col-6">{{ materia_prima.custo_medio_ponderado|currency_brl_precision:4 }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Última Compra:</strong></div>
+                        <div class="col-6">{{ materia_prima.custo_ultima_compra|currency_brl_precision:4 }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Valor Total:</strong></div>
+                        <div class="col-6"><strong>{{ materia_prima.valor_total_em_estoque|currency_brl }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kardex - Histórico de Movimentações -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-history me-2"></i>
+                        Kardex - Histórico de Movimentações
+                    </h4>
+                    <div class="card-tools">
+                        <a href="{% url 'estoque:movimentacao_list' %}?materia_prima={{ materia_prima.pk }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>Ver Todas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th class="text-center">Custo Unit.</th>
+                                    <th class="text-center">Valor Total</th>
+                                    <th>Usuário</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mov in movimentacoes %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ mov.data_movimento|date:"d/m/Y" }}</div>
+                                        <small class="text-muted">{{ mov.data_movimento|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if 'ENTRADA' in mov.tipo_movimento %}success{% else %}danger{% endif %}">
+                                            {{ mov.get_tipo_movimento_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold {% if mov.quantidade > 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ mov.quantidade|floatformat:2 }}
+                                        </span>
+                                        <small class="text-muted d-block">{{ materia_prima.get_unidade_display }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold">{{ mov.custo_unitario|currency_brl_precision:4 }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold">{{ mov.valor_total|currency_brl }}</span>
+                                    </td>
+                                    <td>
+                                        {{ mov.usuario.username|default:"-" }}
+                                        {% if mov.observacoes %}
+                                            <br><small class="text-muted">{{ mov.observacoes|truncatechars:30 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'estoque:movimentacao_detail' mov.pk %}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-history text-muted mb-2" style="font-size: 2rem;"></i>
+                                        <p class="text-muted">Nenhuma movimentação registrada</p>
+                                        <a href="{% url 'estoque:entrada_create' %}?materia_prima={{ materia_prima.pk }}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i>Registrar Primeira Movimentação
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

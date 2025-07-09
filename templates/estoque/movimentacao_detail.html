@@ -1,0 +1,368 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}Detalhes da Movimentação #{{ movimentacao.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box">
+                <div class="row">
+                    <div class="col">
+                        <h4 class="page-title">Detalhes da Movimentação #{{ movimentacao.id }}</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'empresas:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:dashboard' %}">Estoque</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:movimentacao_list' %}">Movimentações</a></li>
+                            <li class="breadcrumb-item active">Detalhes</li>
+                        </ol>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Principais -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title d-flex align-items-center">
+                        {% if 'ENTRADA' in movimentacao.tipo_movimento %}
+                            <i class="fas fa-arrow-up text-success me-2"></i>
+                        {% else %}
+                            <i class="fas fa-arrow-down text-danger me-2"></i>
+                        {% endif %}
+                        {{ movimentacao.get_tipo_movimento_display }}
+                        
+                        {% if movimentacao.cancelada %}
+                            <span class="badge bg-danger ms-2">CANCELADA</span>
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Registrada em {{ movimentacao.data_movimento|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Informações do Produto</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Matéria-Prima:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-box text-primary me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">{{ movimentacao.materia_prima.descricao }}</div>
+                                        <small class="text-muted">Código: {{ movimentacao.materia_prima.codigo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Categoria:</label>
+                                <div class="d-flex align-items-center">
+                                    {% if movimentacao.materia_prima.categoria %}
+                                        <span class="badge bg-primary">
+                                            {{ movimentacao.materia_prima.categoria.nome }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Sem categoria</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if movimentacao.lote %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Lote:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-barcode text-info me-2"></i>
+                                    <div>
+                                        <div>{{ movimentacao.lote.numero_lote }}</div>
+                                        {% if movimentacao.lote.data_validade %}
+                                            <small class="text-muted">Validade: {{ movimentacao.lote.data_validade|date:"d/m/Y" }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Informações da Movimentação</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Quantidade:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-hashtag text-warning me-2"></i>
+                                    <span class="fs-5 fw-bold {% if movimentacao.quantidade > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ movimentacao.quantidade|floatformat:3 }} {{ movimentacao.materia_prima.unidade }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Custo Unitário:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-dollar-sign text-success me-2"></i>
+                                    <span class="fs-6">{{ movimentacao.custo_unitario|currency_brl_precision:4 }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Valor Total:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calculator text-info me-2"></i>
+                                    <span class="fs-5 fw-bold text-primary">{{ movimentacao.valor_total|currency_brl }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Usuário:</label>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user text-secondary me-2"></i>
+                                    <span>{{ movimentacao.usuario.get_full_name|default:movimentacao.usuario.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if movimentacao.numero_documento %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-light">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                <strong>Documento:</strong> {{ movimentacao.numero_documento }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if movimentacao.observacoes %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-light">
+                                <i class="fas fa-comment me-2"></i>
+                                <strong>Observações:</strong> {{ movimentacao.observacoes }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if movimentacao.motivo_ajuste %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Motivo do Ajuste:</strong> {{ movimentacao.motivo_ajuste }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if movimentacao.cancelada %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>Movimentação Cancelada</strong><br>
+                                <small>
+                                    Cancelada em {{ movimentacao.data_cancelamento|date:"d/m/Y H:i" }}
+                                    por {{ movimentacao.usuario_cancelamento.get_full_name|default:movimentacao.usuario_cancelamento.username }}
+                                </small>
+                                {% if movimentacao.motivo_cancelamento %}
+                                    <br><strong>Motivo:</strong> {{ movimentacao.motivo_cancelamento }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com Ações e Informações -->
+        <div class="col-lg-4">
+            <!-- Ações -->
+            {% if not movimentacao.cancelada %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-cogs me-2"></i>
+                        Ações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <button type="button" class="btn btn-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#cancelarModal">
+                        <i class="fas fa-times me-2"></i>Cancelar Movimentação
+                    </button>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        O cancelamento irá reverter os efeitos desta movimentação no estoque.
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Impacto no Estoque -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Impacto no Estoque
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-muted mb-1">Antes</h6>
+                                <h4 class="text-primary mb-0">{{ movimentacao.estoque_anterior|floatformat:3 }}</h4>
+                                <small class="text-muted">{{ movimentacao.materia_prima.unidade }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Depois</h6>
+                            <h4 class="text-success mb-0">{{ movimentacao.estoque_posterior|floatformat:3 }}</h4>
+                            <small class="text-muted">{{ movimentacao.materia_prima.unidade }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <div class="badge bg-light text-dark">
+                            {% if movimentacao.quantidade > 0 %}
+                                <i class="fas fa-plus text-success me-1"></i>
+                            {% else %}
+                                <i class="fas fa-minus text-danger me-1"></i>
+                            {% endif %}
+                            {{ movimentacao.quantidade|floatformat:3 }} {{ movimentacao.materia_prima.unidade }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estoque Atual -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse me-2"></i>
+                        Estoque Atual
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="text-primary mb-1">{{ movimentacao.materia_prima.quantidade_em_estoque|floatformat:3 }}</h3>
+                    <p class="text-muted mb-2">{{ movimentacao.materia_prima.unidade }}</p>
+                    
+                    <div class="d-flex justify-content-between text-sm">
+                        <span class="text-muted">Mínimo: {{ movimentacao.materia_prima.estoque_minimo|floatformat:3 }}</span>
+                        <span class="text-muted">Máximo: {{ movimentacao.materia_prima.estoque_maximo|floatformat:3 }}</span>
+                    </div>
+                    
+                    <div class="progress mt-2" style="height: 6px;">
+                        {% with porcentagem=movimentacao.materia_prima.porcentagem_estoque %}
+                        <div class="progress-bar 
+                            {% if porcentagem < 20 %}bg-danger
+                            {% elif porcentagem < 50 %}bg-warning
+                            {% else %}bg-success{% endif %}" 
+                            role="progressbar" 
+                            style="width: 50%">
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Técnicas -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações Técnicas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <strong>ID:</strong> {{ movimentacao.id }}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <strong>Criado em:</strong><br>
+                            <small>{{ movimentacao.data_criacao|date:"d/m/Y H:i:s" }}</small>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <strong>Atualizado em:</strong><br>
+                            <small>{{ movimentacao.data_atualizacao|date:"d/m/Y H:i:s" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cancelamento -->
+{% if not movimentacao.cancelada %}
+<div class="modal fade" id="cancelarModal" tabindex="-1" aria-labelledby="cancelarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelarModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Cancelar Movimentação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'estoque:movimentacao_cancelar' movimentacao.pk %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção!</strong> Esta ação irá:
+                        <ul class="mb-0 mt-2">
+                            <li>Reverter os efeitos desta movimentação no estoque</li>
+                            <li>Marcar a movimentação como cancelada</li>
+                            <li>Registrar o motivo do cancelamento</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo do Cancelamento <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required 
+                                  placeholder="Descreva o motivo do cancelamento..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check me-2"></i>Confirmar Cancelamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação adicional para cancelamento
+    document.getElementById('cancelarModal').addEventListener('show.bs.modal', function() {
+        const motivoField = document.getElementById('motivo');
+        motivoField.value = '';
+        motivoField.focus();
+    });
+});
+</script>
+{% endblock %} 

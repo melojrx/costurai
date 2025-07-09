@@ -7,10 +7,16 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+from django.views.generic import CreateView, UpdateView, ListView, DetailView
+from django.urls import reverse_lazy
+from django.db import transaction
+from django.http import Http404
+from django.utils.decorators import method_decorator
 
 from apps.core.middleware import require_empresa, get_current_empresa
 from .models import Cliente, Produto, ProdutoMateriaPrima, ProdutoTamanho, TamanhoProduto, Fornecedor, CategoriaProduto
-from .forms import ClienteForm, ProdutoForm, FornecedorForm
+from .forms import ClienteForm, FornecedorForm, ProdutoMateriaPrimaFormSet
+from apps.core.mixins import TenantMixin
 
 
 # === VIEWS DE CLIENTES ===
@@ -115,124 +121,7 @@ def cliente_deletar(request, pk):
 
 
 # === VIEWS DE PRODUTOS ===
-@login_required
-@require_empresa
-def produtos_listar(request):
-    """Lista todos os produtos da empresa"""
-    empresa = get_current_empresa()
-    produtos = Produto.objects.filter(empresa=empresa)
-    
-    # Filtros
-    search = request.GET.get('search')
-    if search:
-        produtos = produtos.filter(
-            Q(codigo__icontains=search) |
-            Q(referencia__icontains=search) |
-            Q(descricao__icontains=search) |
-            Q(cor__icontains=search)
-        )
-    
-    categoria = request.GET.get('categoria')
-    if categoria:
-        produtos = produtos.filter(produto=categoria)
-    
-    # Paginação
-    paginator = Paginator(produtos, 25)
-    page = request.GET.get('page')
-    produtos = paginator.get_page(page)
-    
-    context = {
-        'produtos': produtos,
-        'search': search,
-        'categoria': categoria,
-        'categorias': Produto.TIPO_PRODUTO_CHOICES,
-        'total_produtos': Produto.objects.filter(empresa=empresa).count(),
-        'produtos_ativos': Produto.objects.filter(empresa=empresa, ativo=True).count(),
-    }
-    
-    return render(request, 'cadastros/produtos/listar.html', context)
-
-
-@login_required
-@require_empresa
-def produto_criar(request):
-    """Cria um novo produto"""
-    if request.method == 'POST':
-        form = ProdutoForm(request.POST, request.FILES)
-        if form.is_valid():
-            produto = form.save(commit=False)
-            produto.empresa = get_current_empresa()
-            produto.save()
-            
-            messages.success(request, 'Produto criado com sucesso!')
-            return redirect('cadastros:produto_detalhes', pk=produto.pk)
-    else:
-        form = ProdutoForm()
-    
-    return render(request, 'cadastros/produtos/form.html', {'form': form, 'title': 'Novo Produto'})
-
-
-@login_required
-@require_empresa
-def produto_editar(request, pk):
-    """Edita um produto existente"""
-    produto = get_object_or_404(Produto, pk=pk, empresa=get_current_empresa())
-    
-    if request.method == 'POST':
-        form = ProdutoForm(request.POST, request.FILES, instance=produto)
-        if form.is_valid():
-            form.save()
-            
-            messages.success(request, 'Produto atualizado com sucesso!')
-            return redirect('cadastros:produto_detalhes', pk=produto.pk)
-    else:
-        form = ProdutoForm(instance=produto)
-    
-    return render(request, 'cadastros/produtos/form.html', {
-        'form': form, 
-        'produto': produto,
-        'title': f'Editar Produto - {produto.codigo}'
-    })
-
-
-@login_required
-@require_empresa
-def produto_detalhes(request, pk):
-    """Mostra detalhes de um produto"""
-    produto = get_object_or_404(Produto, pk=pk, empresa=get_current_empresa())
-    
-    context = {
-        'produto': produto,
-        'materias_primas': produto.materias_primas.all(),
-        'tamanhos': produto.tamanhos.all().order_by('ordem'),
-    }
-    
-    return render(request, 'cadastros/produtos/detalhes.html', context)
-
-
-@login_required
-@require_empresa
-def produto_deletar(request, pk):
-    """Deleta um produto"""
-    produto = get_object_or_404(Produto, pk=pk, empresa=get_current_empresa())
-    
-    if request.method == 'POST':
-        try:
-            nome = produto.nome
-            produto.delete()
-            messages.success(request, f'Produto "{nome}" deletado com sucesso!')
-            return redirect('cadastros:produtos_listar')
-        except Exception as e:
-            # Verificar se é erro de proteção (produto sendo usado)
-            if 'protected foreign keys' in str(e) or 'ProtectedError' in str(e):
-                messages.error(request, 
-                    f'Não é possível excluir o produto "{produto.nome}" pois ele está sendo usado em ordens de produção. '
-                    f'Para removê-lo do sistema, você pode desativá-lo ao invés de excluí-lo.')
-            else:
-                messages.error(request, f'Erro ao deletar produto: {str(e)}')
-            return redirect('cadastros:produtos_listar')
-    
-    return render(request, 'cadastros/produtos/confirmar_exclusao.html', {'produto': produto})
+# Removidas as function-based views antigas - agora usando apenas Class-Based Views
 
 
 # === VIEWS DE FORNECEDORES ===
@@ -298,8 +187,29 @@ def fornecedor_criar(request):
             fornecedor = form.save(commit=False)
             fornecedor.empresa = get_current_empresa()
             fornecedor.save()
+            
+            # Se for requisição AJAX, retornar JSON
+            if request.headers.get('X-CSRFToken'):
+                return JsonResponse({
+                    'id': fornecedor.id,
+                    'nome': fornecedor.nome_fantasia or fornecedor.razao_social,
+                    'success': True
+                })
+            
             messages.success(request, 'Fornecedor criado com sucesso!')
             return redirect('cadastros:fornecedor_detalhes', pk=fornecedor.pk)
+        else:
+            # Se for requisição AJAX, retornar erro JSON
+            if request.headers.get('X-CSRFToken'):
+                errors = []
+                for field, error_list in form.errors.items():
+                    for error in error_list:
+                        errors.append(f"{field}: {error}")
+                
+                return JsonResponse({
+                    'error': '; '.join(errors),
+                    'success': False
+                }, status=400)
     else:
         form = FornecedorForm()
     
@@ -565,3 +475,96 @@ def api_produto_desativar(request, produto_id):
             }, status=400)
     
     return JsonResponse({'success': False, 'error': 'Método não permitido'}, status=405)
+
+
+@method_decorator([login_required, require_empresa], name='dispatch')
+class ProdutoListView(TenantMixin, ListView):
+    model = Produto
+    template_name = 'cadastros/produtos/listar.html'
+    context_object_name = 'produtos'
+
+@method_decorator([login_required, require_empresa], name='dispatch')
+class ProdutoDetailView(TenantMixin, DetailView):
+    model = Produto
+    template_name = 'cadastros/produtos/detalhes.html'
+    context_object_name = 'produto'
+
+@method_decorator([login_required, require_empresa], name='dispatch')
+class ProdutoCreateView(TenantMixin, CreateView):
+    model = Produto
+    template_name = 'cadastros/produtos/form.html'
+    fields = '__all__' # Simplificado por enquanto
+    success_url = reverse_lazy('cadastros:produtos_listar')
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['materias_primas'] = ProdutoMateriaPrimaFormSet(self.request.POST)
+        else:
+            data['materias_primas'] = ProdutoMateriaPrimaFormSet()
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        materias_primas = context['materias_primas']
+        with transaction.atomic():
+            self.object = form.save()
+            if materias_primas.is_valid():
+                materias_primas.instance = self.object
+                materias_primas.save()
+        return super().form_valid(form)
+
+@method_decorator([login_required, require_empresa], name='dispatch')
+class ProdutoUpdateView(TenantMixin, UpdateView):
+    model = Produto
+    template_name = 'cadastros/produtos/form.html'
+    fields = '__all__' # Simplificado por enquanto
+    success_url = reverse_lazy('cadastros:produtos_listar')
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['materias_primas'] = ProdutoMateriaPrimaFormSet(self.request.POST, instance=self.object)
+        else:
+            data['materias_primas'] = ProdutoMateriaPrimaFormSet(instance=self.object)
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        materias_primas = context['materias_primas']
+        with transaction.atomic():
+            self.object = form.save()
+            if materias_primas.is_valid():
+                materias_primas.instance = self.object
+                materias_primas.save()
+        return super().form_valid(form)
+
+@method_decorator([login_required, require_empresa], name='dispatch')
+class ProdutoDeleteView(TenantMixin, DetailView):
+    model = Produto
+    template_name = 'cadastros/produtos/confirmar_exclusao.html'
+    context_object_name = 'produto'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        empresa_atual = get_current_empresa()
+        if not obj.empresa == empresa_atual:
+            raise Http404("Produto não encontrado ou não pertence à sua empresa.")
+        return obj
+
+    def post(self, request, *args, **kwargs):
+        produto = self.get_object()
+        try:
+            nome = produto.nome
+            produto.delete()
+            messages.success(request, f'Produto "{nome}" deletado com sucesso!')
+            return redirect('cadastros:produtos_listar')
+        except Exception as e:
+            # Verificar se é erro de proteção (produto sendo usado)
+            if 'protected foreign keys' in str(e) or 'ProtectedError' in str(e):
+                messages.error(request, 
+                    f'Não é possível excluir o produto "{produto.nome}" pois ele está sendo usado em ordens de produção. '
+                    f'Para removê-lo do sistema, você pode desativá-lo ao invés de excluí-lo.')
+            else:
+                messages.error(request, f'Erro ao deletar produto: {str(e)}')
+            return redirect('cadastros:produtos_listar')

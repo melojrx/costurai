@@ -1,5 +1,6 @@
 from django import forms
-from .models import Cliente, Produto, Fornecedor
+from django.forms import inlineformset_factory
+from .models import Cliente, Produto, Fornecedor, ProdutoMateriaPrima
 
 
 class ClienteForm(forms.ModelForm):
@@ -88,4 +89,27 @@ class FornecedorForm(forms.ModelForm):
             'conta': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00000-0'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observações'}),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        } 
+        }
+
+
+class ProdutoMateriaPrimaForm(forms.ModelForm):
+    class Meta:
+        model = ProdutoMateriaPrima
+        fields = ['materia_prima', 'quantidade']
+        # Podemos adicionar widgets aqui para customizar a aparência se necessário
+        widgets = {
+            'materia_prima': forms.Select(attrs={'class': 'form-control materia-select'}),
+            'quantidade': forms.NumberInput(attrs={'class': 'form-control materia-quantidade'}),
+        }
+
+# Criamos um FormSet que trabalha com o relacionamento entre Produto e ProdutoMateriaPrima.
+# 'extra=1' significa que ele vai renderizar um formulário extra em branco por padrão.
+# 'can_delete=True' permite que o usuário marque itens para serem excluídos.
+ProdutoMateriaPrimaFormSet = inlineformset_factory(
+    Produto,
+    ProdutoMateriaPrima,
+    form=ProdutoMateriaPrimaForm,
+    extra=1,
+    can_delete=True,
+    fk_name='produto'
+) 

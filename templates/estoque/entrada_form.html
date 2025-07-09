@@ -1,0 +1,364 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo|default:"Registrar Entrada de Estoque" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box">
+                <div class="row">
+                    <div class="col">
+                        <h4 class="page-title">{{ titulo|default:"Registrar Entrada de Estoque" }}</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'empresas:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:dashboard' %}">Estoque</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'estoque:movimentacao_list' %}">Movimentações</a></li>
+                            <li class="breadcrumb-item active">Registrar Entrada</li>
+                        </ol>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-plus-circle text-success me-2"></i>
+                        Nova Entrada de Matéria-Prima
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Use este formulário para registrar entrada de matérias-primas no estoque.
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="entrada-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.materia_prima.id_for_label }}" class="form-label">
+                                        <i class="fas fa-box me-1"></i>
+                                        Matéria-Prima <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.materia_prima }}
+                                    {% if form.materia_prima.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.materia_prima.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo_movimento.id_for_label }}" class="form-label">
+                                        <i class="fas fa-exchange-alt me-1"></i>
+                                        Tipo de Movimento <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.tipo_movimento }}
+                                    {% if form.tipo_movimento.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.tipo_movimento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.quantidade.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hashtag me-1"></i>
+                                        Quantidade <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.quantidade }}
+                                        <span class="input-group-text" id="unidade-display">UN</span>
+                                    </div>
+                                    {% if form.quantidade.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.quantidade.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.custo_unitario.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        Custo Unitário <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        {{ form.custo_unitario }}
+                                    </div>
+                                    {% if form.custo_unitario.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.custo_unitario.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero_documento.id_for_label }}" class="form-label">
+                                        <i class="fas fa-file-invoice me-1"></i>
+                                        Número do Documento
+                                    </label>
+                                    {{ form.numero_documento }}
+                                    {% if form.numero_documento.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.numero_documento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Ex: Nota Fiscal, Pedido de Compra, etc.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>
+                                        Observações
+                                    </label>
+                                    {{ form.observacoes }}
+                                    {% if form.observacoes.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.observacoes.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo do Movimento -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="resumo-movimento" style="display: none;">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Resumo do Movimento</h6>
+                                    <div id="resumo-conteudo"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'estoque:movimentacao_list' %}" class="btn btn-light">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Registrar Entrada
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar com informações -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Esta operação irá aumentar o estoque da matéria-prima selecionada.
+                    </div>
+                    
+                    <h6>Tipos de Entrada:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-truck text-primary me-2"></i>Compra</li>
+                        <li><i class="fas fa-undo text-info me-2"></i>Devolução</li>
+                        <li><i class="fas fa-tools text-warning me-2"></i>Ajuste</li>
+                        <li><i class="fas fa-gift text-success me-2"></i>Doação</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Campos Obrigatórios:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Matéria-Prima</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Tipo de Movimento</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Quantidade</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Custo Unitário</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Estoque Atual -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-warehouse me-2"></i>
+                        Estoque Atual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="estoque-atual" class="text-center">
+                        <p class="text-muted">Selecione uma matéria-prima para ver o estoque atual</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const materiaPrimaSelect = document.getElementById('{{ form.materia_prima.id_for_label }}');
+    const quantidadeInput = document.getElementById('{{ form.quantidade.id_for_label }}');
+    const custoInput = document.getElementById('{{ form.custo_unitario.id_for_label }}');
+    const unidadeDisplay = document.getElementById('unidade-display');
+    const estoqueAtual = document.getElementById('estoque-atual');
+    const resumoMovimento = document.getElementById('resumo-movimento');
+    const resumoConteudo = document.getElementById('resumo-conteudo');
+    
+    // Dados das matérias-primas (seria carregado via AJAX em produção)
+    const materiasPrimas = {};
+    
+    // Atualizar unidade quando matéria-prima mudar
+    materiaPrimaSelect.addEventListener('change', function() {
+        const materiaPrimaId = this.value;
+        if (materiaPrimaId) {
+            // Buscar informações da matéria-prima via AJAX
+            fetch(`/estoque/api/materia-prima/${materiaPrimaId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    unidadeDisplay.textContent = data.unidade || 'UN';
+                    
+                    // Atualizar estoque atual
+                    estoqueAtual.innerHTML = `
+                        <div class="text-center">
+                            <h4 class="text-primary">${data.quantidade_em_estoque || 0}</h4>
+                            <p class="text-muted mb-0">${data.unidade || 'UN'} em estoque</p>
+                            <small class="text-muted">Custo médio: R$ ${data.custo_medio_ponderado || '0,00'}</small>
+                        </div>
+                    `;
+                    
+                    materiasPrimas[materiaPrimaId] = data;
+                    atualizarResumo();
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar dados da matéria-prima:', error);
+                    unidadeDisplay.textContent = 'UN';
+                    estoqueAtual.innerHTML = '<p class="text-muted">Erro ao carregar dados</p>';
+                });
+        } else {
+            unidadeDisplay.textContent = 'UN';
+            estoqueAtual.innerHTML = '<p class="text-muted">Selecione uma matéria-prima</p>';
+            resumoMovimento.style.display = 'none';
+        }
+    });
+    
+    // Atualizar resumo quando quantidade ou custo mudarem
+    quantidadeInput.addEventListener('input', atualizarResumo);
+    custoInput.addEventListener('input', atualizarResumo);
+    
+    function atualizarResumo() {
+        const materiaPrimaId = materiaPrimaSelect.value;
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const custo = parseFloat(custoInput.value) || 0;
+        
+        if (materiaPrimaId && quantidade > 0 && custo > 0) {
+            const materiaPrima = materiasPrimas[materiaPrimaId];
+            const valorTotal = quantidade * custo;
+            const estoqueAtualQtd = materiaPrima ? materiaPrima.quantidade_em_estoque : 0;
+            const novoEstoque = estoqueAtualQtd + quantidade;
+            
+            resumoConteudo.innerHTML = `
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Quantidade:</strong> ${quantidade} ${materiaPrima ? materiaPrima.unidade : 'UN'}
+                    </div>
+                    <div class="col-6">
+                        <strong>Custo Unitário:</strong> R$ ${custo.toFixed(2)}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}
+                    </div>
+                    <div class="col-6">
+                        <strong>Novo Estoque:</strong> ${novoEstoque} ${materiaPrima ? materiaPrima.unidade : 'UN'}
+                    </div>
+                </div>
+            `;
+            resumoMovimento.style.display = 'block';
+        } else {
+            resumoMovimento.style.display = 'none';
+        }
+    }
+    
+    // Formatação de moeda no campo de custo
+    custoInput.addEventListener('blur', function() {
+        const value = parseFloat(this.value) || 0;
+        this.value = value.toFixed(4);
+    });
+    
+    // Validação do formulário
+    document.getElementById('entrada-form').addEventListener('submit', function(e) {
+        let valid = true;
+        
+        // Validar campos obrigatórios
+        const requiredFields = [materiaPrimaSelect, quantidadeInput, custoInput];
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                valid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validar quantidade positiva
+        if (parseFloat(quantidadeInput.value) <= 0) {
+            quantidadeInput.classList.add('is-invalid');
+            valid = false;
+        }
+        
+        // Validar custo positivo
+        if (parseFloat(custoInput.value) <= 0) {
+            custoInput.classList.add('is-invalid');
+            valid = false;
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+        }
+    });
+});
+</script>
+{% endblock %} 

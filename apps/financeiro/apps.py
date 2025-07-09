@@ -7,8 +7,7 @@ class FinanceiroConfig(AppConfig):
     verbose_name = "Módulo Financeiro"
 
     def ready(self):
-        # Importar signals se necessário
-        try:
-            import apps.financeiro.signals
-        except ImportError:
-            pass
+        """
+        Importa os signals quando a aplicação está pronta.
+        """
+        import apps.financeiro.signals

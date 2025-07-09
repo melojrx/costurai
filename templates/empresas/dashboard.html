@@ -39,28 +39,30 @@
                 </div>
                 <div class="plano-contador-mensagem">{{ plano_info.mensagem_status }}</div>
             </div>
-            <div class="plano-contador-dias">
-                {% if plano_info.is_trial %}
-                    <div class="contador-numero">{{ plano_info.dias_restantes }}</div>
-                    <div class="contador-label">dia{{ plano_info.dias_restantes|pluralize:"s" }} restante{{ plano_info.dias_restantes|pluralize:"s" }}</div>
-                {% else %}
-                    <div class="contador-numero">{{ plano_info.dias_para_vencimento }}</div>
-                    <div class="contador-label">dia{{ plano_info.dias_para_vencimento|pluralize:"s" }} p/ vencimento</div>
-                {% endif %}
+            <div class="plano-contador-right">
+                <div class="plano-contador-dias">
+                    {% if plano_info.is_trial %}
+                        <div class="contador-numero">{{ plano_info.dias_restantes }}</div>
+                        <div class="contador-label">dia{{ plano_info.dias_restantes|pluralize:"s" }} restante{{ plano_info.dias_restantes|pluralize:"s" }}</div>
+                    {% else %}
+                        <div class="contador-numero">{{ plano_info.dias_para_vencimento }}</div>
+                        <div class="contador-label">dia{{ plano_info.dias_para_vencimento|pluralize:"s" }} p/ vencimento</div>
+                    {% endif %}
+                </div>
+                <div class="plano-contador-actions">
+                    {% if plano_info.is_trial %}
+                        <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-upgrade">
+                            <i class="fas fa-crown"></i>
+                            Assinar Plano
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-manage">
+                            <i class="fas fa-cog"></i>
+                            Gerenciar
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-        <div class="plano-contador-actions">
-            {% if plano_info.is_trial %}
-                <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-upgrade">
-                    <i class="fas fa-crown"></i>
-                    Assinar Plano
-                </a>
-            {% else %}
-                <a href="{% url 'accounts:gestao_conta' %}" class="btn-contador btn-contador-manage">
-                    <i class="fas fa-cog"></i>
-                    Gerenciar
-                </a>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -120,6 +122,16 @@
     gap: 20px;
 }
 
+.plano-contador-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-left: 24px;
+    border-left: 1px solid var(--gray-200);
+    flex-shrink: 0;
+}
+
 .plano-contador-icon {
     width: 56px;
     height: 56px;
@@ -171,9 +183,6 @@
 
 .plano-contador-dias {
     text-align: center;
-    padding: 0 24px;
-    border-left: 1px solid var(--gray-200);
-    flex-shrink: 0;
 }
 
 .contador-numero {
@@ -210,8 +219,8 @@
 }
 
 .plano-contador-actions {
-    margin-left: auto;
-    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
 }
 
 .btn-contador {
@@ -276,14 +285,15 @@
         gap: 16px;
     }
     
-    .plano-contador-dias {
+    .plano-contador-right {
         border-left: none;
         border-top: 1px solid var(--gray-200);
-        padding: 16px 0 0 0;
+        padding-left: 0;
+        padding-top: 16px;
+        width: 100%;
     }
     
     .plano-contador-actions {
-        margin-left: 0;
         width: 100%;
     }
     
@@ -308,10 +318,10 @@
             </div>
         </div>
         <div class="stat-label">Clientes</div>
-        <div class="stat-value">{{ total_clientes|default:"42" }}</div>
-        <div class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            12% este mês
+        <div class="stat-value">{{ total_clientes }}</div>
+        <div class="stat-change {% if crescimento_clientes >= 0 %}positive{% else %}negative{% endif %}">
+            <i class="fas fa-arrow-{% if crescimento_clientes >= 0 %}up{% else %}down{% endif %}"></i>
+            {{ crescimento_clientes|floatformat:0 }}% este mês
         </div>
     </div>
     
@@ -322,10 +332,10 @@
             </div>
         </div>
         <div class="stat-label">OPs em Produção</div>
-        <div class="stat-value">{{ ops_producao|default:"12" }}</div>
-        <div class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            8% esta semana
+        <div class="stat-value">{{ ops_producao }}</div>
+        <div class="stat-change {% if crescimento_ops >= 0 %}positive{% else %}negative{% endif %}">
+            <i class="fas fa-arrow-{% if crescimento_ops >= 0 %}up{% else %}down{% endif %}"></i>
+            {{ crescimento_ops|floatformat:0 }}% esta semana
         </div>
     </div>
     
@@ -336,10 +346,14 @@
             </div>
         </div>
         <div class="stat-label">Entregas Hoje</div>
-        <div class="stat-value">{{ entregas_hoje|default:"3" }}</div>
-        <div class="stat-change negative">
-            <i class="fas fa-arrow-down"></i>
-            2 atrasadas
+        <div class="stat-value">{{ entregas_hoje }}</div>
+        <div class="stat-change {% if entregas_atrasadas > 0 %}negative{% else %}positive{% endif %}">
+            <i class="fas fa-{% if entregas_atrasadas > 0 %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+            {% if entregas_atrasadas > 0 %}
+                {{ entregas_atrasadas }} atrasada{{ entregas_atrasadas|pluralize:"s" }}
+            {% else %}
+                Em dia
+            {% endif %}
         </div>
     </div>
     
@@ -350,10 +364,10 @@
             </div>
         </div>
         <div class="stat-label">Faturamento Mês</div>
-        <div class="stat-value">R$ {{ faturamento_mes|default:"3.250"|floatformat:3 }}</div>
-        <div class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            23% vs mês anterior
+        <div class="stat-value">R$ {{ faturamento_mes|floatformat:0 }}</div>
+        <div class="stat-change {% if crescimento_faturamento >= 0 %}positive{% else %}negative{% endif %}">
+            <i class="fas fa-arrow-{% if crescimento_faturamento >= 0 %}up{% else %}down{% endif %}"></i>
+            {{ crescimento_faturamento|floatformat:0 }}% vs mês anterior
         </div>
     </div>
 </div>
@@ -370,70 +384,34 @@
             <div class="table-modern">
                 <table>
                     <tbody>
+                        {% for atividade in atividades_recentes %}
                         <tr>
                             <td style="padding: 20px;">
                                 <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div class="stat-icon primary" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="fas fa-user-plus"></i>
+                                    <div class="stat-icon {{ atividade.cor }}" style="width: 40px; height: 40px; font-size: 1rem;">
+                                        <i class="fas fa-{{ atividade.icone }}"></i>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-gray-900">Novo cliente cadastrado</div>
-                                        <div class="text-sm text-gray-600">Maria Santos adicionada ao sistema</div>
+                                        <div class="font-semibold text-gray-900">{{ atividade.titulo }}</div>
+                                        <div class="text-sm text-gray-600">{{ atividade.descricao }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td style="padding: 20px; text-align: right;">
-                                <span class="text-xs text-gray-500">Há 30 min</span>
+                                <span class="text-xs text-gray-500">{{ atividade.tempo }}</span>
                             </td>
                         </tr>
+                        {% empty %}
                         <tr>
-                            <td style="padding: 20px;">
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div class="stat-icon success" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-gray-900">OP Finalizada</div>
-                                        <div class="text-sm text-gray-600">OP #1234 - 50 peças produzidas</div>
-                                    </div>
+                            <td colspan="2" style="padding: 40px; text-align: center;">
+                                <div style="color: #6b7280;">
+                                    <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 16px; opacity: 0.3;"></i>
+                                    <p>Nenhuma atividade recente encontrada</p>
+                                    <p style="font-size: 0.875rem; margin-top: 8px;">As atividades aparecerão aqui conforme você usar o sistema</p>
                                 </div>
                             </td>
-                            <td style="padding: 20px; text-align: right;">
-                                <span class="text-xs text-gray-500">Há 2 horas</span>
-                            </td>
                         </tr>
-                        <tr>
-                            <td style="padding: 20px;">
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div class="stat-icon warning" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-gray-900">Material em falta</div>
-                                        <div class="text-sm text-gray-600">Tecido azul marinho - estoque baixo</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="padding: 20px; text-align: right;">
-                                <span class="text-xs text-gray-500">Há 3 horas</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 20px;">
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div class="stat-icon danger" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="fas fa-dollar-sign"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-gray-900">Pagamento recebido</div>
-                                        <div class="text-sm text-gray-600">Cliente João Silva - R$ 1.500,00</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="padding: 20px; text-align: right;">
-                                <span class="text-xs text-gray-500">Há 5 horas</span>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -456,7 +434,7 @@
             </div>
             <div class="card-body-modern">
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="{% url 'cadastros:cliente_criar' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
+                    <a href="{% url 'cadastros:cliente_novo' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
                         <i class="fas fa-user-plus"></i>
                         Adicionar cliente
                     </a>
@@ -468,10 +446,7 @@
                         <i class="fas fa-hand-holding-usd"></i>
                         Entrada financeira
                     </a>
-                    <a href="{% url 'producao:relatorios' %}" class="btn-modern btn-modern-secondary" style="justify-content: flex-start;">
-                        <i class="fas fa-chart-bar"></i>
-                        Ver relatórios
-                    </a>
+                    
                 </div>
             </div>
         </div>
@@ -484,27 +459,29 @@
             </div>
             <div class="card-body-modern">
                 <div style="display: flex; flex-direction: column; gap: 16px;">
+                    {% for entrega in proximas_entregas %}
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
-                            <div class="font-semibold text-gray-900">OP #1235 - Maria Silva</div>
-                            <div class="text-sm text-gray-600">30 camisetas</div>
+                            <div class="font-semibold text-gray-900">OP #{{ entrega.numero_op }} - {{ entrega.cliente.nome }}</div>
+                            <div class="text-sm text-gray-600">{{ entrega.quantidade_total }} {{ entrega.produto.nome|truncatechars:20 }}</div>
                         </div>
-                        <span class="badge-modern warning">Hoje</span>
+                        <span class="badge-modern {% if entrega.data_previsao == today %}warning{% elif entrega.data_previsao == tomorrow %}primary{% else %}success{% endif %}">
+                            {% if entrega.data_previsao == today %}
+                                Hoje
+                            {% elif entrega.data_previsao == tomorrow %}
+                                Amanhã
+                            {% else %}
+                                {{ entrega.data_previsao|date:"d/m" }}
+                            {% endif %}
+                        </span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="font-semibold text-gray-900">OP #1236 - João Santos</div>
-                            <div class="text-sm text-gray-600">50 calças</div>
-                        </div>
-                        <span class="badge-modern primary">Amanhã</span>
+                    {% empty %}
+                    <div style="text-align: center; padding: 20px; color: #6b7280;">
+                        <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>Nenhuma entrega programada</p>
+                        <p style="font-size: 0.875rem; margin-top: 8px;">As entregas aparecerão aqui quando você criar OPs</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <div class="font-semibold text-gray-900">OP #1237 - Pedro Lima</div>
-                            <div class="text-sm text-gray-600">20 jaquetas</div>
-                        </div>
-                        <span class="badge-modern success">Sexta</span>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="card-footer-modern">

@@ -1,0 +1,45 @@
+# Configuração de finais de linha para o projeto
+# Forçar LF para arquivos de texto no repositório
+
+# Arquivos de texto
+*.py text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+
+# Arquivos de configuração
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+requirements.txt text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# Arquivos específicos do Django
+manage.py text eol=lf
+
+# Arquivos binários
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.svg binary 

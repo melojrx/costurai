@@ -1,0 +1,408 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}Novo Inventário Físico - Controle de Estoque{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .form-card-header {
+        padding: 24px 28px 20px;
+        border-bottom: 1px solid #e9ecef;
+        background: #f8f9fa;
+    }
+    
+    .form-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-card-title i {
+        color: #007bff;
+    }
+    
+    .form-card-body {
+        padding: 28px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+    
+    .form-label.required:after {
+        content: ' *';
+        color: #dc3545;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 12px 14px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-help {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .form-check-input {
+        margin: 0;
+    }
+    
+    .form-check-label {
+        font-size: 0.875rem;
+        color: #495057;
+        margin: 0;
+    }
+    
+    .info-card {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .info-card i {
+        color: #2196f3;
+        font-size: 1.25rem;
+        margin-right: 12px;
+    }
+    
+    .info-card-title {
+        font-weight: 600;
+        color: #1976d2;
+        margin-bottom: 4px;
+    }
+    
+    .info-card-text {
+        color: #1976d2;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .form-actions {
+        background: #f8f9fa;
+        padding: 24px 28px;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+    
+    .btn-modern {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .btn-modern-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-modern-primary:hover {
+        background: #0056b3;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .btn-modern-outline {
+        background: transparent;
+        color: #6c757d;
+        border: 1px solid #6c757d;
+    }
+    
+    .btn-modern-outline:hover {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        margin-top: 4px;
+        border: 1px solid #f5c6cb;
+    }
+    
+    @media (max-width: 768px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-card-body {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Novo Inventário Físico</h1>
+            <p class="text-muted">Configure um novo inventário para contagem de estoque</p>
+        </div>
+        <div>
+            <a href="{% url 'estoque:inventario_list' %}" class="btn btn-modern btn-modern-outline">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar para Lista
+            </a>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <!-- Informações Básicas -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <h3 class="form-card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informações Básicas
+                </h3>
+            </div>
+            <div class="form-card-body">
+                <div class="info-card">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <div class="info-card-title">Como funciona o inventário?</div>
+                        <p class="info-card-text">
+                            O inventário físico permite contar fisicamente o estoque e comparar com o sistema, 
+                            gerando ajustes automáticos para as diferenças encontradas.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Descrição do Inventário</label>
+                    <input type="text" name="descricao" class="form-control" 
+                           placeholder="Ex: Inventário Mensal - Janeiro 2024" 
+                           value="{{ form.descricao.value|default:'' }}" required>
+                    <div class="form-help">Descrição clara para identificar este inventário</div>
+                    {% if form.descricao.errors %}
+                        <div class="error-message">{{ form.descricao.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Configurações -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <h3 class="form-card-title">
+                    <i class="fas fa-filter"></i>
+                    Filtros e Configurações
+                </h3>
+            </div>
+            <div class="form-card-body">
+                <div class="form-group">
+                    <label class="form-label">Filtrar por Categoria</label>
+                    <select name="categoria_filtro" class="form-select">
+                        <option value="">Todas as categorias</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" 
+                                {% if form.categoria_filtro.value == categoria.id %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-help">Se selecionado, apenas matérias-primas desta categoria serão incluídas</div>
+                    {% if form.categoria_filtro.errors %}
+                        <div class="error-message">{{ form.categoria_filtro.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="incluir_zerados" class="form-check-input" id="incluir_zerados"
+                               {% if form.incluir_zerados.value %}checked{% endif %}>
+                        <label class="form-check-label" for="incluir_zerados">
+                            Incluir itens com estoque zerado
+                        </label>
+                    </div>
+                    <div class="form-help">Marque para incluir matérias-primas que estão com estoque zerado no sistema</div>
+                    {% if form.incluir_zerados.errors %}
+                        <div class="error-message">{{ form.incluir_zerados.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="info-card">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <div class="info-card-title">Dica:</div>
+                        <p class="info-card-text">
+                            Recomendamos fazer inventários parciais por categoria para facilitar a contagem. 
+                            Itens zerados podem ser incluídos para verificar se realmente não há estoque físico.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <h3 class="form-card-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Resumo Estimado
+                </h3>
+            </div>
+            <div class="form-card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-primary mb-1" id="total-itens">-</div>
+                            <div class="text-muted">Itens a Contar</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-success mb-1" id="total-categorias">-</div>
+                            <div class="text-muted">Categorias</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-info mb-1" id="valor-estimado">-</div>
+                            <div class="text-muted">Valor Estimado</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-warning mb-1" id="tempo-estimado">-</div>
+                            <div class="text-muted">Tempo Estimado</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        * Os valores são estimados baseados no estoque atual do sistema
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="form-actions">
+            <a href="{% url 'estoque:inventario_list' %}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-times me-2"></i>
+                Cancelar
+            </a>
+            <button type="submit" class="btn-modern btn-modern-primary">
+                <i class="fas fa-save me-2"></i>
+                Criar Inventário
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Atualizar resumo quando filtros mudarem
+    const categoriaSelect = document.querySelector('select[name="categoria_filtro"]');
+    const incluirZeradosCheck = document.querySelector('input[name="incluir_zerados"]');
+    
+    function atualizarResumo() {
+        const categoria = categoriaSelect.value;
+        const incluirZerados = incluirZeradosCheck.checked;
+        
+        // Mostrar loading
+        document.getElementById('total-itens').textContent = '...';
+        document.getElementById('total-categorias').textContent = '...';
+        document.getElementById('valor-estimado').textContent = '...';
+        document.getElementById('tempo-estimado').textContent = '...';
+        
+        // Fazer requisição para API real
+        const params = new URLSearchParams({
+            categoria_filtro: categoria,
+            incluir_zerados: incluirZerados
+        });
+        
+        fetch(`/estoque/api/inventario/resumo/?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('total-itens').textContent = data.total_itens;
+                    document.getElementById('total-categorias').textContent = data.total_categorias;
+                    document.getElementById('valor-estimado').textContent = data.valor_estimado.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    });
+                    document.getElementById('tempo-estimado').textContent = data.tempo_estimado_horas + 'h';
+                } else {
+                    console.error('Erro ao buscar resumo:', data.error);
+                    // Mostrar valores padrão em caso de erro
+                    document.getElementById('total-itens').textContent = '0';
+                    document.getElementById('total-categorias').textContent = '0';
+                    document.getElementById('valor-estimado').textContent = 'R$ 0,00';
+                    document.getElementById('tempo-estimado').textContent = '0h';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                // Mostrar valores padrão em caso de erro
+                document.getElementById('total-itens').textContent = '0';
+                document.getElementById('total-categorias').textContent = '0';
+                document.getElementById('valor-estimado').textContent = 'R$ 0,00';
+                document.getElementById('tempo-estimado').textContent = '0h';
+            });
+    }
+    
+    // Atualizar resumo inicial
+    atualizarResumo();
+    
+    // Atualizar quando filtros mudarem
+    categoriaSelect.addEventListener('change', atualizarResumo);
+    incluirZeradosCheck.addEventListener('change', atualizarResumo);
+});
+</script>
+{% endblock %} 

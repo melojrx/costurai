@@ -6,6 +6,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from datetime import date, timedelta
+from django.db.models import Count, Sum, Q
 
 from apps.core.models import (
     Empresa, PlanoAssinatura, AssinaturaEmpresa, 
@@ -14,6 +15,9 @@ from apps.core.models import (
 from apps.accounts.models import UserProfile
 from apps.core.middleware import get_user_empresas, require_empresa, get_current_empresa
 from .models import ConfiguracaoEmpresa, EmpresaStatus
+from apps.cadastros.models import Cliente
+from apps.producao.models import OrdemProducao
+from apps.financeiro.models import ContaReceber
 
 
 @login_required
@@ -172,6 +176,8 @@ def dashboard_empresa(request):
     Dashboard principal da empresa com estatísticas e informações gerais.
     """
     empresa = get_current_empresa()
+    hoje = timezone.now().date()
+    inicio_mes = hoje.replace(day=1)
     
     # Buscar ou criar status da empresa
     status_empresa, created = EmpresaStatus.objects.get_or_create(
@@ -184,19 +190,183 @@ def dashboard_empresa(request):
         }
     )
     
-    # Dados para gráficos
+    # === DADOS REAIS DO SISTEMA ===
+    
+    # 1. Total de clientes
+    total_clientes = Cliente.objects.filter(empresa=empresa, ativo=True).count()
+    
+    # 2. OPs em produção
+    ops_producao = OrdemProducao.objects.filter(
+        empresa=empresa,
+        status='EM_PRODUCAO'
+    ).count()
+    
+    # 3. Entregas hoje
+    entregas_hoje = OrdemProducao.objects.filter(
+        empresa=empresa,
+        data_previsao=hoje,
+        status__in=['EM_PRODUCAO', 'CONCLUIDA']
+    ).count()
+    
+    # 4. Entregas atrasadas
+    entregas_atrasadas = OrdemProducao.objects.filter(
+        empresa=empresa,
+        data_previsao__lt=hoje,
+        status__in=['CADASTRADA', 'EM_PRODUCAO']
+    ).count()
+    
+    # 5. Faturamento do mês
+    faturamento_mes = ContaReceber.objects.filter(
+        empresa=empresa,
+        data_vencimento__gte=inicio_mes,
+        status='PAGO'
+    ).aggregate(total=Sum('valor_total'))['total'] or 0
+    
+    # 6. Faturamento mês anterior para comparação
+    inicio_mes_anterior = (inicio_mes - timedelta(days=1)).replace(day=1)
+    fim_mes_anterior = inicio_mes - timedelta(days=1)
+    
+    faturamento_mes_anterior = ContaReceber.objects.filter(
+        empresa=empresa,
+        data_vencimento__gte=inicio_mes_anterior,
+        data_vencimento__lte=fim_mes_anterior,
+        status='PAGO'
+    ).aggregate(total=Sum('valor_total'))['total'] or 0
+    
+    # Calcular percentual de crescimento
+    crescimento_faturamento = 0
+    if faturamento_mes_anterior > 0:
+        crescimento_faturamento = ((faturamento_mes - faturamento_mes_anterior) / faturamento_mes_anterior) * 100
+    elif faturamento_mes > 0:
+        crescimento_faturamento = 100
+    
+    # 7. Crescimento de clientes este mês
+    clientes_mes_passado = Cliente.objects.filter(
+        empresa=empresa,
+        ativo=True,
+        created_at__lt=inicio_mes
+    ).count()
+    
+    crescimento_clientes = 0
+    if clientes_mes_passado > 0:
+        crescimento_clientes = ((total_clientes - clientes_mes_passado) / clientes_mes_passado) * 100
+    elif total_clientes > 0:
+        crescimento_clientes = 100
+    
+    # 8. Crescimento de OPs esta semana
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+    ops_semana_atual = OrdemProducao.objects.filter(
+        empresa=empresa,
+        data_entrada__gte=inicio_semana,
+        status='EM_PRODUCAO'
+    ).count()
+    
+    inicio_semana_anterior = inicio_semana - timedelta(days=7)
+    ops_semana_anterior = OrdemProducao.objects.filter(
+        empresa=empresa,
+        data_entrada__gte=inicio_semana_anterior,
+        data_entrada__lt=inicio_semana,
+        status='EM_PRODUCAO'
+    ).count()
+    
+    crescimento_ops = 0
+    if ops_semana_anterior > 0:
+        crescimento_ops = ((ops_semana_atual - ops_semana_anterior) / ops_semana_anterior) * 100
+    elif ops_semana_atual > 0:
+        crescimento_ops = 100
+    
+    # === ATIVIDADES RECENTES ===
+    atividades_recentes = []
+    
+    # Clientes recentes
+    clientes_recentes = Cliente.objects.filter(
+        empresa=empresa,
+        ativo=True
+    ).order_by('-created_at')[:2]
+    
+    for cliente in clientes_recentes:
+        tempo_decorrido = timezone.now() - cliente.created_at
+        if tempo_decorrido.days == 0:
+            if tempo_decorrido.seconds < 3600:
+                tempo_str = f"Há {tempo_decorrido.seconds // 60} min"
+            else:
+                tempo_str = f"Há {tempo_decorrido.seconds // 3600} horas"
+        else:
+            tempo_str = f"Há {tempo_decorrido.days} dias"
+        
+        atividades_recentes.append({
+            'icone': 'user-plus',
+            'cor': 'primary',
+            'titulo': 'Novo cliente cadastrado',
+            'descricao': f'{cliente.nome} adicionado ao sistema',
+            'tempo': tempo_str
+        })
+    
+    # OPs finalizadas recentemente
+    ops_finalizadas = OrdemProducao.objects.filter(
+        empresa=empresa,
+        status='CONCLUIDA'
+    ).order_by('-updated_at')[:2]
+    
+    for op in ops_finalizadas:
+        tempo_decorrido = timezone.now() - op.updated_at
+        if tempo_decorrido.days == 0:
+            if tempo_decorrido.seconds < 3600:
+                tempo_str = f"Há {tempo_decorrido.seconds // 60} min"
+            else:
+                tempo_str = f"Há {tempo_decorrido.seconds // 3600} horas"
+        else:
+            tempo_str = f"Há {tempo_decorrido.days} dias"
+        
+        atividades_recentes.append({
+            'icone': 'check-circle',
+            'cor': 'success',
+            'titulo': 'OP Finalizada',
+            'descricao': f'OP #{op.numero_op} - {op.quantidade_total} peças produzidas',
+            'tempo': tempo_str
+        })
+    
+    # Ordenar por tempo
+    atividades_recentes.sort(key=lambda x: x['tempo'])
+    
+    # === PRÓXIMAS ENTREGAS ===
+    proximas_entregas = OrdemProducao.objects.filter(
+        empresa=empresa,
+        data_previsao__gte=hoje,
+        status__in=['CADASTRADA', 'EM_PRODUCAO']
+    ).order_by('data_previsao')[:5]
+    
+    # Dados para gráficos - OPs por status
     ops_por_status = {}
     for status in ['CADASTRADA', 'EM_PRODUCAO', 'CONCLUIDA', 'ENTREGUE']:
-        # Simular dados por enquanto
-        ops_por_status[status] = 0
+        ops_por_status[status] = OrdemProducao.objects.filter(
+            empresa=empresa,
+            status=status
+        ).count()
     
-    # Faturamento últimos 6 meses (simulado)
+    # Faturamento últimos 6 meses
     faturamento_meses = []
     for i in range(6):
-        mes_atual = date.today().replace(day=1) - timedelta(days=i*30)
+        mes_ref = (hoje.replace(day=1) - timedelta(days=i*30))
+        inicio_mes_ref = mes_ref.replace(day=1)
+        
+        if i == 0:
+            fim_mes_ref = hoje
+        else:
+            # Último dia do mês
+            proximo_mes = inicio_mes_ref.replace(day=28) + timedelta(days=4)
+            fim_mes_ref = proximo_mes - timedelta(days=proximo_mes.day)
+        
+        faturamento_mes_ref = ContaReceber.objects.filter(
+            empresa=empresa,
+            data_vencimento__gte=inicio_mes_ref,
+            data_vencimento__lte=fim_mes_ref,
+            status='PAGO'
+        ).aggregate(total=Sum('valor_total'))['total'] or 0
+        
         faturamento_meses.append({
-            'mes': mes_atual.strftime('%b/%Y'),
-            'valor': 0
+            'mes': inicio_mes_ref.strftime('%b/%Y'),
+            'valor': float(faturamento_mes_ref)
         })
     
     faturamento_meses.reverse()
@@ -374,7 +544,21 @@ def dashboard_empresa(request):
         'total_usuarios': UsuarioEmpresa.objects.filter(
             empresa=empresa, 
             ativo=True
-        ).count()
+        ).count(),
+        # Dados reais para os cards
+        'total_clientes': total_clientes,
+        'ops_producao': ops_producao,
+        'entregas_hoje': entregas_hoje,
+        'entregas_atrasadas': entregas_atrasadas,
+        'faturamento_mes': faturamento_mes,
+        'crescimento_faturamento': crescimento_faturamento,
+        'crescimento_clientes': crescimento_clientes,
+        'crescimento_ops': crescimento_ops,
+        'atividades_recentes': atividades_recentes,
+        'proximas_entregas': proximas_entregas,
+        # Datas para template
+        'today': hoje,
+        'tomorrow': hoje + timedelta(days=1),
     }
     
     return render(request, 'empresas/dashboard.html', context)

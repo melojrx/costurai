@@ -333,25 +333,20 @@
 <!-- Mobile Backdrop -->
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-<!-- Sidebar -->
+<!-- Sidebar Corrigida -->
 <aside class="sidebar-elias" id="sidebarModern">
-    <!-- Header -->
     <div class="sidebar-header">
         <a href="{% url 'dashboard' %}" class="sidebar-logo">
-            <span class="sidebar-logo-icon">
-                <i class="fas fa-cut"></i>
-            </span>
+            <span class="sidebar-logo-icon"><i class="fas fa-cut"></i></span>
             <span class="sidebar-logo-text">Costurai</span>
         </a>
     </div>
     
-    <!-- Company Info -->
     <div class="sidebar-company">
         <div class="company-name">{{ empresa_atual.nome|truncatechars:30|default:"Empresa Demo" }}</div>
         <div class="company-info">{{ empresa_atual.cnpj|default:"Sistema de Gestão" }}</div>
     </div>
     
-    <!-- Navigation -->
     <nav class="sidebar-nav">
         <!-- Principal -->
         <div class="nav-section">
@@ -371,19 +366,12 @@
                 <a href="{% url 'producao:ops_listar' %}" class="nav-link {% if 'ops' in request.path and 'novo' not in request.path %}active{% endif %}">
                     <i class="fas fa-clipboard-list"></i>
                     <span class="nav-link-text">Ordens de Produção</span>
-                    <span class="nav-badge">{{ ops_count|default:"0" }}</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a href="{% url 'producao:op_novo' %}" class="nav-link {% if 'ops/novo' in request.path %}active{% endif %}">
                     <i class="fas fa-plus-circle"></i>
                     <span class="nav-link-text">Nova OP</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="{% url 'producao:linhas' %}" class="nav-link {% if 'linhas' in request.path %}active{% endif %}">
-                    <i class="fas fa-cogs"></i>
-                    <span class="nav-link-text">Linhas de Produção</span>
                 </a>
             </div>
         </div>
@@ -403,11 +391,45 @@
                     <span class="nav-link-text">Produtos</span>
                 </a>
             </div>
-            
             <div class="nav-item">
                 <a href="{% url 'cadastros:fornecedores_listar' %}" class="nav-link {% if 'fornecedores' in request.path %}active{% endif %}">
                     <i class="fas fa-truck"></i>
                     <span class="nav-link-text">Fornecedores</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Estoque -->
+        <div class="nav-section">
+            <div class="nav-section-title">ESTOQUE</div>
+            <div class="nav-item">
+                <a href="{% url 'estoque:dashboard' %}" class="nav-link {% if 'estoque' in request.path and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="nav-link-text">Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'estoque:materia_prima_list' %}" class="nav-link {% if 'materias-primas' in request.path %}active{% endif %}">
+                    <i class="fas fa-boxes"></i>
+                    <span class="nav-link-text">Matérias-Primas</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'estoque:movimentacao_list' %}" class="nav-link {% if 'movimentacoes' in request.path %}active{% endif %}">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span class="nav-link-text">Movimentações</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'estoque:entrada_create' %}" class="nav-link {% if 'entrada' in request.path %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span class="nav-link-text">Registrar Entrada</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'estoque:inventario_list' %}" class="nav-link {% if 'inventarios' in request.path %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="nav-link-text">Inventários</span>
                 </a>
             </div>
         </div>
@@ -433,51 +455,11 @@
                     <span class="nav-link-text">Contas a Pagar</span>
                 </a>
             </div>
-            
-            </div>
-        </div>
-        
-        <!-- Relatórios -->
-        <div class="nav-section">
-            <div class="nav-section-title">RELATÓRIOS</div>
-            <div class="nav-item">
-                <a href="{% url 'producao:relatorios' %}" class="nav-link {% if 'relatorios' in request.path and 'producao' not in request.path and 'eficiencia' not in request.path %}active{% endif %}">
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="nav-link-text">Visão Geral</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="{% url 'producao:relatorio_producao' %}" class="nav-link {% if 'relatorios/producao' in request.path %}active{% endif %}">
-                    <i class="fas fa-chart-area"></i>
-                    <span class="nav-link-text">Análise de Produção</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="{% url 'producao:relatorio_eficiencia' %}" class="nav-link {% if 'relatorios/eficiencia' in request.path %}active{% endif %}">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span class="nav-link-text">Eficiência</span>
-                </a>
-            </div>
-        </div>
-        
-        <!-- Sistema -->
-        <div class="nav-section">
-            <div class="nav-section-title">ADMINISTRAÇÃO</div>
-            <div class="nav-item">
-                <a href="{% url 'empresas:configuracoes' %}" class="nav-link {% if 'configuracoes' in request.path %}active{% endif %}">
-                    <i class="fas fa-cog"></i>
-                    <span class="nav-link-text">Configurações</span>
-                </a>
-            </div>
-            
         </div>
     </nav>
     
-    <!-- Footer -->
     <div class="sidebar-footer">
-        <div class="sidebar-footer-text">
-            © 2025 Costurai v1.0
-        </div>
+        <div class="sidebar-footer-text">© 2025 Costurai v1.0</div>
     </div>
 </aside>
 

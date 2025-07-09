@@ -1,11 +1,56 @@
-## 📋 PLANO DETALHADO \- SISTEMA SAAS MULTITENANT
 
-### 🎯 VISÃO GERAL DO PROJETO
 
-Nome: costurai.com.br  
-Tipo: SaaS Multitenant para Gestão de Confecções  
-Tecnologias: Django, PostgreSQL, Bootstrap 5, Chart.js, Celery, Redis  
-Arquitetura: Multitenant com isolamento por empresa
+### 📈 Fluxo de Negócios da Confecção
+
+O ciclo operacional de uma empresa de confecção que utiliza o sistema segue os seguintes passos:
+
+1.  **Contratação:** Um cliente final contrata a empresa para confeccionar um lote de produtos (roupas).
+2.  **Ordem de Produção (OP):** A empresa cria uma **Ordem de Produção** no sistema, detalhando a encomenda, prazo e valor a receber.
+3.  **Aquisição de Insumos:** Para executar a OP, a empresa compra matérias-primas e contrata serviços de terceiros (fornecedores), gerando contas a pagar.
+4.  **Gestão de Estoque:** O sistema gerencia o estoque de matérias-primas, dando baixa nos insumos utilizados na produção.
+5.  **Execução e Acompanhamento:** A OP passa por um fluxo de trabalho (ex: corte, costura, acabamento). O gestor atualiza o status da OP em uma timeline visual, permitindo o acompanhamento em tempo real.
+6.  **Gestão Financeira:** O sistema consolida as **contas a receber** (das OPs) e as **contas a pagar** (insumos, serviços, despesas administrativas), oferecendo uma visão clara da saúde financeira.
+7.  **Análise e Relatórios:** Dashboards e relatórios (DRE, Fluxo de Caixa, KPIs de produção) fornecem insights para a tomada de decisão.
+
+![Fluxo de Produção](../static/img/fluxo_producao.png)
+
+---
+
+### 🧩 Módulos do Sistema
+
+* **Core:**
+    * Arquitetura `TenantBase` (modelos e managers).
+    * Gestão de Planos de Assinatura (`Básico`, `Profissional`, `Enterprise`).
+    * Modelos de Billing (`GatewayPagamento`, `TransacaoPagamento`, `CupomDesconto`).
+* **Accounts:**
+    * Gestão de usuários, perfis (`UserProfile`) e permissões por empresa (`UsuarioEmpresa`).
+* **Empresas:**
+    * Configurações gerais do tenant (nome, dias úteis, moeda padrão, etc.).
+* **Cadastros:**
+    * **Clientes:** Quem contrata a confecção.
+    * **Fornecedores:** De quem a confecção compra insumos.
+    * **Produtos:**
+        * Cadastro de produtos acabados.
+        * Tabelas auxiliares: categorias, NCM.
+        * Grades de características (Letras: `P`, `M`, `G`; Números: `38`, `40`, `42`; Idade).
+        * Composição de matéria-prima por produto.
+* **Estoque:**
+    * Gestão de entrada e saída de matérias-primas (insumos).
+* **Produção:**
+    * Criação e gestão completa das **Ordens de Produção (OPs)**.
+    * Timeline visual para acompanhamento do status de cada OP.
+    * Dashboard de produção com filtros (status, prazo, cliente).
+    * Alertas automáticos para OPs com prazo de entrega próximo.
+* **Financeiro:**
+    * **Contas a Pagar:** Classificação de despesas (administrativas, produção).
+    * **Contas a Receber:** Vinculadas às OPs entregues.
+    * Fluxo de Caixa.
+* **Relatórios:**
+    * Relatórios gerenciais e financeiros (`DRE`, `Fluxo de Caixa`).
+    * Relatórios operacionais (Produção, Estoque, Vendas por Produto).
+    * Dashboard com KPIs customizáveis.
+* **API:**
+    * API REST completa para integrações com sistemas externos.
 
 ## 📐 FASE 1: ARQUITETURA E PLANEJAMENTO
 

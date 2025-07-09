@@ -1,0 +1,565 @@
+{% extends 'base/dashboard_base.html' %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}Inventários Físicos - Controle de Estoque{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        border-left: 4px solid #007bff;
+    }
+    
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    .stat-card.danger { border-left-color: #dc3545; }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .inventarios-grid {
+        display: grid;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .inventario-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .inventario-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    
+    .inventario-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .inventario-numero {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    
+    .inventario-descricao {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin: 4px 0 0 0;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .status-aberto { background: #e3f2fd; color: #1976d2; }
+    .status-em_andamento { background: #fff3e0; color: #f57c00; }
+    .status-finalizado { background: #e8f5e8; color: #2e7d32; }
+    .status-cancelado { background: #ffebee; color: #d32f2f; }
+    
+    .inventario-body {
+        padding: 20px;
+    }
+    
+    .inventario-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .info-item {
+        text-align: center;
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .info-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .progress-container {
+        margin-bottom: 20px;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .progress-text {
+        font-size: 0.875rem;
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .progress-percent {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        transition: width 0.3s ease;
+    }
+    
+    .inventario-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+        color: white;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #1e7e34;
+        color: white;
+    }
+    
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .btn-info:hover {
+        background: #117a8b;
+        color: white;
+    }
+    
+    .btn-outline-secondary {
+        background: transparent;
+        color: #6c757d;
+        border: 1px solid #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    
+    .empty-text {
+        color: #6c757d;
+        margin-bottom: 24px;
+    }
+    
+    .filtros-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .btn-filtro {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-filtro:hover {
+        background: #0056b3;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .inventario-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .inventario-info {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .inventario-actions {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Inventários Físicos</h1>
+            <p class="text-muted">Controle de contagem e ajustes de estoque</p>
+        </div>
+        <div>
+            <a href="{% url 'estoque:inventario_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Novo Inventário
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value text-primary">{{ inventarios.count }}</div>
+            <div class="stat-label">Total de Inventários</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value text-warning">
+                {{ inventarios|length|add:"-1"|default:0 }}
+            </div>
+            <div class="stat-label">Em Andamento</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value text-success">
+                {{ inventarios|length|add:"-1"|default:0 }}
+            </div>
+            <div class="stat-label">Finalizados</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value text-info">
+                {{ inventarios|length|add:"-1"|default:0 }}
+            </div>
+            <div class="stat-label">Este Mês</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Buscar</label>
+                <input type="text" name="q" class="form-control" 
+                       placeholder="Número ou descrição..." 
+                       value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="ABERTO" {% if request.GET.status == 'ABERTO' %}selected{% endif %}>Aberto</option>
+                    <option value="EM_ANDAMENTO" {% if request.GET.status == 'EM_ANDAMENTO' %}selected{% endif %}>Em Andamento</option>
+                    <option value="FINALIZADO" {% if request.GET.status == 'FINALIZADO' %}selected{% endif %}>Finalizado</option>
+                    <option value="CANCELADO" {% if request.GET.status == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Período</label>
+                <select name="periodo" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="hoje" {% if request.GET.periodo == 'hoje' %}selected{% endif %}>Hoje</option>
+                    <option value="semana" {% if request.GET.periodo == 'semana' %}selected{% endif %}>Esta Semana</option>
+                    <option value="mes" {% if request.GET.periodo == 'mes' %}selected{% endif %}>Este Mês</option>
+                    <option value="trimestre" {% if request.GET.periodo == 'trimestre' %}selected{% endif %}>Este Trimestre</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Responsável</label>
+                <select name="responsavel" class="form-select">
+                    <option value="">Todos</option>
+                    <!-- Adicionar opções de responsáveis -->
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-filtro w-100">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Inventários -->
+    {% if inventarios %}
+    <div class="inventarios-grid">
+        {% for inventario in inventarios %}
+        <div class="inventario-card">
+            <div class="inventario-header">
+                <div>
+                    <h5 class="inventario-numero">{{ inventario.numero }}</h5>
+                    <p class="inventario-descricao">{{ inventario.descricao }}</p>
+                </div>
+                <span class="status-badge status-{{ inventario.status|lower }}">
+                    {{ inventario.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="inventario-body">
+                <div class="inventario-info">
+                    <div class="info-item">
+                        <div class="info-label">Total de Itens</div>
+                        <div class="info-value">{{ inventario.total_itens }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Contados</div>
+                        <div class="info-value">{{ inventario.itens_contados }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Diferenças</div>
+                        <div class="info-value">{{ inventario.total_diferencas }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Responsável</div>
+                        <div class="info-value" style="font-size: 0.875rem;">{{ inventario.responsavel.get_full_name|default:inventario.responsavel.username }}</div>
+                    </div>
+                </div>
+                
+                {% if inventario.status == 'EM_ANDAMENTO' %}
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span class="progress-text">Progresso da Contagem</span>
+                        <span class="progress-percent">{{ inventario.percentual_conclusao|floatformat:0 }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ inventario.percentual_conclusao }}%"></div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="inventario-actions">
+                    <a href="{% url 'estoque:inventario_detail' inventario.pk %}" class="btn-action btn-primary">
+                        <i class="fas fa-eye me-1"></i>
+                        Ver Detalhes
+                    </a>
+                    
+                    {% if inventario.status == 'ABERTO' %}
+                    <form method="post" action="{% url 'estoque:inventario_iniciar' inventario.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-success">
+                            <i class="fas fa-play me-1"></i>
+                            Iniciar
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if inventario.status == 'EM_ANDAMENTO' %}
+                    <a href="{% url 'estoque:inventario_detail' inventario.pk %}" class="btn-action btn-info">
+                        <i class="fas fa-clipboard-check me-1"></i>
+                        Contar
+                    </a>
+                    {% endif %}
+                    
+                    {% if inventario.status not in 'FINALIZADO,CANCELADO' %}
+                    <button type="button" class="btn-action btn-outline-secondary" 
+                            onclick="confirmarCancelamento({{ inventario.pk }}, '{{ inventario.numero }}')">
+                        <i class="fas fa-times me-1"></i>
+                        Cancelar
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{{ request.GET.urlencode|slice:'1:' }}">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginator.num_pages }}{{ request.GET.urlencode|slice:'1:' }}">Última</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- Estado Vazio -->
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list empty-icon"></i>
+        <h4 class="empty-title">Nenhum inventário encontrado</h4>
+        <p class="empty-text">Comece criando seu primeiro inventário físico para controlar o estoque.</p>
+        <a href="{% url 'estoque:inventario_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Criar Primeiro Inventário
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Cancelamento -->
+<div class="modal fade" id="cancelarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancelar Inventário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="cancelarForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Tem certeza que deseja cancelar o inventário <strong id="inventarioNumero"></strong>?</p>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo do cancelamento:</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmarCancelamento(inventarioId, inventarioNumero) {
+    document.getElementById('inventarioNumero').textContent = inventarioNumero;
+    document.getElementById('cancelarForm').action = `/estoque/inventarios/${inventarioId}/cancelar/`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cancelarModal'));
+    modal.show();
+}
+
+// Auto-submit form on filter change
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelects = document.querySelectorAll('select[name="status"], select[name="periodo"], select[name="responsavel"]');
+    
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            // Opcional: auto-submit
+            // this.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %} 

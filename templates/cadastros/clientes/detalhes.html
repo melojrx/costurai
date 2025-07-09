@@ -647,7 +647,7 @@ function confirmDelete() {
     if (confirm('Tem certeza que deseja excluir o cliente "{{ cliente.nome }}"?\n\nEsta ação não pode ser desfeita.')) {
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{% url "cadastros:cliente_deletar" cliente.id %}';
+        form.action = '{% url "cadastros:cliente_excluir" cliente.id %}';
         
         var csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';

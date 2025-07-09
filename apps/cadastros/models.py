@@ -222,6 +222,13 @@ class Produto(TenantBaseModel):
         verbose_name="Preço de Venda",
         help_text="Preço de venda do produto"
     )
+    custo_total_materias_primas = models.DecimalField(
+        max_digits=10, 
+        decimal_places=4, 
+        default=0,
+        verbose_name="Custo Total de Matérias-Primas",
+        help_text="Calculado automaticamente pela ficha técnica do produto."
+    )
     
     # Campos antigos mantidos para compatibilidade
     preco_unitario = models.DecimalField(
@@ -274,6 +281,11 @@ class Produto(TenantBaseModel):
         elif self.preco_unitario and self.custo_unitario:
             return ((self.preco_unitario - self.custo_unitario) / self.preco_unitario) * 100
         return None
+
+    @property
+    def custo_materias_primas(self):
+        """Usa o campo desnormalizado para performance."""
+        return self.custo_total_materias_primas
     
     @property
     def consumo_total_linha(self):
@@ -295,7 +307,7 @@ class Produto(TenantBaseModel):
     
     def calcular_custo_total(self):
         """Calcula custo total incluindo matérias-primas"""
-        custo_materias = self.custo_materias_primas
+        custo_materias = self.custo_total_materias_primas
         custo_base = self.preco_custo or 0
         return custo_base + custo_materias
 
@@ -372,7 +384,7 @@ class ProdutoMateriaPrima(TenantBaseModel):
         verbose_name="Produto"
     )
     materia_prima = models.ForeignKey(
-        'producao.MateriaPrima', 
+        'estoque.MateriaPrima', 
         on_delete=models.CASCADE, 
         verbose_name="Matéria-Prima"
     )
@@ -388,7 +400,7 @@ class ProdutoMateriaPrima(TenantBaseModel):
         verbose_name = "Matéria-Prima do Produto"
         verbose_name_plural = "Matérias-Primas do Produto"
         unique_together = ['produto', 'materia_prima']
-        ordering = ['materia_prima__nome']
+        ordering = ['materia_prima__descricao']
     
     def __str__(self):
         return f"{self.produto.nome} - {self.materia_prima.nome}"
