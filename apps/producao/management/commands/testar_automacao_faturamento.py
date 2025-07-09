@@ -53,6 +53,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING('⚠️ Criando cliente de teste...')
                 )
+                # Não especificar created_at - deixar o auto_now_add funcionar
                 cliente = Cliente.objects.create(
                     empresa=empresa,
                     nome='Cliente Teste Automação',
@@ -76,9 +77,9 @@ class Command(BaseCommand):
                 produto = Produto.objects.create(
                     empresa=empresa,
                     codigo='TESTE-001',
-                    referencia='Produto Teste Automação',
                     descricao='Produto criado para teste de automação',
-                    preco_unitario=100.00
+                    preco_custo=100.00,
+                    preco_venda=150.00
                 )
 
             # Criar OP de teste
@@ -90,7 +91,7 @@ class Command(BaseCommand):
                 cliente=cliente,
                 produto=produto,
                 data_previsao=timezone.now().date(),
-                preco_unitario=produto.preco_unitario or 100.00,
+                preco_unitario=produto.preco_venda or 100.00,
                 status=StatusOP.EM_PRODUCAO,
                 observacoes='OP criada para teste de automação'
             )

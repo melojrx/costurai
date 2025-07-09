@@ -240,6 +240,12 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        # Filtrar warnings de timezone naive para reduzir spam
+        'py.warnings': {
+            'handlers': ['console'],
+            'level': 'ERROR',  # Só mostrar erros, não warnings
+            'propagate': False,
+        },
     },
 }
 

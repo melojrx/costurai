@@ -381,7 +381,7 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <button type="button" class="btn-action btn-delete" title="Excluir" 
-                                onclick="confirmDelete('{{ cliente.nome }}', '{% url 'cadastros:cliente_excluir' cliente.id %}')">
+                                onclick="confirmDelete('{{ cliente.nome }}', '{% url 'cadastros:cliente_deletar' cliente.id %}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>

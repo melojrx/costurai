@@ -93,42 +93,44 @@
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
             // Fazer requisição
-            fetch(`{% url 'producao:op_excluir' 0 %}`.replace('0', opParaExcluir), {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remover linha da tabela
-                    const row = document.getElementById(`op-row-${opParaExcluir}`);
-                    if (row) {
-                        row.remove();
-                    }
+            // URL de exclusão não implementada ainda
+            alert('Funcionalidade de exclusão será implementada em breve');
+            // fetch(`{% url 'producao:op_excluir' 0 %}`.replace('0', opParaExcluir), {
+            //     method: 'POST',
+            //     headers: {
+            //         'X-CSRFToken': csrfToken,
+            //         'X-Requested-With': 'XMLHttpRequest',
+            //         'Content-Type': 'application/json'
+            //     }
+            // })
+            // .then(response => response.json())
+            // .then(data => {
+            //     if (data.success) {
+            //         // Remover linha da tabela
+            //         const row = document.getElementById(`op-row-${opParaExcluir}`);
+            //         if (row) {
+            //             row.remove();
+            //         }
                     
-                    // Mostrar mensagem
-                    alert(data.message);
+            //         // Mostrar mensagem
+            //         alert(data.message);
                     
-                    // Fechar modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacao'));
-                    modal.hide();
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao excluir OP');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.textContent = 'Excluir';
-                opParaExcluir = null;
-            });
+            //         // Fechar modal
+            //         const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacao'));
+            //         modal.hide();
+            //     } else {
+            //         alert('Erro: ' + data.message);
+            //     }
+            // })
+            // .catch(error => {
+            //     console.error('Erro:', error);
+            //     alert('Erro ao excluir OP');
+            // })
+            // .finally(() => {
+            //     btn.disabled = false;
+            //     btn.textContent = 'Excluir';
+            //     opParaExcluir = null;
+            // });
         }
     });
 </script>
